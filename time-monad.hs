@@ -20,8 +20,8 @@ instance Applicative Temporal where
     pure a          = T (\(_, _) -> \vt -> return (a, vt))
     (T f) <*> (T x) = T (\(startT, nowT) -> \vT -> 
                              do thenT      <- getCurrentTime
-                                (x', vT')  <- x (startT, thenT) vT
-                                (f', vT'') <- f (startT, nowT) vT'
+                                (f', vT')  <- f (startT, thenT) vT
+                                (x', vT'') <- x (startT, nowT) vT'
                                 return (f' x', vT''))
 
 instance Monad Temporal where
@@ -61,6 +61,12 @@ kernelSleep x = T $ \(_, _) -> \vT -> do { threadDelay (round (x * 1000000)); re
 
 {- Testing -}
 
+timeTaken k = do k
+                 startT <- start
+                 endT <- time
+                 return $ (diffTime endT startT)
+
+
 foo = do a <- time
          kernelSleep 2
          sleep 2
@@ -86,11 +92,12 @@ foo3 = do sleep 1
           e <- time
           return $ (diffUTCTime e s)
 
+foo4app = (kernelSleep 2) *> (sleep 1) *> (sleep 2) *> (kernelSleep 3)
+
+
 foo4 = do kernelSleep 2
           sleep 1
           -- ;
-          --sleep 2
-          --kernelSleep 3
           foo4A
           s <- start
           e <- time
