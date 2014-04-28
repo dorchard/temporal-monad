@@ -260,6 +260,8 @@
 %
 
 
+\usepackage{enumerate}
+\usepackage{subfigure}
 \usepackage{fancyvrb}
 \usepackage{stmaryrd}
 \usepackage{amsthm}
@@ -280,13 +282,19 @@
 \newcommand{\note}[1]{{\color{blue}{#1}}}
 
 \newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
 
 \newcommand{\play}{\mathsf{play}\;}
-\newcommand{\sleep}{\mathsf{sleep}\;}
 \newcommand{\playOp}{\textsf{play}}
+
+\newcommand{\sleep}{\mathsf{sleep}\;}
 \newcommand{\sleepOp}{\textsf{sleep}}
+
+\newcommand{\ksleep}{\mathsf{kernelSleep}\;}
+\newcommand{\ksleepOp}{\textsf{kernelSleep}}
+
 \newcommand{\lang}{SonicPi}
 
 \newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
@@ -304,8 +312,50 @@
 \begin{document}
 \maketitle
 
+\section{Introduction}
+
+\note{Introduction to SonicPi}
+
+The underlying programming model of SonicPi provides a way to separate
+the ordering of effects from the timing of
+effects. Figure~\ref{three-chord-example} shows an example program
+where three chords are played in sequence, combining simple notions of 
+parallel, timed, and ordered effects. The first three statements play
+the notes of a C major chord in parallel. A \sleepOp{} statement then 
+provides a \emph{barrier}
+
+
+
+
+Thus ``$\sleep{} t$'' communicates that, after it has been evaluated, at least 
+$t$ seconds has elapsed since the last \sleepOp{}. This provides a minimum
+time. In between calls to \sleepOp{}, any other statements can (with some limits)
+be considered task parallel. 
+
+In \lang{}, it is possible that a computation proceeding a \sleepOp{}
+can overrun; that is, run longer than the sleep time.  Thus, the
+programming model is not suitable for realtime systems requiring hard
+deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
+the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
+
+
+\begin{itemize}
+\item A computational model of virtual and real time 
+      structured by an \emph{applicative functor} abstraction.
+
+\item We show that the applicative approach extends
+      to a monadic approach, which can be composed with additional
+      monads to capture other useful notions of effect in \lang{} programs,
+      such as random numbers (Section~\ref{}).
+\end{itemize}
+
+Previously reported on the language~\cite{aaron2013sonic}
+
 \begin{figure}[t]
+\subfigure[Three chord program in \lang{}]{
+\begin{minipage}{0.46\linewidth}
 \[
+\hspace{-6em}
 \begin{array}{l}
 \play C \\
 \play E \\ 
@@ -317,70 +367,180 @@
 \sleep 0.5 \\
 \play G \\
 \play B \\
-\play D
+\play D \\
 \end{array}
 \]
-\caption{Playing three chords in \lang{} with the second two chords played
+\end{minipage}
+\label{three-chord-example}
+}
+\subfigure[Timing of the three chord program]{
+\begin{minipage}{0.46\linewidth}
+\note{insert nice diagram that shows when the notes
+occur over the 1.5s duration} \\
+\end{minipage}
+\label{three-chord-timing}
+}
+\caption{Playing three chords (C major, F major, G major) 
+in \lang{} with the second two chords played
 closer together by $0.5s$.}
 \end{figure}
 
-The \sleepOp{} statement essentially imposes a minimum \emph{soft deadline}
-(in the terminology of )
+\subsection{Examples}
+\label{sec:examples}
 
-Thus ``$\sleep{} t$'' communicates that, after it has been evaluated, at least 
-$t$ seconds has elapsed since the last \sleepOp{}. This provides a kind of
-\emph{minimum (soft) deadline}. 
+\note{Show a few more example programs here that
+demonstrate the programming model.}
 
-In \lang{}, it is possible that a computation proceeding a \sleepOp{}
-can overrun; that is, run longer than the sleep time.  Thus, the
-programming model is not suitable for realtime systems requiring hard
-deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
-the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
-
-
-
-\paragraph{Terminology} 
-We refer to closed (\ie{}, without free variables)
-sequences of statements as \emph{programs}.
-
-\begin{definition}
-For a program $P$, then $\vtime{P}$ is the \emph{virtual time} that
-elapses when running $P$ and $\etime{P}$ is the \emph{actual (kernel)
-  time} that elapses when running $P$.
-\end{definition}
-
-\begin{definition}
-\note{This is partial, there is no compositional definition for
-$\etime{-}$ (proving this might be interesting, it can be
-done by example).}
-Since the \sleepOp{} operation increments virtual time, but also
-causes kernel sleep then: $\vtime{\sleep t} = \etime{\sleep t} = t$,
-and
+Figure~\ref{sleep-examples} shows four similar programs which each
+have different internal behaviours for \sleepOp, illustrating the
+semantics of \sleepOp{}. The first three take 3s to execute and the
+last takes 4s to execute, with the behaviours:
 %
+\begin{enumerate}[(a)]
+\item{3s -- sleeps for 1s then sleeps for 2s (two sleeps performed);}
+\item{3s -- performs a computation lasting 1s, ignores
+the first \sleepOp{} since its minimum deadline has been reached, 
+and then sleeps for 2s (one sleep performed);}
+\item{3s -- performs a computation lasting 2s, which means that
+the first \sleepOp{} is ignored, and the second \sleepOp{} waits
+for only 1s to reach its minimum deadline (half a sleep performed);}
+\item{4s -- performs a computation lasting 2s, thus 
+the first \sleepOp{} is ignored, then performs a computation lasting
+2s, thus the second \sleepOp{} is ignored (no sleeps performed).}
+\end{enumerate}
+
+
+\begin{figure}[t]
+\subfigure[Two sleeps]{
+\begin{minipage}{0.18\linewidth}
 \[
-\vtime{P; Q} = \vtime{P} + \vtime{Q}
+\hspace{-1em}
+\begin{array}{l}
+\sleep 1 \\
+\sleep 2 \\ \\ \\ \\
+\end{array}
 \]
+\end{minipage}
+\label{sleep-examples:a}
+}
+\rule[-2em]{0.3pt}{5em}
+%\hspace{1em}
+% takes 3
+\subfigure[One sleep]{
+\begin{minipage}{0.23\linewidth}
+\begin{center}
+\[
+\hspace{-0.5em}
+\begin{array}{l}
+\ldots \; \textit{\# lasts 1s} \\
+\sleep 1 \\
+\sleep 2 \\ \\  \\
+\end{array}
+\]
+\end{center}
+\end{minipage}
+\label{sleep-examples:b}
+}
+\rule[-2em]{0.3pt}{5em}
+%\hspace{1em}
+% takes 3s
+\subfigure[Half a sleep]{
+\begin{minipage}{0.23\linewidth}
+\begin{center}
+\[
+\hspace{-0.5em}
+\begin{array}{l}
+\ldots \; \textit{\# lasts 2s} \\
+\sleep 1 \\
+\sleep 2 \\ \\ \\
+\end{array}
+\]
+\end{center}
+\end{minipage}
+\label{sleep-examples:c}
+% takes 6
+}
+\rule[-2em]{0.3pt}{5em}
+\subfigure[No sleeps]{
+\begin{minipage}{0.23\linewidth}
+\begin{center}
+\[
+\hspace{-0.5em}
+\begin{array}{l}
+\ldots \; \textit{\# lasts 2s} \\
+\sleep 1 \\
+\ldots \; \textit{\# lasts 2s} \\
+\sleep 2 \\  \\
+\end{array}
+\]
+\end{center}
+\end{minipage}
+}
+
+\caption{Example programs with different \sleepOp{} behaviours}
+\label{sleep-examples}
+\end{figure}
+
+
+
+\section{Model}
+
+\paragraph{Terminology and notation}
+We refer to closed sequences of statements (\ie{}, without free
+variables) as \emph{programs}. Throughout, $P$, $Q$ range over programs,
+and $s, t$ range over times (usually in seconds).
+
+\subsection{Virtual time and real time}
+
+The programming model of \lang{} distinguishes between the
+\emph{actual time} elapsed since the start of a program $P$, which we
+write as $\etime{P}$, and the \emph{virtual time} which is advanced by
+\sleepOp{} statements, written $\vtime{P}$.
+
+Since \sleepOp{} is the only operation that changes the virtual
+time, we can specification for $\vtime{-}$ over all programs:
+%
+\begin{definition}
+Virtual time is specified for statements of \lang{} programs 
+by the following (ordered) cases:
+%
+\begin{align*}
+\vtime{\sleep t} & = t \\ 
+\vtime{P; Q} & = \vtime{P} + \vtime{Q} \\
+\vtime{-} & = 0
+\end{align*}
+%
+\ie{}, the virtual time is $0$ 
+for any statment other than \sleepOp{} or sequential composition.
+\label{sleep-spec}
 \end{definition}
 
-\begin{lemma}
-For all programs $P$ then $\etime{P} \geq \vtime{P}$. 
-\label{lemma1}
-\end{lemma}
+Equality of computation times is difficult. In order to not sweep this
+issue entirely under the carpet, we will use the relation $\approx$,
+where $s \approx t$ means that $s$ and $t$ are either exactly equal or
+differ by some amount $\epsilon$.\note{Discuss this further, may be
+  able to say later that in some cases $\epsilon$ is the scheduling
+  time for play statments?}  The virtual time and actual time of a
+single sleep statement (in isolation) are roughly the same, \ie{},
+$\vtime{\sleep t} \approx \etime{\sleep t}$ and thus $\vtime{\sleep t}
+\approx t$ by the specification in Definition~\ref{sleep-spec}.
+
+We should be clear however, that this approximate equality does not always
+hold. We can only say that it holds when \sleepOp{} is used in isolation, that is, 
+when it is the only statement in a program. As shown by the examples
+of Section~\ref{sec:examples}, the use of $\sleep t$ in a program 
+does not mean that a program necessarily waits for $t$ seconds-- 
+depending on the context, it may wait for anywhere between $0$ and $t$ seconds.
+ 
+For convenience, and to contrast with \sleepOp{}, we'll use an additional
+statement \ksleepOp{} here (which is not available in the actual language)
+ which always sleeps for the number of seconds specified by its parameter.
+
+
+
 
 \begin{lemma}
-For all programs $P$ and $Q$ then:
-%%
-\begin{equation}
-\vtime{P} + \vtime{Q} \leq \etime{P; Q} \leq \etime{P} + \etime{Q}
-\end{equation}
-\label{lemma2}
-\end{lemma}
-
-\paragraph{Proof}
-TODO
-
-\begin{lemma}
-For a program $P$ then:
+For some program $P$ and time $s$: 
 %%
 \begin{align*}
 \etime{P; \sleep{} s} = 
@@ -389,17 +549,83 @@ For a program $P$ then:
    \etime{P} & \etime{P} > s
  \end{cases}
 \end{align*}
-\label{lemma3}
+\label{lem:sleep-R}
 \end{lemma}
 
 \begin{lemma}
-For a program $P$ then
+For some program $P$ and time $s$:
 %%
 \begin{align*}
 \etime{\sleep{} s; P} = s + \etime{P}
 \end{align*}
-\label{lemma4}
+\label{lem:sleep-L}
 \end{lemma}
+
+\begin{lemma}
+For all programs $P$ then $\etime{P} \geq \vtime{P}$. 
+\label{lemma1}
+\end{lemma}
+
+\begin{theorem}
+For all programs $P$ and $Q$ then:
+%%
+\begin{equation}
+\vtime{P} + \vtime{Q} \leq \etime{P; Q} \leq \etime{P} + \etime{Q}
+\end{equation}
+\label{len:sleep}
+\end{theorem}
+
+\paragraph{Proof}
+Since sequential composition is associative, we can reassociate
+$P; Q$ such that $P = P_1; P'$ where $P_1$ is a single statement
+
+\begin{itemize}
+\item $P = \sleep t$
+
+\begin{align*}
+\begin{array}{ll}
+       & \etime{\sleep t; Q} \\[0.5em]
+\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-L}\} \\[0.1em]
+       & s + \etime{Q} \\[0.5em]
+\equiv & \; \{\textit{Definition}~\ref{}\} \\[0.1em]
+       & \etime{\sleep t} + \etime{Q}
+\end{array}
+\end{align*}
+
+\item $Q = \sleep t$
+
+\begin{itemize}
+\item $\etime{P} \leq t$ then:
+
+\begin{align*}
+\begin{array}{ll}
+       & \etime{P; \sleep t} \\[0.5em]
+\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
+       & \vtime{P} + t \\[0.5em]
+\equiv & \; \{\textit{Definition}~\ref{sleep-spec}\} \\[0.1em]
+       & \vtime{P} + \vtime{\sleep t}
+\end{array}
+\end{align*}
+
+ $\etime{P; \sleep t} = \etime{P} + $ 
+
+
+\end{itemize}
+
+\item $P = P';P'', Q = Q';Q''$
+
+By induction:
+%%
+\begin{align}
+\vtime{P'} + \vtime{P''} \leq \etime{P'; P''} \leq \vtime{P'} + \vtime{P''} \\
+\vtime{Q'} + \vtime{Q''} \leq \etime{Q'; Q''} \leq \vtime{Q'} + \vtime{Q''} \\
+\end{align}
+
+
+and
+
+
+\end{itemize}
 
 
 For example, consider subprograms $A$, $B$, $C$ interposed with two
@@ -430,7 +656,7 @@ s_1 + s_2 + t_3$, iff $t_1 \leq 1$ and $t_2 \leq 2$.
 %\end{array}
 %\end{equation*}
 
-\section{Model}
+\subsection{Applicative structure on computation}
 
 In the following, we use Haskell as our meta language for the
 semantics (since it provides convenient syntax for working with
@@ -547,11 +773,16 @@ elided here since it does not relate directly to the temporal semantics.
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{18}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{24}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{28}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{time},\Varid{start}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
+\>[B]{}\Varid{time}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
 \\
 \>[B]{}\Varid{time}{}\<[7]%
 \>[7]{}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\Varid{nowT})\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{nowT},\Varid{vT})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{start}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
 \\
 \>[B]{}\Varid{start}\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\anonymous )\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{startT},\Varid{vT})){}\<[E]%
 \\[\blanklineskip]%
@@ -562,6 +793,17 @@ elided here since it does not relate directly to the temporal semantics.
 \>[B]{}\Varid{setVirtualTime}\mathbin{::}\Conid{VTime}\to \Conid{Temporal}\;(){}\<[E]%
 \\
 \>[B]{}\Varid{setVirtualTime}\;\Varid{vT}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \anonymous \to \Varid{return}\;((),\Varid{vT})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\Varid{kernelSleep}\mathbin{::}\Conid{RealFrac}\;\Varid{a}\Rightarrow \Varid{a}\to \Conid{Temporal}\;(){}\<[E]%
+\\
+\>[B]{}\Varid{kernelSleep}\;\Varid{t}\mathrel{=}{}\<[18]%
+\>[18]{}\Conid{T}\;(\lambda (\anonymous ,\anonymous )\to \lambda \Varid{vT}\to {}\<[E]%
+\\
+\>[18]{}\hsindent{6}{}\<[24]%
+\>[24]{}\mathbf{do}\;{}\<[28]%
+\>[28]{}\Varid{threadDelay}\;(\Varid{round}\;(\Varid{t}\mathbin{*}\mathrm{1000000})){}\<[E]%
+\\
+\>[28]{}\Varid{return}\;((),\Varid{vT})){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 \caption{Simple \emph{Temporal} computations, used  by the model}
@@ -646,7 +888,7 @@ logic and we do not have a model checking process for answering
 questions such as, at time $t$ what formula hold (what statements have
 been evluated).  The properties of Lemmas 1 to 5 however provide some
 basis for programmers to reason about time in their programs. In
-practise, we find that such reasoning can be done by children in a
+practice, we find that such reasoning can be done by children in a
 completely informal but highly useful way.
 
 

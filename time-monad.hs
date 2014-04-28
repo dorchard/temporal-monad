@@ -66,6 +66,11 @@ timeTaken k = do k
                  endT <- time
                  return $ (diffTime endT startT)
 
+fig2a = (sleep 1) *> (sleep 2)
+fig2b = (kernelSleep 1) *> (sleep 1) *> (sleep 2)
+fig2c = (kernelSleep 2) *> (sleep 1) *> (sleep 2)
+fig2d = (kernelSleep 2) *> (sleep 1) *> (kernelSleep 2) *> (sleep 2) 
+
 
 foo = do a <- time
          kernelSleep 2
@@ -91,6 +96,9 @@ foo3 = do sleep 1
           s <- start
           e <- time
           return $ (diffUTCTime e s)
+
+
+
 
 foo4app = (kernelSleep 2) *> (sleep 1) *> (sleep 2) *> (kernelSleep 3)
 
