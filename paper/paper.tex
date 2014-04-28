@@ -1,0 +1,163 @@
+\documentclass[preprint]{sigplanconf}
+
+\usepackage{stmaryrd}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{xypic}
+\usepackage{multirow}
+
+\usepackage{color}
+
+\newcommand{\note}[1]{{\color{blue}{#1}}}
+
+\newtheorem{lemma}{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\newcommand{\play}{\mathsf{play}\;}
+\newcommand{\sleep}{\mathsf{sleep}\;}
+\newcommand{\sleepOp}{\textsf{sleep}}
+\newcommand{\lang}{SonicPi}
+
+\newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
+\newcommand{\etime}[1]{[#1]_{\mathsf{t}}}
+
+\newcommand{\interp}[1]{\llbracket{#1}\rrbracket}
+
+\newcommand{\ie}{\emph{i.e.}}
+\newcommand{\eg}{\emph{e.g.}}
+
+\title{TIME MONAD}
+
+\authorinfo{Sam Aaron}{}{}
+\authorinfo{Dominic Orchard}{}{}
+\title{A programming model for temporal coordination (in music)}
+
+\begin{document}
+\maketitle
+
+\begin{figure}[t]
+\[
+\begin{array}{l}
+\play C \\
+\play E \\ 
+\play G \\
+\sleep 1 \\
+\play F \\
+\play A \\
+\play C \\
+\sleep 0.5 \\
+\play G \\
+\play B \\
+\play D
+\end{array}
+\]
+\caption{Playing three chords in \lang{} with the second two chords played
+closer together by $0.5s$.}
+\end{figure}
+
+\paragraph{Terminology} 
+We refer to closed (\ie{}, without free variables)
+sequences of statements as \emph{programs}.
+
+\begin{definition}
+For a program $P$, then $\vtime{P}$ is the \emph{virtual time} that
+elapses when running $P$ and $\etime{P}$ is the \emph{actual (kernel)
+  time} that elapses when running $P$.
+\end{definition}
+
+\begin{definition}
+\note{This is partial, there is no compositional definition for
+$\etime{-}$ (proving this might be interesting, it can be
+done by example).}
+Since the \sleepOp{} operation increments virtual time, but also
+causes kernel sleep then: $\vtime{\sleep t} = \etime{\sleep t} = t$,
+and
+%
+\[
+\vtime{P; Q} = \vtime{P} + \vtime{Q}
+\]
+\end{definition}
+
+\begin{lemma}
+For all programs $P$ then $\etime{P} \geq \vtime{P}$. 
+\end{lemma}
+
+\paragraph{Proof}
+TODO
+
+\begin{lemma}
+For a program $P$ then:
+%%
+\begin{align*}
+\etime{P; \sleep{} s} = 
+ \begin{cases}
+   s + \vtime{P} & \etime{P} \leq s \\
+   \etime{P} & \etime{P} > s
+ \end{cases}
+\end{align*}
+\end{lemma}
+
+\begin{lemma}
+For a program $P$ then
+%%
+\begin{align*}
+\etime{\sleep{} s; P} = s + \etime{P}
+\end{align*}
+\end{lemma}
+
+
+For example, consider subprograms $A$, $B$, $C$ interposed with two
+sleep statements with lengths $s_1$ and $s_2$:
+%
+\begin{equation}
+\begin{array}{l}
+A \\
+\sleep s_1 \\
+B  \\
+\sleep s_2 \\
+C
+\end{array}
+\label{example:time1}
+\end{equation}
+%%
+If $[A] = t_1$, $[B] = t_2$, $[C] = t_3$, then $[eq. \eqref{example:time1}] = 
+s_1 + s_2 + t_3$, iff $t_1 \leq 1$ and $t_2 \leq 2$.
+
+%\begin{equation*}
+%\begin{array}{lllll}
+%A & \multirow{2}{*}{\rule[1em]{0.6pt}{1.2em}} & \multirow{2}{*}{$t_1$} & 
+%\multirow{4}{*}{\rule[1em]{0.6pt}{4em}} & \multirow{4}{*}{$t_1 + t_2 + 3$}
+%\\
+%\emph{sleep} \; 1 \qquad \\
+%B &  \multirow{2}{*}{\rule[1em]{0.6pt}{1.2em}} & \multirow{2}{*}{$t_2$} \\
+%\emph{sleep} \; 2
+%\end{array}
+%\end{equation*}
+
+\subsection{Time monad}
+
+\newcommand{\TM}{\mathsf{TM}}
+
+\begin{equation*}
+\TM a = (\mathit{Time}, \mathit{Time}) \rightarrow (\mathit{VTime} \rightarrow \mathit{IO} (a, \mathit{VTime}))
+\end{equation*}
+
+
+\paragraph{Quotienting by non-time dependent functions}
+
+In L, there is no expression which returns the current time; 
+ \emph{getTime} belongs only to the model, not to the language.
+That is, for all expressions $e$, then the denotation 
+$\interp{e}$ factors through 
+
+
+\subsection{Emitting overrun exceptions}
+
+\paragraph{Overrun}
+
+\paragraph{Overrun schedule}
+
+
+
+\end{document}

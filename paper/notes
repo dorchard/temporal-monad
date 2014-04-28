@@ -1,0 +1,50 @@
+sleep 1
+sleep 2 
+
+
+sleep 3
+
+
+
+
+
+do vT    <- getVirtualTime
+   thenT <- startTime
+   nowT  <- getTime
+   let diffT = diffUTCTime nowT thenT
+   let vT'   = vT + 1
+   if (vT' < diffT) then return () else kernelSleep (vT' - diffT)
+   setVirtualTime vT'
+   AvT    <- getVirtualTime
+   AthenT <- startTime
+   AnowT  <- getTime
+   let AdiffT = diffUTCTime AnowT AthenT
+   let AvT'   = AvT + 2
+   if (AvT' < AdiffT) then return () else kernelSleep (AvT' - AdiffT)
+   setVirtualTime AvT'
+
+
+do vT    <- getVirtualTime
+   thenT <- startTime
+   nowT  <- getTime
+   let diffT = diffUTCTime nowT thenT
+   let vT'   = vT + 1
+   if (vT' < diffT) then return () else kernelSleep (vT' - diffT)
+   AthenT <- startTime
+   AnowT  <- getTime
+   let AdiffT = diffUTCTime AnowT AthenT
+   let AvT'   = vT' + 2
+   if (AvT' < AdiffT) then return () else kernelSleep (AvT' - AdiffT)
+   setVirtualTime AvT'
+
+do vT    <- getVirtualTime
+   thenT <- startTime
+   nowT  <- getTime
+   let diffT = diffUTCTime nowT thenT
+   let vT'   = vT + 1
+   if (vT' < diffT) then return () else kernelSleep (vT' - diffT)
+   AnowT  <- getTime
+   let AdiffT = diffUTCTime AnowT thenT
+   let AvT'   = vT' + 2
+   if (AvT' < AdiffT) then return () else kernelSleep (AvT' - AdiffT)
+   setVirtualTime AvT'
