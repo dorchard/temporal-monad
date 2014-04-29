@@ -313,6 +313,7 @@
 \maketitle
 
 \section{Introduction}
+\label{sec:introduction}
 
 \note{Introduction to SonicPi}
 
@@ -481,8 +482,6 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \label{sleep-examples}
 \end{figure}
 
-
-
 \section{Model}
 
 \paragraph{Terminology and notation}
@@ -537,26 +536,31 @@ statement \ksleepOp{} here (which is not available in the actual language)
  which always sleeps for the number of seconds specified by its parameter.
 
 
-
-
 \begin{lemma}
-For some program $P$ and time $s$: 
+For some program $P$ and time $t$: 
 %%
 \begin{align*}
-\etime{P; \sleep{} s} = 
+\etime{P; \sleep{} t} = 
  \begin{cases}
-   s + \vtime{P} & \etime{P} \leq s \\
-   \etime{P} & \etime{P} > s
+   \etime{P} & (\vtime{P} + t) < \etime{P} \\
+   \vtime{P} + t  & \textit{otherwise}
  \end{cases}
 \end{align*}
+%\begin{align*}
+%\etime{P; \sleep{} t} = 
+% \begin{cases}
+%   \etime{P} & t < \etime{P} \\
+%   \vtime{P} + t & t \geq \etime{P}
+% \end{cases}
+%\end{align*}
 \label{lem:sleep-R}
 \end{lemma}
 
 \begin{lemma}
-For some program $P$ and time $s$:
+For some program $P$ and time $t$:
 %%
 \begin{align*}
-\etime{\sleep{} s; P} = s + \etime{P}
+\etime{\sleep{} t; P} = t + \etime{P}
 \end{align*}
 \label{lem:sleep-L}
 \end{lemma}
@@ -572,64 +576,15 @@ For all programs $P$ and $Q$ then:
 \begin{equation}
 \vtime{P} + \vtime{Q} \leq \etime{P; Q} \leq \etime{P} + \etime{Q}
 \end{equation}
-\label{len:sleep}
+\label{theorem:main}
 \end{theorem}
 
-\paragraph{Proof}
-Since sequential composition is associative, we can reassociate
-$P; Q$ such that $P = P_1; P'$ where $P_1$ is a single statement
 
-\begin{itemize}
-\item $P = \sleep t$
-
-\begin{align*}
-\begin{array}{ll}
-       & \etime{\sleep t; Q} \\[0.5em]
-\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-L}\} \\[0.1em]
-       & s + \etime{Q} \\[0.5em]
-\equiv & \; \{\textit{Definition}~\ref{}\} \\[0.1em]
-       & \etime{\sleep t} + \etime{Q}
-\end{array}
-\end{align*}
-
-\item $Q = \sleep t$
-
-\begin{itemize}
-\item $\etime{P} \leq t$ then:
-
-\begin{align*}
-\begin{array}{ll}
-       & \etime{P; \sleep t} \\[0.5em]
-\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
-       & \vtime{P} + t \\[0.5em]
-\equiv & \; \{\textit{Definition}~\ref{sleep-spec}\} \\[0.1em]
-       & \vtime{P} + \vtime{\sleep t}
-\end{array}
-\end{align*}
-
- $\etime{P; \sleep t} = \etime{P} + $ 
-
-
-\end{itemize}
-
-\item $P = P';P'', Q = Q';Q''$
-
-By induction:
-%%
-\begin{align}
-\vtime{P'} + \vtime{P''} \leq \etime{P'; P''} \leq \vtime{P'} + \vtime{P''} \\
-\vtime{Q'} + \vtime{Q''} \leq \etime{Q'; Q''} \leq \vtime{Q'} + \vtime{Q''} \\
-\end{align}
-
-
-and
-
-
-\end{itemize}
-
-
-For example, consider subprograms $A$, $B$, $C$ interposed with two
-sleep statements with lengths $s_1$ and $s_2$:
+From these lemmas we can reason about the evaluation time of programs.
+For example, consider subprograms $A$, $B$, $C$ where 
+$\etime{A} = t_1$, $\etime{B} = t_2$, $\etime{C} = t_3$ and
+$\vtime{A} = \vtime{B} \vtime{C} = 0$, interposed with two
+sleep statements of duration $s_1$ and $s_2$:
 %
 \begin{equation}
 \begin{array}{l}
@@ -642,7 +597,7 @@ C
 \label{example:time1}
 \end{equation}
 %%
-If $[A] = t_1$, $[B] = t_2$, $[C] = t_3$, then $[eq. \eqref{example:time1}] = 
+Then by the above lemmas, we see that $\etime{eq. \eqref{example:time1}} = 
 s_1 + s_2 + t_3$, iff $t_1 \leq 1$ and $t_2 \leq 2$.
 
 %\begin{equation*}
@@ -656,15 +611,17 @@ s_1 + s_2 + t_3$, iff $t_1 \leq 1$ and $t_2 \leq 2$.
 %\end{array}
 %\end{equation*}
 
-\subsection{Applicative structure on computation}
+
+\newcommand{\TM}{\mathsf{TM}}
+
+\subsection{Monadic structure on computation}
 
 In the following, we use Haskell as our meta language for the
 semantics (since it provides convenient syntax for working with
 monads)\footnote{The source code for the model is avilable at
   \url{https://github.com/dorchard/time-monad}}.
-
-\newcommand{\TM}{\mathsf{TM}}
-
+\lang{} computations are modelled by the \emph{Temporal} data type, defined:
+%%
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
@@ -675,99 +632,129 @@ monads)\footnote{The source code for the model is avilable at
 \>[5]{}\Conid{T}\;((\Conid{Time},\Conid{Time})\to (\Conid{VTime}\to \Conid{IO}\;(\Varid{a},\Conid{VTime}))){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-%%
-Which maps a pair of two times, which will be the
-start time of the computation and current time, to
-a stateful computation over the \emph{IO} monad with
-a single location storing a virtual time. The \emph{IO}
-computation provides underlying access to the actual
-time from kernel. 
+%
+Thus, temporal computations map a pair of two times, which will be
+the start time of the computation and current time, to a stateful
+computation with a single location storing a virtual time, over the
+\emph{IO} type.  The \emph{IO} computation provides underlying access
+to the actual time from kernel.
 
-
-To model \lang{}, it is enough for \emph{Temporal} to have the
-structure of an \emph{applicative functor}~\cite{mcbride2008functional} (also called
-\emph{idioms} or \emph{monoidal functors}).  Recall the usual
-applicative functor interface in Haskell:
-%%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{10}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{class}\;\Conid{Functor}\;\Varid{f}\Rightarrow \Conid{Applicative}\;\Varid{f}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}\Varid{pure}{}\<[10]%
-\>[10]{}\mathbin{::}\Varid{a}\to \Varid{f}\;\Varid{a}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}(<\!\!\!*\!\!\!>)\mathbin{::}\Varid{f}\;(\Varid{a}\to \Varid{b})\to \Varid{f}\;\Varid{a}\to \Varid{f}\;\Varid{b}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
-%%
-The \emph{Applicative} interface describes how to compose effectul
-computations encoded as values of type $f\ a$ (the effectful computation
-of a pure value of type $a$). Thus, \emph{pure} constructs a trivially
-effectful computation from a pure value. The \ensuremath{<\!\!\!*\!\!\!>} operation (which we'll
-call \emph{apply}) takes an effectful computation of a function and
-an effectful computation of an argument and evaluates the two effects
-
-
-The \emph{Applicative} instance for \emph{Temporal} is:
+The \emph{Monad} instance for \emph{Temporal} is then as follows:
 %
 \begin{hscode}\SaveRestoreHook
 \column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{21}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{30}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{33}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{44}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{25}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{37}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{instance}\;\Conid{Applicative}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
+\>[B]{}\mathbf{instance}\;\Conid{Monad}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
 \\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{pure}\;\Varid{a}{}\<[21]%
-\>[21]{}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\anonymous )\to \lambda \Varid{vt}\to \Varid{return}\;(\Varid{a},\Varid{vt})){}\<[E]%
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\Varid{return}\;\Varid{a}{}\<[16]%
+\>[16]{}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{a},\Varid{vT})){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}\\[-1.5em]{}\<[E]%
 \\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}(\Conid{T}\;\Varid{f})<\!\!\!*\!\!\!>(\Conid{T}\;\Varid{x})\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\Varid{nowT})\to \lambda \Varid{vT}\to {}\<[E]%
+\>[B]{}\hsindent{3}{}\<[3]%
+\>[3]{}(\Conid{T}\;\Varid{p})\bind \Varid{q}{}\<[16]%
+\>[16]{}\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\Varid{nowT})\to \lambda \Varid{vT}\to {}\<[E]%
 \\
-\>[5]{}\hsindent{25}{}\<[30]%
-\>[30]{}\mathbf{do}\;\Varid{thenT}{}\<[44]%
-\>[44]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\>[16]{}\hsindent{5}{}\<[21]%
+\>[21]{}\mathbf{do}\;{}\<[25]%
+\>[25]{}(\Varid{x},\Varid{vT'}){}\<[37]%
+\>[37]{}\leftarrow \Varid{p}\;(\Varid{startT},\Varid{nowT})\;\Varid{vT}{}\<[E]%
 \\
-\>[30]{}\hsindent{3}{}\<[33]%
-\>[33]{}(\Varid{f'},\Varid{vT'}){}\<[44]%
-\>[44]{}\leftarrow \Varid{f}\;(\Varid{startT},\Varid{thenT})\;\Varid{vT}{}\<[E]%
+\>[25]{}\mathbf{let}\;(\Conid{T}\;\Varid{q'}){}\<[37]%
+\>[37]{}\mathrel{=}\Varid{q}\;\Varid{x}{}\<[E]%
 \\
-\>[30]{}\hsindent{3}{}\<[33]%
-\>[33]{}(\Varid{x'},\Varid{vT''})\leftarrow \Varid{x}\;(\Varid{startT},\Varid{nowT})\;\Varid{vT'}{}\<[E]%
+\>[25]{}\Varid{thenT}{}\<[37]%
+\>[37]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
 \\
-\>[30]{}\hsindent{3}{}\<[33]%
-\>[33]{}\Varid{return}\;(\Varid{f'}\;\Varid{x'},\Varid{vT''})){}\<[E]%
+\>[25]{}\Varid{q'}\;(\Varid{startT},\Varid{thenT})\;\Varid{vT'}){}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
 %
+\begin{itemize}
+
+\item \ensuremath{\Varid{return}\mathbin{::}\Varid{a}\to \Conid{Temporal}\;\Varid{a}} thus ignores the time parameters and
+has the usual pure state behaviour: passing the state unchanged.
+For the bind
+
+\item \ensuremath{(\bind )\mathbin{::}\Conid{Temporal}\;\Varid{a}\to (\Varid{a}\to \Conid{Temporal}\;\Varid{b})\to \Conid{Temporal}\;\Varid{b}} thus
+composes two computations together. 
 The result of composing two temporal computations, with
 start time \emph{starT}, current time \emph{nowT}, and virtual
 time \emph{vT}, is the result of evaluating first the right 
 hand side, and then the left hand side 
 
-Note this gives a left-to-right evaluation order on the appicative
-\emph{apply} operation. 
 
-To understand this ordering, consider 
+\end{itemize}
 
-
-\begin{align*}
-\interp{\emph{statement}} & : \emph{Temporal} \, () \\
-\interp{P; Q} & = (\lambda() \rightarrow \interp{P}) <\!\!\!*\!\!\!> \interp{Q} \\
-\interp{\sleep t} & = \emph{sleep} \, \interp{t}
-\end{align*}
+The following \ensuremath{\Varid{runTime}} operation executes a temporal computation
+inside of the \emph{IO} monad by providing the start time of the
+computation, and with virtual time 0:
 %%
-Note that $\interp{-}$ is overloaded in the rule for \sleepOp{} for (pure) expressions. 
-The concrete interpreation of other statements in the language, such as \playOp, is
-elided here since it does not relate directly to the temporal semantics. 
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{runTime}\mathbin{::}\Conid{Temporal}\;\Varid{a}\to \Conid{IO}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\Varid{runTime}\;(\Conid{T}\;\Varid{c})\mathrel{=}\mathbf{do}\;{}\<[21]%
+\>[21]{}\Varid{startT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[21]{}(\Varid{x},\anonymous )\leftarrow \Varid{c}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
+\\
+\>[21]{}\Varid{return}\;\Varid{x}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%%
+To illustrate the evalution of temporal computation and the
+ordering and interleaving of calls to the operation system for the
+current time, we consider a program:
+%%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\Varid{runTime}\;(\mathbf{do}\;\{\mskip1.5mu \Varid{f};\Varid{g};\Varid{h};\mskip1.5mu\}){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+(where \ensuremath{\Varid{f}\mathrel{=}\Conid{T}\;\Varid{f'},\Varid{g}\mathrel{=}\Conid{T}\;\Varid{g'},\Varid{h}\mathrel{=}\Conid{T}\;\Varid{h'}}) which 
+desugars to the following, after some simplification: 
+%%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{do}\;{}\<[5]%
+\>[5]{}\Varid{startT}{}\<[15]%
+\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[5]{}(\anonymous ,\Varid{vT'}){}\<[15]%
+\>[15]{}\leftarrow \Varid{f'}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
+\\
+\>[5]{}\Varid{thenT}{}\<[15]%
+\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[5]{}(\anonymous ,\Varid{vT''})\leftarrow \Varid{g'}\;(\Varid{startT},\Varid{thenT})\;\Varid{vT'}{}\<[E]%
+\\
+\>[5]{}\Varid{thenT'}{}\<[15]%
+\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[5]{}(\Varid{y},\anonymous ){}\<[15]%
+\>[15]{}\leftarrow \Varid{h'}\;(\Varid{startT},\Varid{thenT'})\;\Varid{vT''})\;{}\<[E]%
+\\
+\>[5]{}\Varid{return}\;\Varid{y}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+The above illustrates the repeated calls to \ensuremath{\Varid{getCurrentTime}}, the
+constant start time parameter, and the threading of virtual time state
+throughout the computation. 
 
 \begin{figure}[t]
 \begin{hscode}\SaveRestoreHook
@@ -809,6 +796,23 @@ elided here since it does not relate directly to the temporal semantics.
 \caption{Simple \emph{Temporal} computations, used  by the model}
 \end{figure}
 
+\paragraph{Interpreting \lang{} statements}
+
+The following interpretation function $\interp{-}$ on \lang{} 
+programs shows the mapping to the operations of the \emph{Temporal}
+monad:
+%%
+\begin{align*}
+\interp{\emph{statement}} & : \emph{Temporal} \, () \\
+\interp{x = P; Q} & = \interp{P} \ensuremath{\bind (\lambda \Varid{x}\to } \interp{Q}) \\
+\interp{P; Q} & = \interp{P} \ensuremath{\bind (\lambda \anonymous \to } \interp{Q}) \\
+\interp{\sleep e} & = \emph{sleep} \, \interp{e}
+\end{align*}
+%%
+Note that $\interp{-}$ is overloaded in the rule for \sleepOp{} for (pure) expressions. 
+The concrete interpreation of other statements in the language, such as \playOp, is
+elided here since it does not relate directly to the temporal semantics. 
+
 The key primitive \emph{sleep} provides the semantics for \sleepOp{} as:
 %%
 \begin{hscode}\SaveRestoreHook
@@ -847,21 +851,215 @@ The key primitive \emph{sleep} provides the semantics for \sleepOp{} as:
 \ColumnHook
 \end{hscode}\resethooks
 %%
-\emph{sleep} proceeds by calculating the elapsed time, \emph{diffT}, 
-and the new virtual time \emph{vT'}. If the new virtual time is less
-than the elapsed time then no actual (kernel) sleeping happens. However,
-if the new virtual time is ahead of the elapsed time, then the process
-sleeps for the difference. Finally, the virtual time state is updated
+Thus, \emph{sleep} proceeds by calculating the elapsed time, \emph{diffT}, 
+and the new virtual time \emph{vT'} (after the sleep). 
+If the new virtual time is less than the elapsed time then no actual (kernel) 
+sleeping happens. However, if the new virtual time is ahead of the elapsed time, 
+then the process sleeps for the difference. Finally, the virtual time state is updated
 with the new virtual time. 
+
+\subsection{Soundness}
+
+\paragraph{Lemma~\ref{lem:sleep-R}} 
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{do}\;\Varid{startT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}(\Varid{x},\Varid{vT'}){}\<[16]%
+\>[16]{}\leftarrow \Varid{p}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{thenT}{}\<[16]%
+\>[16]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\mathbf{let}\;\Varid{vT''}{}\<[15]%
+\>[15]{}\mathrel{=}\Varid{vT'}\mathbin{+}\Varid{t}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\mathbf{let}\;\Varid{diffT}\mathrel{=}\Varid{diffTime}\;\Varid{thenT}\;\Varid{startT}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\mathbf{if}\;(\Varid{vT''}\mathbin{<}\Varid{diffT}){}\<[E]%
+\\
+\>[4]{}\hsindent{3}{}\<[7]%
+\>[7]{}\mathbf{then}\;\Varid{return}\;(){}\<[E]%
+\\
+\>[4]{}\hsindent{3}{}\<[7]%
+\>[7]{}\mathbf{else}\;\Varid{kernelSleep}\;(\Varid{vT''}\mathbin{-}\Varid{diffT}){}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{setVirtualTime}\;\Varid{vT''}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+
+\begin{align*}
+\etime{P; \sleep{} t} = 
+ \begin{cases}
+   \etime{P} & (\vtime{P} + t) < \etime{P}  \\
+   \etime{P} + (\vtime{P} + t) - \etime{P}  & \textit{otherwise}
+ \end{cases}
+\end{align*}
+
+\begin{align*}
+\etime{P; \sleep{} t} = 
+ \begin{cases}
+   \etime{P} & (\vtime{P} + t) < \etime{P} \\
+   \vtime{P} + t  &  \textit{otherwise}
+ \end{cases}
+\end{align*}
+
+
+\paragraph{Lemma~\ref{lem:sleep-L}}
+ $\etime{\sleep{} t; P} = t + \etime{P}$.
+This lemma holds in the model, where \ensuremath{\Varid{runTime}\;(\mathbf{do}\;\{\mskip1.5mu \Varid{sleep}\;\Varid{t};\Conid{P}\mskip1.5mu\})} desugars and
+simplifies to:
+%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{12}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{17}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{do}\;{}\<[5]%
+\>[5]{}\Varid{startT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[5]{}\Varid{kernelSleep}\;\Varid{t}{}\<[E]%
+\\
+\>[5]{}\mathbf{let}\;(\Conid{T}\;\Varid{p'}){}\<[17]%
+\>[17]{}\mathrel{=}\Varid{p}\;(){}\<[E]%
+\\
+\>[5]{}\Varid{thenT}{}\<[12]%
+\>[12]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
+\\
+\>[5]{}\Varid{p'}\;(\Varid{startT},\Varid{thenT})\;\Varid{t}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+Thus, we see that we \ensuremath{\Varid{kernelSleep}} for $t$, and then continue with $P$ at virtual
+time $t$.
 
 
 \paragraph{Quotienting by non-time dependent functions}
+
+\note{This section is more of a marker for myself (Dom), I need
+to think about this later, but basically it is about showing
+that the monad laws hold for our semantics (but not in general)}
 
 In L, there is no expression which returns the current time; 
  \emph{getTime} belongs only to the model, not to the language.
 That is, for all expressions $e$, then the denotation 
 $\interp{e}$ factors through 
 
+\subsection{Subsets of the semantics}
+
+For the examples of Section~\ref{sec:introduction}, the full structure
+of monad is not needed to give their semantics as there is no using of
+binding between statements (and thus no dataflow). In these case just
+an \emph{applicative functor}~\cite{mcbride2008functional} or even a
+monoid would suffice. These can be derived from the monad structure
+on \emph{Temporal} since all monads are applicative functors and all 
+monads define monoid over $m ()$.
+
+\paragraph{Applicative subset}
+
+Applicative functors are described by the following interface in
+Haskell:
+%%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{10}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{class}\;\Conid{Functor}\;\Varid{f}\Rightarrow \Conid{Applicative}\;\Varid{f}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{pure}{}\<[10]%
+\>[10]{}\mathbin{::}\Varid{a}\to \Varid{f}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}(<\!\!\!*\!\!\!>)\mathbin{::}\Varid{f}\;(\Varid{a}\to \Varid{b})\to \Varid{f}\;\Varid{a}\to \Varid{f}\;\Varid{b}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+The \emph{Applicative} class describes how to compose effectul
+computations encoded as values of type $f\ a$ (the effectful
+computation of a pure value of type $a$). Thus, \emph{pure} constructs
+a trivially effectful computation from a pure value and \ensuremath{<\!\!\!*\!\!\!>} (akin to
+application) takes an effectful computation of a function and an
+effectful computation of an argument and evaluates the two effects.
+
+Our \emph{Temporal} denotations have the applicative functor
+structure with the following derivation in terms of the monad:
+%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{instance}\;\Conid{Functor}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{fmap}\;\Varid{f}\;\Varid{x}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{x'}\leftarrow \Varid{x};\Varid{return}\;(\Varid{f}\;\Varid{x'})\mskip1.5mu\}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{instance}\;\Conid{Applicative}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{pure}\;\Varid{a}{}\<[21]%
+\>[21]{}\mathrel{=}\Varid{return}\;\Varid{a}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{f}<\!\!\!*\!\!\!>\Varid{x}{}\<[21]%
+\>[21]{}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{f'}\leftarrow \Varid{f};\Varid{x'}\leftarrow \Varid{x};\Varid{return}\;(\Varid{f'}\;\Varid{x'})\mskip1.5mu\}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%
+Note that the definition of \ensuremath{<\!\!\!*\!\!\!>} here orders the effects left-to-right.
+
+The interpretation of sequential composition for statements (with no
+dataflow) is then $\interp{P; Q} = (\lambda() \rightarrow
+\interp{P}) <\!\!\!*\!\!\!> \interp{Q}$.
+
+\paragraph{Monoid subset}
+
+Alternatively, the full structure of an applicative functor is
+not even needed in this restricted case. Instead, a monoid
+over \emph{Temporal ()} would suffice:
+%
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{class}\;\Conid{Monoid}\;\Varid{m}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{mempty}\mathbin{::}\Varid{m}{}\<[E]%
+\\
+\>[B]{}\hsindent{4}{}\<[4]%
+\>[4]{}\Varid{mappend}\mathbin{::}\Varid{m}\to \Varid{m}\to \Varid{m}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{instance}\;\Conid{Monoid}\;(\Conid{Temporal}\;())\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{mempty}{}\<[19]%
+\>[19]{}\mathrel{=}\Varid{return}\;(){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{a}\mathbin{`\Varid{mappend}`}\Varid{b}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{a};\Varid{b};\Varid{return}\;()\mskip1.5mu\}{}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
+%% 
+with the interpretation $\interp{P; Q} = \interp{P} \ensuremath{\mathbin{`\Varid{mappend}`}} Q$ and
+where \ensuremath{\Varid{mempty}} provides a \emph{no-op}. 
 
 \subsection{Emitting overrun exceptions}
 
@@ -899,6 +1097,69 @@ completely informal but highly useful way.
 \paragraph{Acknowledgements}
 
 \bibliography{references}
+
+\appendix
+
+\paragraph{Proof} (of Theorem~\ref{theorem:main})
+Since sequential composition is associative, we can reassociate
+$P; Q$ such that $P = P_1; P'$ where $P_1$ is a single statement
+
+\begin{itemize}
+\item $P = \sleep t$
+
+\begin{align*}
+\begin{array}{ll}
+       & \etime{\sleep t; Q} \\[0.5em]
+\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-L}\} \\[0.1em]
+       & s + \etime{Q} \\[0.5em]
+\equiv & \; \{\textit{Definition}~\ref{}\} \\[0.1em]
+       & \etime{\sleep t} + \etime{Q}
+\end{array}
+\end{align*}
+
+\item $Q = \sleep t$ by Lemma~\ref{lem:sleep-R} then 
+there are two cases:
+
+\begin{itemize}
+\item $\etime{P} \leq t$ then:
+
+\begin{align*}
+\begin{array}{ll}
+       & \etime{P; \sleep t} \\[0.5em]
+\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
+       & \vtime{P} + t \\[0.5em]
+\equiv & \; \{\textit{Definition}~\ref{sleep-spec}\} \\[0.1em]
+       & \vtime{P} + \vtime{\sleep t}
+\end{array}
+\end{align*}
+
+\item $\etime{P} > t$ then:
+
+\begin{align*}
+\begin{array}{ll}
+       & \etime{P; \sleep t} \\[0.5em]
+\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
+       & \etime{P} \\[0.5em]
+\leq   & \etime{P} + \etime{\sleep t}
+\end{array}
+\end{align*}
+
+\end{itemize}
+
+\item $P = P';P'', Q = Q';Q''$
+
+Ressociate so that $P'; (P''; (Q'; Q''))$ then
+
+By induction:
+%%
+\begin{align}
+\vtime{P'} + \vtime{P''} \leq \etime{P'; P''} \leq \vtime{P'} + \vtime{P''} \\
+\vtime{Q'} + \vtime{Q''} \leq \etime{Q'; Q''} \leq \vtime{Q'} + \vtime{Q''} \\
+\end{align}
+
+and
+\note{STUCK!}
+\end{itemize}
 
 
 \end{document}

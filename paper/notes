@@ -1,3 +1,56 @@
+Reduction for 3 computations
+
+|runTime $ (T f) >>= (\_ -> (T g) >>= (\_ -> (T h)))|
+
+
+\begin{code}
+runTime $
+  T (\(startT, nowT) -> \vt -> 
+   do  (x, vt')    <- f (startT, nowT) vt
+       let q = \_ -> T (\(startT', nowT') -> \vtP -> 
+                    do  (x', vt'')  <- g (startT', nowT') vtP
+                        thenT'      <- getCurrentTime
+                        ((\_ -> h) x) (startT', thenT') vt'')
+       let (T q')  = q x
+       thenT       <- getCurrentTime
+       q' (startT, thenT) vt')
+\end{code}
+
+\begin{code}
+runTime $
+  T (\(startT, nowT) -> \vt -> 
+   do  (x, vt')    <- f (startT, nowT) vt
+       let q' = (\(startT', nowT') -> \vtP -> 
+                  do  (x', vt'')  <- g (startT', nowT') vtP
+                      thenT'      <- getCurrentTime
+                      ((\_ -> h) x) (startT', thenT') vt'')
+       thenT       <- getCurrentTime
+       q' (startT, thenT) vt')
+\end{code}
+
+\begin{code}
+runTime $
+  T (\(startT, nowT) -> \vt -> 
+   do  (x, vt')    <- f (startT, nowT) vt
+       thenT       <- getCurrentTime
+       (x', vt'')  <- g (startT, thenT) vt'
+       thenT'      <- getCurrentTime
+       h (startT, thenT') vt'')
+\end{code}
+
+\begin{code}
+do  startT    <- getCurrentTime
+    (_, vt')  <- f (startT, startT) 0
+    thenT     <- getCurrentTime
+    (_, vt'')<- g (startT, thenT) vt'
+    thenT'    <- getCurrentTime
+    (y, _)    <- h (startT, thenT') vt'')
+    return y
+
+---------------------
+
+
+
 sleep 1
 sleep 2 
 

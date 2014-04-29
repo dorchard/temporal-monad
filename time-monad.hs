@@ -1,39 +1,32 @@
-{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE NoMonomorphismRestriction, FlexibleInstances #-}
 
 import Data.Time
 import Control.Applicative
 import Control.Concurrent
+import Data.Monoid
 
 import Debug.Trace
 
+-- Some aliases to simplify code
 type Time = UTCTime
 type VTime = NominalDiffTime
 diffTime = diffUTCTime
 
+-- Core data type and monad definition
 data Temporal a = T ((Time, Time) -> (VTime -> IO (a, VTime)))
 
-instance Functor Temporal where
-    fmap f (T x) = T (\(startT, nowT) -> \vT -> do (a, vT') <- x (startT, nowT) vT
-                                                   return (f a, vT'))
-
-instance Applicative Temporal where
-    pure a          = T (\(_, _) -> \vt -> return (a, vt))
-    (T f) <*> (T x) = T (\(startT, nowT) -> \vT -> 
-                             do thenT      <- getCurrentTime
-                                (f', vT')  <- f (startT, thenT) vT
-                                (x', vT'') <- x (startT, nowT) vT'
-                                return (f' x', vT''))
-
 instance Monad Temporal where
-    return a     = T $ \(_, _) -> \vt -> return (a, vt)
-    (T c1) >>= f = T $ \(startT, nowT) -> \vT -> do thenT <- getCurrentTime
-                                                    (x, vT') <- c1 (startT, thenT) vT
-                                                    let (T c2) = f x in c2 (startT, nowT) vT'
-                                           
+    return a     = T (\_ -> \vt -> return (a, vt))
+
+    (T p) >>= q  = T (\(startT, nowT) -> \vt -> 
+                             do (x, vt')    <- p (startT, nowT) vt
+                                let (T q')  = q x
+                                thenT       <- getCurrentTime
+                                q' (startT, thenT) vt')
 
 runTime :: Temporal a -> IO a
-runTime (T c) = do t <- getCurrentTime
-                   (y, _) <- c (t, t) 0
+runTime (T c) = do startT <- getCurrentTime
+                   (y, _) <- c (startT, startT) 0
                    return y
 
 time, start :: Temporal Time
@@ -57,20 +50,55 @@ sleep delayT = do vT     <- getVirtualTime
                   setVirtualTime vT'
 
 kernelSleep :: RealFrac a => a -> Temporal ()
-kernelSleep x = T $ \(_, _) -> \vT -> do { threadDelay (round (x * 1000000)); return ((), vT) } 
+kernelSleep x = T (\(_, _) -> \vT -> do { threadDelay (round (x * 1000000)); return ((), vT) })
 
-{- Testing -}
+duration k = do k
+                startT <- start
+                endT <- time
+                return $ (diffTime endT startT)
 
-timeTaken k = do k
-                 startT <- start
-                 endT <- time
-                 return $ (diffTime endT startT)
+{- Alternate computation structures, derived from the monad -}
 
-fig2a = (sleep 1) *> (sleep 2)
-fig2b = (kernelSleep 1) *> (sleep 1) *> (sleep 2)
-fig2c = (kernelSleep 2) *> (sleep 1) *> (sleep 2)
-fig2d = (kernelSleep 2) *> (sleep 1) *> (kernelSleep 2) *> (sleep 2) 
+instance Functor Temporal where
+    fmap f x = do { x' <- x; return (f x') }
 
+instance Applicative Temporal where
+    pure a          = return a
+    f <*> x         = do { f' <- f; x' <- x; return (f' x') }
+
+instance Monoid (Temporal ()) where
+    mempty        = return ()
+    a `mappend` b = do { a; b; return () }
+
+{- Paper examples -}
+
+fig2a = (sleep 1) <> (sleep 2)
+fig2b = (kernelSleep 1) <> (sleep 1) <> (sleep 2)
+fig2c = (kernelSleep 2) <> (sleep 1) <> (sleep 2)
+fig2d = (kernelSleep 2) <> (sleep 1) <> (kernelSleep 2) <> (sleep 2) 
+
+fig2aA = (sleep 1) *> (sleep 2)
+fig2bA = (kernelSleep 1) *> (sleep 1) *> (sleep 2)
+fig2cA = (kernelSleep 2) *> (sleep 1) *> (sleep 2)
+fig2dA = (kernelSleep 2) *> (sleep 1) *> (kernelSleep 2) *> (sleep 2) 
+
+fig2aM = do sleep 1
+            sleep 2
+
+fig2bM = do kernelSleep 1
+            sleep 1
+            sleep 2
+
+fig2cM = do kernelSleep 2
+            sleep 1
+            sleep 2
+
+fig2dM = do kernelSleep 2
+            sleep 1
+            kernelSleep 2
+            sleep 2
+
+{- Other examples -}
 
 foo = do a <- time
          kernelSleep 2
@@ -87,59 +115,39 @@ foo2 = do a <- time
           b <- time
           sleep 2
           c <- time
-          return $ (diffUTCTime b a, 
-                    diffUTCTime c b,
-                    diffUTCTime c a)
+          return $ (diffUTCTime b a, -- 1
+                    diffUTCTime c b, -- 2
+                    diffUTCTime c a) -- 3
 
-foo3 = do sleep 1
-          sleep 2
-          s <- start
-          e <- time
-          return $ (diffUTCTime e s)
+-- [foo4A]_t = 6
+foo4A = (kernelSleep 2) *> (sleep 1) *> (sleep 2) *> (kernelSleep 3)
 
-
-
-
-foo4app = (kernelSleep 2) *> (sleep 1) *> (sleep 2) *> (kernelSleep 3)
-
-
+-- [foo4]_t = 6
 foo4 = do kernelSleep 2
           sleep 1
-          -- ;
-          foo4A
-          s <- start
-          e <- time
-          return $ (diffUTCTime e s)
+          foo5A
 
+-- [foo4']_t = 7
 foo4' = do kernelSleep 2
            sleep 1
-           -- ;
-           --kernelSleep 5
-           --sleep 2
-           foo4B
-           s <- start
-           e <- time
-           return $ (diffUTCTime e s)
+           foo5B
 
+-- [foo4'']_t = 5
 foo4'' = do kernelSleep 2
             sleep 1
-            -- ;
             kernelSleep 3
             sleep 2
-            s <- start
-            e <- time
-            return $ (diffUTCTime e s)
 
-
-
-foo4A = do sleep 2
+-- [foo5A]_t = 5
+foo5A = do sleep 2
            kernelSleep 3
            s <- start
            e <- time
            r <- getVirtualTime
            return $ (diffUTCTime e s, r)
 
-foo4B = do kernelSleep 5
+-- [foo5B]_t = 5
+foo5B = do kernelSleep 5
            sleep 2
            s <- start
            e <- time
@@ -147,14 +155,7 @@ foo4B = do kernelSleep 5
            return $ (diffUTCTime e s, r)
 
 
-foo5 = do sleep 1
-          sleep 2
-          s <- start
-          e <- time
-          return $ (diffUTCTime e s)
-          
-
-{- Monad laws -}
+{- Monad laws experimentation -}
 
 unitLaw f x = do left  <- runTime $ do { y <- return x; f y }
                  right <- runTime $ do { f x }
@@ -179,5 +180,3 @@ law2Foo = unitLaw2 (T (\(t, t') _ -> return $ (diffUTCTime t' t, 0)))
 law3Foo = assocLaw sleep' sleep2 (T (\(t, t') _ -> return $ (diffUTCTime t' t, 0)))
                 where sleep' x = do { sleep x; return (x * 0.5); }
                       sleep2 x = do { sleep x; sleep x; time }
-
-{- law1Foo2 = unitLaw (\t -> (sleep t) >> (T $ (\_ -> putStrLn "hello"))) 1.0 -}
