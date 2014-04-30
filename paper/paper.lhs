@@ -1,264 +1,12 @@
 \documentclass[preprint]{sigplanconf}
 
-%% ODER: format ==         = "\mathrel{==}"
-%% ODER: format /=         = "\neq "
-%
-%
-\makeatletter
-\@ifundefined{lhs2tex.lhs2tex.sty.read}%
-  {\@namedef{lhs2tex.lhs2tex.sty.read}{}%
-   \newcommand\SkipToFmtEnd{}%
-   \newcommand\EndFmtInput{}%
-   \long\def\SkipToFmtEnd#1\EndFmtInput{}%
-  }\SkipToFmtEnd
+%include lhs2TeX.fmt
+%include lhs2TeX.sty
+%include polycode.fmt
 
-\newcommand\ReadOnlyOnce[1]{\@ifundefined{#1}{\@namedef{#1}{}}\SkipToFmtEnd}
-\usepackage{amstext}
-\usepackage{amssymb}
-\usepackage{stmaryrd}
-\DeclareFontFamily{OT1}{cmtex}{}
-\DeclareFontShape{OT1}{cmtex}{m}{n}
-  {<5><6><7><8>cmtex8
-   <9>cmtex9
-   <10><10.95><12><14.4><17.28><20.74><24.88>cmtex10}{}
-\DeclareFontShape{OT1}{cmtex}{m}{it}
-  {<-> ssub * cmtt/m/it}{}
-\newcommand{\texfamily}{\fontfamily{cmtex}\selectfont}
-\DeclareFontShape{OT1}{cmtt}{bx}{n}
-  {<5><6><7><8>cmtt8
-   <9>cmbtt9
-   <10><10.95><12><14.4><17.28><20.74><24.88>cmbtt10}{}
-\DeclareFontShape{OT1}{cmtex}{bx}{n}
-  {<-> ssub * cmtt/bx/n}{}
-\newcommand{\tex}[1]{\text{\texfamily#1}}	% NEU
-
-\newcommand{\Sp}{\hskip.33334em\relax}
-
-
-\newcommand{\Conid}[1]{\mathit{#1}}
-\newcommand{\Varid}[1]{\mathit{#1}}
-\newcommand{\anonymous}{\kern0.06em \vbox{\hrule\@width.5em}}
-\newcommand{\plus}{\mathbin{+\!\!\!+}}
-\newcommand{\bind}{\mathbin{>\!\!\!>\mkern-6.7mu=}}
-\newcommand{\rbind}{\mathbin{=\mkern-6.7mu<\!\!\!<}}% suggested by Neil Mitchell
-\newcommand{\sequ}{\mathbin{>\!\!\!>}}
-\renewcommand{\leq}{\leqslant}
-\renewcommand{\geq}{\geqslant}
-\usepackage{polytable}
-
-%mathindent has to be defined
-\@ifundefined{mathindent}%
-  {\newdimen\mathindent\mathindent\leftmargini}%
-  {}%
-
-\def\resethooks{%
-  \global\let\SaveRestoreHook\empty
-  \global\let\ColumnHook\empty}
-\newcommand*{\savecolumns}[1][default]%
-  {\g@addto@macro\SaveRestoreHook{\savecolumns[#1]}}
-\newcommand*{\restorecolumns}[1][default]%
-  {\g@addto@macro\SaveRestoreHook{\restorecolumns[#1]}}
-\newcommand*{\aligncolumn}[2]%
-  {\g@addto@macro\ColumnHook{\column{#1}{#2}}}
-
-\resethooks
-
-\newcommand{\onelinecommentchars}{\quad-{}- }
-\newcommand{\commentbeginchars}{\enskip\{-}
-\newcommand{\commentendchars}{-\}\enskip}
-
-\newcommand{\visiblecomments}{%
-  \let\onelinecomment=\onelinecommentchars
-  \let\commentbegin=\commentbeginchars
-  \let\commentend=\commentendchars}
-
-\newcommand{\invisiblecomments}{%
-  \let\onelinecomment=\empty
-  \let\commentbegin=\empty
-  \let\commentend=\empty}
-
-\visiblecomments
-
-\newlength{\blanklineskip}
-\setlength{\blanklineskip}{0.66084ex}
-
-\newcommand{\hsindent}[1]{\quad}% default is fixed indentation
-\let\hspre\empty
-\let\hspost\empty
-\newcommand{\NB}{\textbf{NB}}
-\newcommand{\Todo}[1]{$\langle$\textbf{To do:}~#1$\rangle$}
-
-\EndFmtInput
-\makeatother
-%
-%
-%
-%
-%
-%
-% This package provides two environments suitable to take the place
-% of hscode, called "plainhscode" and "arrayhscode". 
-%
-% The plain environment surrounds each code block by vertical space,
-% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
-% similar to formulas. Note that if these dimensions are changed,
-% the spacing around displayed math formulas changes as well.
-% All code is indented using \leftskip.
-%
-% Changed 19.08.2004 to reflect changes in colorcode. Should work with
-% CodeGroup.sty.
-%
-\ReadOnlyOnce{polycode.fmt}%
-\makeatletter
-
-\newcommand{\hsnewpar}[1]%
-  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
-
-% can be used, for instance, to redefine the code size, by setting the
-% command to \small or something alike
-\newcommand{\hscodestyle}{}
-
-% The command \sethscode can be used to switch the code formatting
-% behaviour by mapping the hscode environment in the subst directive
-% to a new LaTeX environment.
-
-\newcommand{\sethscode}[1]%
-  {\expandafter\let\expandafter\hscode\csname #1\endcsname
-   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
-
-% "compatibility" mode restores the non-polycode.fmt layout.
-
-\newenvironment{compathscode}%
-  {\par\noindent
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\compaths}{\sethscode{compathscode}}
-
-% "plain" mode is the proposed default.
-% It should now work with \centering.
-% This required some changes. The old version
-% is still available for reference as oldplainhscode.
-
-\newenvironment{plainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\hspre\(\let\hspost\)%
-   \pboxed}%
-  {\endpboxed%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newenvironment{oldplainhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-% Here, we make plainhscode the default environment.
-
-\newcommand{\plainhs}{\sethscode{plainhscode}}
-\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
-\plainhs
-
-% The arrayhscode is like plain, but makes use of polytable's
-% parray environment which disallows page breaks in code blocks.
-
-\newenvironment{arrayhscode}%
-  {\hsnewpar\abovedisplayskip
-   \advance\leftskip\mathindent
-   \hscodestyle
-   \let\\=\@normalcr
-   \(\parray}%
-  {\endparray\)%
-   \hsnewpar\belowdisplayskip
-   \ignorespacesafterend}
-
-\newcommand{\arrayhs}{\sethscode{arrayhscode}}
-
-% The mathhscode environment also makes use of polytable's parray 
-% environment. It is supposed to be used only inside math mode 
-% (I used it to typeset the type rules in my thesis).
-
-\newenvironment{mathhscode}%
-  {\parray}{\endparray}
-
-\newcommand{\mathhs}{\sethscode{mathhscode}}
-
-% texths is similar to mathhs, but works in text mode.
-
-\newenvironment{texthscode}%
-  {\(\parray}{\endparray\)}
-
-\newcommand{\texths}{\sethscode{texthscode}}
-
-% The framed environment places code in a framed box.
-
-\def\codeframewidth{\arrayrulewidth}
-\RequirePackage{calc}
-
-\newenvironment{framedhscode}%
-  {\parskip=\abovedisplayskip\par\noindent
-   \hscodestyle
-   \arrayrulewidth=\codeframewidth
-   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
-   \hline\framedhslinecorrect\\{-1.5ex}%
-   \let\endoflinesave=\\
-   \let\\=\@normalcr
-   \(\pboxed}%
-  {\endpboxed\)%
-   \framedhslinecorrect\endoflinesave{.5ex}\hline
-   \endtabular
-   \parskip=\belowdisplayskip\par\noindent
-   \ignorespacesafterend}
-
-\newcommand{\framedhslinecorrect}[2]%
-  {#1[#2]}
-
-\newcommand{\framedhs}{\sethscode{framedhscode}}
-
-% The inlinehscode environment is an experimental environment
-% that can be used to typeset displayed code inline.
-
-\newenvironment{inlinehscode}%
-  {\(\def\column##1##2{}%
-   \let\>\undefined\let\<\undefined\let\\\undefined
-   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
-   \def\fromto##1##2##3{##3}%
-   \def\nextline{}}{\) }%
-
-\newcommand{\inlinehs}{\sethscode{inlinehscode}}
-
-% The joincode environment is a separate environment that
-% can be used to surround and thereby connect multiple code
-% blocks.
-
-\newenvironment{joincode}%
-  {\let\orighscode=\hscode
-   \let\origendhscode=\endhscode
-   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
-   %\let\SaveRestoreHook=\empty
-   %\let\ColumnHook=\empty
-   %\let\resethooks=\empty
-   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
-  {\origendhscode
-   \global\let\hscode=\orighscode
-   \global\let\endhscode=\origendhscode}%
-
-\makeatother
-\EndFmtInput
-%
-
+%format <*> = "<\!\!\!*\!\!\!>"
+%format newline = "\\[-1.5em]"
+%format interpP = "\interp{P}"
 
 \usepackage{enumerate}
 \usepackage{subfigure}
@@ -286,12 +34,12 @@
 \newtheorem{theorem}{Theorem}
 
 \makeatletter
-\newtheorem*{rep@lemma}{\rep@title}
+\newtheorem*{rep@@lemma}{\rep@@title}
 \newcommand{\newreplemma}[2]{%
 \newenvironment{rep#1}[1]{%
- \def\rep@title{#2 \ref{##1} (recap)}%
- \begin{rep@lemma}}%
- {\end{rep@lemma}}}
+ \def\rep@@title{#2 \ref{##1} (recap)}%
+ \begin{rep@@lemma}}%
+ {\end{rep@@lemma}}}
 \makeatother
 
 \newreplemma{lemma}{Lemma}
@@ -650,16 +398,10 @@ monads)\footnote{The source code for the model is avilable at
   \url{https://github.com/dorchard/time-monad}}.
 \lang{} computations are modelled by the \emph{Temporal} data type, defined:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{data}\;\Conid{Temporal}\;\Varid{a}\mathrel{=}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Conid{T}\;((\Conid{Time},\Conid{Time})\to (\Conid{VTime}\to \Conid{IO}\;(\Varid{a},\Conid{VTime}))){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+data Temporal a =
+    T ((Time, Time) -> (VTime -> IO (a, VTime)))
+\end{code}
 %
 Thus, temporal computations map a pair of two times, which will be
 the start time of the computation and current time, to a stateful
@@ -669,123 +411,71 @@ to the actual time from kernel.
 
 The \emph{Monad} instance for \emph{Temporal} is then as follows:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{3}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{25}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{37}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{instance}\;\Conid{Monad}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{3}{}\<[3]%
-\>[3]{}\Varid{return}\;\Varid{a}{}\<[16]%
-\>[16]{}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{a},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\hsindent{3}{}\<[3]%
-\>[3]{}\\[-1.5em]{}\<[E]%
-\\
-\>[B]{}\hsindent{3}{}\<[3]%
-\>[3]{}(\Conid{T}\;\Varid{p})\bind \Varid{q}{}\<[16]%
-\>[16]{}\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\Varid{nowT})\to \lambda \Varid{vT}\to {}\<[E]%
-\\
-\>[16]{}\hsindent{5}{}\<[21]%
-\>[21]{}\mathbf{do}\;{}\<[25]%
-\>[25]{}(\Varid{x},\Varid{vT'}){}\<[37]%
-\>[37]{}\leftarrow \Varid{p}\;(\Varid{startT},\Varid{nowT})\;\Varid{vT}{}\<[E]%
-\\
-\>[25]{}\mathbf{let}\;(\Conid{T}\;\Varid{q'}){}\<[37]%
-\>[37]{}\mathrel{=}\Varid{q}\;\Varid{x}{}\<[E]%
-\\
-\>[25]{}\Varid{thenT}{}\<[37]%
-\>[37]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[25]{}\Varid{q'}\;(\Varid{startT},\Varid{thenT})\;\Varid{vT'}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+instance Monad Temporal where
+  return a     = T ( \_ -> \vT -> return (a, vT))
+
+  newline
+  (T p) >>= q  = T (\(startT, nowT) -> \vT -> 
+                    do  (x, vT')    <- p (startT, nowT) vT
+                        let (T q')  = q x
+                        thenT       <- getCurrentTime
+                        q' (startT, thenT) vT')
+\end{code} 
 %
 To ease understanding, we recall the types of \emph{return}
-and \ensuremath{(\bind )} along with some intuition for their behaviour for
+and |(>>=)| along with some intuition for their behaviour for
 \emph{Temporal}:
 %
 \begin{itemize}
-\item \ensuremath{\Varid{return}\mathbin{::}\Varid{a}\to \Conid{Temporal}\;\Varid{a}} lifts a pure value into a trivially
+\item |return :: a -> Temporal a| lifts a pure value into a trivially
 effectful computation by ignoring the time parameters and 
 providing the usual pure state behaviour: passing the state unchanged.
 
-\item \ensuremath{(\bind )\mathbin{::}\Conid{Temporal}\;\Varid{a}\to (\Varid{a}\to \Conid{Temporal}\;\Varid{b})\to \Conid{Temporal}\;\Varid{b}} 
+\item |(>>=) :: Temporal a -> (a -> Temporal b) -> Temporal b| 
   composes two computations together.  The result of composing two
   temporal computations, with start time \emph{startT}, current time
   \emph{nowT}, and virtual time \emph{vT}, is the result of evaluating
   first the left-hand side at time \emph{nowT} and then 
 
 right hand side, and then the left hand side.  Note that
-  \ensuremath{\Varid{getCurrentTime}\mathbin{::}\Conid{IO}\;\Conid{Time}} retrieves the time from the operation
+  |getCurrentTime :: IO Time| retrieves the time from the operation
   system.
 \end{itemize}
 
-The \ensuremath{\Varid{runTime}} operation executes a temporal computation
+The |runTime| operation executes a temporal computation
 inside of the \emph{IO} monad by providing the start time of the
 computation, and with virtual time 0:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{runTime}\mathbin{::}\Conid{Temporal}\;\Varid{a}\to \Conid{IO}\;\Varid{a}{}\<[E]%
-\\
-\>[B]{}\Varid{runTime}\;(\Conid{T}\;\Varid{c})\mathrel{=}\mathbf{do}\;{}\<[21]%
-\>[21]{}\Varid{startT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[21]{}(\Varid{x},\anonymous )\leftarrow \Varid{c}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
-\\
-\>[21]{}\Varid{return}\;\Varid{x}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+runTime :: Temporal a -> IO a
+runTime (T c) = do  startT <- getCurrentTime
+                    (x, _) <- c (startT, startT) 0
+                    return x
+\end{code}
 %%
 To illustrate the evalution of temporal computation and the
 ordering and interleaving of calls to the operation system for the
 current time, we consider a program:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{runTime}\;(\mathbf{do}\;\{\mskip1.5mu \Varid{f};\Varid{g};\Varid{h};\mskip1.5mu\}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
-(where \ensuremath{\Varid{f}\mathrel{=}\Conid{T}\;\Varid{f'},\Varid{g}\mathrel{=}\Conid{T}\;\Varid{g'},\Varid{h}\mathrel{=}\Conid{T}\;\Varid{h'}}) which 
+\begin{code}
+runTime (do { f; g; h; })
+\end{code}
+(where |f = T f', g = T g', h = T h'|) which 
 desugars to the following \emph{IO} computation, 
 after some simplification: 
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{15}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{do}\;{}\<[5]%
-\>[5]{}\Varid{startT}{}\<[15]%
-\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}(\anonymous ,\Varid{vT'}){}\<[15]%
-\>[15]{}\leftarrow \Varid{f'}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
-\\
-\>[5]{}\Varid{thenT}{}\<[15]%
-\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}(\anonymous ,\Varid{vT''})\leftarrow \Varid{g'}\;(\Varid{startT},\Varid{thenT})\;\Varid{vT'}{}\<[E]%
-\\
-\>[5]{}\Varid{thenT'}{}\<[15]%
-\>[15]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}(\Varid{y},\anonymous ){}\<[15]%
-\>[15]{}\leftarrow \Varid{h'}\;(\Varid{startT},\Varid{thenT'})\;\Varid{vT''})\;{}\<[E]%
-\\
-\>[5]{}\Varid{return}\;\Varid{y}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+do  startT    <- getCurrentTime
+    (_, vT')  <- f' (startT, startT) 0
+    thenT     <- getCurrentTime
+    (_, vT'') <- g' (startT, thenT) vT'
+    thenT'    <- getCurrentTime
+    (y, _)    <- h' (startT, thenT') vT'')
+    return y
+\end{code}
 %
-The above illustrates the repeated calls to \ensuremath{\Varid{getCurrentTime}}, the
+The above illustrates the repeated calls to |getCurrentTime|, the
 constant start time parameter, and the threading of virtual time state
 throughout the computation. 
 
@@ -795,42 +485,28 @@ and set the virtual time, and cause a kernel sleep. These
 are used in the next part of the model. 
 
 \begin{figure}[t]
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{18}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{24}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{28}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{time}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
-\\
-\>[B]{}\Varid{time}{}\<[7]%
-\>[7]{}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\Varid{nowT})\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{nowT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{start}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
-\\
-\>[B]{}\Varid{start}\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\anonymous )\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{startT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{getVirtualTime}\mathbin{::}\Conid{Temporal}\;\Conid{VTime}{}\<[E]%
-\\
-\>[B]{}\Varid{getVirtualTime}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\anonymous )\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{vT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{setVirtualTime}\mathbin{::}\Conid{VTime}\to \Conid{Temporal}\;(){}\<[E]%
-\\
-\>[B]{}\Varid{setVirtualTime}\;\Varid{vT}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \anonymous \to \Varid{return}\;((),\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\Varid{kernelSleep}\mathbin{::}\Conid{RealFrac}\;\Varid{a}\Rightarrow \Varid{a}\to \Conid{Temporal}\;(){}\<[E]%
-\\
-\>[B]{}\Varid{kernelSleep}\;\Varid{t}\mathrel{=}{}\<[18]%
-\>[18]{}\Conid{T}\;(\lambda (\anonymous ,\anonymous )\to \lambda \Varid{vT}\to {}\<[E]%
-\\
-\>[18]{}\hsindent{6}{}\<[24]%
-\>[24]{}\mathbf{do}\;{}\<[28]%
-\>[28]{}\Varid{threadDelay}\;(\Varid{round}\;(\Varid{t}\mathbin{*}\mathrm{1000000})){}\<[E]%
-\\
-\>[28]{}\Varid{return}\;((),\Varid{vT})){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+time :: Temporal Time
+time  = T (\(_, nowT) -> \vT -> return (nowT, vT))
+
+
+start :: Temporal Time
+start = T (\(startT, _) -> \vT -> return (startT, vT))
+
+
+getVirtualTime :: Temporal VTime
+getVirtualTime = T (\(_, _) -> \vT -> return (vT, vT))
+
+
+setVirtualTime :: VTime -> Temporal ()
+setVirtualTime vT = T (\_ -> \_ -> return ((), vT))
+
+
+kernelSleep :: RealFrac a => a -> Temporal ()
+kernelSleep t =  T (\(_, _) -> \vT -> 
+                       do  threadDelay (round (t * 1000000))
+                           return ((), vT))
+\end{code}
 \caption{Simple \emph{Temporal} computations, used  by the model}
 \label{core-functions}
 \end{figure}
@@ -843,8 +519,8 @@ monad:
 %%
 \begin{align*}
 \interp{\emph{statement}} & : \emph{Temporal} \, () \\
-\interp{x = P; Q} & = \interp{P} \ensuremath{\bind (\lambda \Varid{x}\to } \interp{Q}) \\
-\interp{P; Q} & = \interp{P} \ensuremath{\bind (\lambda \anonymous \to } \interp{Q}) \\
+\interp{x = P; Q} & = \interp{P} |>>= (\x ->| \interp{Q}) \\
+\interp{P; Q} & = \interp{P} |>>= (\_ ->| \interp{Q}) \\
 \interp{\sleep e} & = \emph{sleep} \, \interp{e}
 \end{align*}
 %%
@@ -854,37 +530,17 @@ elided here since it does not relate directly to the temporal semantics.
 
 The key primitive \emph{sleep} provides the semantics for \sleepOp{} as:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{20}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{30}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{37}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{sleep}\mathbin{::}\Conid{VTime}\to \Conid{Temporal}\;(){}\<[E]%
-\\
-\>[B]{}\Varid{sleep}\;\Varid{delayT}\mathrel{=}\mathbf{do}\;{}\<[20]%
-\>[20]{}\Varid{nowT}{}\<[30]%
-\>[30]{}\leftarrow \Varid{time}{}\<[E]%
-\\
-\>[20]{}\Varid{vT}{}\<[30]%
-\>[30]{}\leftarrow \Varid{getVirtualTime}{}\<[E]%
-\\
-\>[20]{}\mathbf{let}\;\Varid{vT'}{}\<[30]%
-\>[30]{}\mathrel{=}\Varid{vT}\mathbin{+}\Varid{delayT}{}\<[E]%
-\\
-\>[20]{}\Varid{setVirtualTime}\;\Varid{vT'}{}\<[E]%
-\\
-\>[20]{}\Varid{startT}{}\<[30]%
-\>[30]{}\leftarrow \Varid{start}{}\<[E]%
-\\
-\>[20]{}\mathbf{let}\;\Varid{diffT}\mathrel{=}\Varid{diffTime}\;\Varid{nowT}\;\Varid{startT}{}\<[E]%
-\\
-\>[20]{}\mathbf{if}\;(\Varid{vT'}\mathbin{<}\Varid{diffT})\;\mathbf{then}\;\Varid{return}\;(){}\<[E]%
-\\
-\>[20]{}\hsindent{17}{}\<[37]%
-\>[37]{}\mathbf{else}\;\Varid{kernelSleep}\;(\Varid{vT'}\mathbin{-}\Varid{diffT}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+sleep :: VTime -> Temporal ()
+sleep delayT = do  nowT      <- time
+                   vT        <- getVirtualTime
+                   let vT'   = vT + delayT
+                   setVirtualTime vT'
+                   startT    <- start
+                   let diffT = diffTime nowT startT
+                   if (vT' < diffT) then return () 
+                                    else kernelSleep (vT' - diffT)
+\end{code}
 %
 Thus, \emph{sleep} proceeds by getting the current time, calculating
 the new virtual time \emph{vT'} and updating the virtual time
@@ -930,50 +586,26 @@ For some program $P$ and time $t$:
 \begin{proof}
 Our model interprets $(P; \sleep t)$ as:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{runTime}\;(\mathbf{do}\;\{\mskip1.5mu \interp{P};\Varid{sleep}\;\Varid{t}\mskip1.5mu\}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+runTime (do {interpP; sleep t})
+\end{code}
 %%
 which desugars and simplifies to the following \emph{IO} computation:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{do}\;{}\<[5]%
-\>[5]{}\Varid{startT}{}\<[16]%
-\>[16]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}(\Varid{x},\Varid{vT'}){}\<[16]%
-\>[16]{}\leftarrow \interp{P}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
-\\
-\>[5]{}\Varid{nowT}{}\<[16]%
-\>[16]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}\mathbf{let}\;\Varid{vT''}{}\<[16]%
-\>[16]{}\mathrel{=}\Varid{vT'}\mathbin{+}\Varid{t}{}\<[E]%
-\\
-\>[5]{}\Varid{setVirtualTime}\;\Varid{vT''}{}\<[E]%
-\\
-\>[5]{}\mathbf{let}\;\Varid{diffT}{}\<[16]%
-\>[16]{}\mathrel{=}\Varid{diffTime}\;\Varid{nowT}\;\Varid{startT}{}\<[E]%
-\\
-\>[5]{}\mathbf{if}\;(\Varid{vT''}\mathbin{<}\Varid{diffT}){}\<[E]%
-\\
-\>[5]{}\hsindent{2}{}\<[7]%
-\>[7]{}\mathbf{then}\;\Varid{return}\;(){}\<[E]%
-\\
-\>[5]{}\hsindent{2}{}\<[7]%
-\>[7]{}\mathbf{else}\;\Varid{kernelSleep'}\;(\Varid{vT''}\mathbin{-}\Varid{diffT}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+do  startT     <- getCurrentTime
+    (x, vT')   <- interpP (startT, startT) 0
+    nowT       <- getCurrentTime
+    let vT''   = vT' + t
+    setVirtualTime vT''
+    let diffT  = diffTime nowT startT
+    if (vT'' < diffT)
+      then return ()
+      else kernelSleep' (vT'' - diffT)
+
+\end{code}
 %%
-where \ensuremath{\Varid{kernelSleep'}\;\Varid{x}\mathrel{=}\Varid{threadDelay}\;(\Varid{round}\;(\Varid{x}\mathbin{*}\mathrm{1000000}))} is used
+where |kernelSleep' x = threadDelay (round (x * 1000000))| is used
 as an alias here (as per the definition of \emph{kernelSleep} in
 Figure~\ref{core-functions}.
 
@@ -1014,12 +646,9 @@ For some program $P$ and time $t$:
 \begin{proof}
 Our models interprets $(\sleep t; P)$ as:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{runTime}\;(\mathbf{do}\;\{\mskip1.5mu \Varid{sleep}\;\Varid{t};\interp{P}\mskip1.5mu\}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+runTime (do { sleep t; interpP })
+\end{code}
 %
 which desugars and simplifies to the following \emph{IO} computation:
 %
@@ -1028,24 +657,15 @@ which desugars and simplifies to the following \emph{IO} computation:
 %    kernelSleep delayT 
 %    interpP
 %\end{code}
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{do}\;{}\<[5]%
-\>[5]{}\Varid{startT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}\Varid{kernelSleep}\;\Varid{delayT}{}\<[E]%
-\\
-\>[5]{}\mathbf{let}\;(\Conid{T}\;\Varid{p})\mathrel{=}\interp{P}\;(){}\<[E]%
-\\
-\>[5]{}\Varid{thenT}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}\Varid{p}\;(\Varid{startT},\Varid{thenT})\;\Varid{delayT}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+do  startT <- getCurrentTime
+    kernelSleep delayT 
+    let (T p) = interpP ()
+    thenT <- getCurrentTime 
+    p (startT, thenT) delayT
+\end{code}
 %
-The code does a \ensuremath{\Varid{kernelSleep}} for $t$ and then continues with $P$ at
+The code does a |kernelSleep| for $t$ and then continues with $P$ at
 virtual time $t$, \ie{}, the time taken is $t + \interp{P}_t$.  In
 desugaring and simplifying we have certainly elided some intermediate
 steps in the computation (such as the guard test in sleep), which we
@@ -1060,7 +680,7 @@ For all programs $P$ then $\etime{P} \geq \vtime{P}$.
 By induction % possibly by strong induction?
 
 $\interp{sleep t} = $
-\ensuremath{\Varid{runTime}\;(\Varid{sleep}\;\Varid{t})} $\leadsto$ \ensuremath{\Varid{kernelSleep'}\;\Varid{delayT}}
+|runTime (sleep t)| $\leadsto$ |kernelSleep' delayT|
 
 $\etime{P;Q} = $
 Inductive hypothesis: $\etime{P} \geq \vtime{P}$
@@ -1132,55 +752,32 @@ monads define monoid over $m ()$.
 Applicative functors are described by the following interface in
 Haskell:
 %%
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{10}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{class}\;\Conid{Functor}\;\Varid{f}\Rightarrow \Conid{Applicative}\;\Varid{f}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}\Varid{pure}{}\<[10]%
-\>[10]{}\mathbin{::}\Varid{a}\to \Varid{f}\;\Varid{a}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}(<\!\!\!*\!\!\!>)\mathbin{::}\Varid{f}\;(\Varid{a}\to \Varid{b})\to \Varid{f}\;\Varid{a}\to \Varid{f}\;\Varid{b}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+class Functor f => Applicative f where
+   pure  :: a -> f a
+   (<*>) :: f (a -> b) -> f a -> f b
+\end{code}
 %
 The \emph{Applicative} class describes how to compose effectul
 computations encoded as values of type $f\ a$ (the effectful
 computation of a pure value of type $a$). Thus, \emph{pure} constructs
-a trivially effectful computation from a pure value and \ensuremath{<\!\!\!*\!\!\!>} (akin to
+a trivially effectful computation from a pure value and |<*>| (akin to
 application) takes an effectful computation of a function and an
 effectful computation of an argument and evaluates the two effects.
 
 Our \emph{Temporal} denotations have the applicative functor
 structure with the following derivation in terms of the monad:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{instance}\;\Conid{Functor}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{fmap}\;\Varid{f}\;\Varid{x}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{x'}\leftarrow \Varid{x};\Varid{return}\;(\Varid{f}\;\Varid{x'})\mskip1.5mu\}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\mathbf{instance}\;\Conid{Applicative}\;\Conid{Temporal}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{pure}\;\Varid{a}{}\<[21]%
-\>[21]{}\mathrel{=}\Varid{return}\;\Varid{a}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{f}<\!\!\!*\!\!\!>\Varid{x}{}\<[21]%
-\>[21]{}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{f'}\leftarrow \Varid{f};\Varid{x'}\leftarrow \Varid{x};\Varid{return}\;(\Varid{f'}\;\Varid{x'})\mskip1.5mu\}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+instance Functor Temporal where
+    fmap f x = do { x' <- x; return (f x') }
+
+instance Applicative Temporal where
+    pure a          = return a
+    f <*> x         = do { f' <- f; x' <- x; return (f' x') }
+\end{code}
 %
-Note that the definition of \ensuremath{<\!\!\!*\!\!\!>} here orders the effects left-to-right.
+Note that the definition of |<*>| here orders the effects left-to-right.
 
 The interpretation of sequential composition for statements (with no
 dataflow) is then $\interp{P; Q} = (\lambda() \rightarrow
@@ -1192,70 +789,33 @@ Alternatively, the full structure of an applicative functor is
 not even needed in this restricted case. Instead, a monoid
 over \emph{Temporal ()} would suffice:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{4}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{19}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{class}\;\Conid{Monoid}\;\Varid{m}\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}\Varid{mempty}\mathbin{::}\Varid{m}{}\<[E]%
-\\
-\>[B]{}\hsindent{4}{}\<[4]%
-\>[4]{}\Varid{mappend}\mathbin{::}\Varid{m}\to \Varid{m}\to \Varid{m}{}\<[E]%
-\\[\blanklineskip]%
-\>[B]{}\mathbf{instance}\;\Conid{Monoid}\;(\Conid{Temporal}\;())\;\mathbf{where}{}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{mempty}{}\<[19]%
-\>[19]{}\mathrel{=}\Varid{return}\;(){}\<[E]%
-\\
-\>[B]{}\hsindent{5}{}\<[5]%
-\>[5]{}\Varid{a}\mathbin{`\Varid{mappend}`}\Varid{b}\mathrel{=}\mathbf{do}\;\{\mskip1.5mu \Varid{a};\Varid{b};\Varid{return}\;()\mskip1.5mu\}{}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+class Monoid m where
+   mempty :: m
+   mappend :: m -> m -> m
+
+instance Monoid (Temporal ()) where
+    mempty        = return ()
+    a `mappend` b = do { a; b; return () }
+\end{code}
 %% 
-with the interpretation $\interp{P; Q} = \interp{P} \ensuremath{\mathbin{`\Varid{mappend}`}} Q$ and
-where \ensuremath{\Varid{mempty}} provides a \emph{no-op}. 
+with the interpretation $\interp{P; Q} = \interp{P} |`mappend`| Q$ and
+where |mempty| provides a \emph{no-op}. 
 
 \subsection{Alternate definition of \emph{sleep}}
 
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{21}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{25}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{31}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\Varid{sleep'}\mathbin{::}\Conid{VTime}\to \Conid{Temporal}\;(){}\<[E]%
-\\
-\>[B]{}\Varid{sleep'}\;\Varid{delayT}\mathrel{=}\mathbf{do}\;{}\<[21]%
-\>[21]{}\Varid{vT}{}\<[31]%
-\>[31]{}\leftarrow \Varid{getVirtualTime}{}\<[E]%
-\\
-\>[21]{}\mathbf{let}\;\Varid{vT'}{}\<[31]%
-\>[31]{}\mathrel{=}\Varid{vT}\mathbin{+}\Varid{delayT}{}\<[E]%
-\\
-\>[21]{}\Varid{setVirtualTime}\;\Varid{vT'}{}\<[E]%
-\\
-\>[21]{}\Varid{startT}{}\<[31]%
-\>[31]{}\leftarrow \Varid{start}{}\<[E]%
-\\
-\>[21]{}\Varid{nowT}{}\<[31]%
-\>[31]{}\leftarrow \Varid{time}{}\<[E]%
-\\
-\>[21]{}\mathbf{let}\;\Varid{diffT}\mathrel{=}\Varid{diffTime}\;\Varid{nowT}\;\Varid{startT}{}\<[E]%
-\\
-\>[21]{}\mathbf{if}\;(\Varid{vT'}\mathbin{<}\Varid{diffT}){}\<[E]%
-\\
-\>[21]{}\hsindent{4}{}\<[25]%
-\>[25]{}\mathbf{then}\;\Varid{return}\;(){}\<[E]%
-\\
-\>[21]{}\hsindent{4}{}\<[25]%
-\>[25]{}\mathbf{else}\;\Varid{kernelSleep}\;(\Varid{vT'}\mathbin{-}\Varid{diffT}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+sleep' :: VTime -> Temporal ()
+sleep' delayT = do  vT        <- getVirtualTime
+                    let vT'   = vT + delayT
+                    setVirtualTime vT'
+                    startT    <- start
+                    nowT      <- time
+                    let diffT = diffTime nowT startT
+                    if (vT' < diffT) 
+                        then return () 
+                        else kernelSleep (vT' - diffT)
+\end{code}
 %
 This alternate definition should reduce any oversleeping by minimising 
 noise in the timing. For example, the virtual time is calculated 
@@ -1282,39 +842,17 @@ If the above alternate definition \emph{sleep'} is used, then
 the interpreation of $(P; \sleep t)$  
 desugars and simplifies to the following:
 %
-\begin{hscode}\SaveRestoreHook
-\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{7}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{16}{@{}>{\hspre}l<{\hspost}@{}}%
-\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{do}\;{}\<[5]%
-\>[5]{}\Varid{startT}{}\<[16]%
-\>[16]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}(\Varid{x},\Varid{vT'}){}\<[16]%
-\>[16]{}\leftarrow \interp{P}\;(\Varid{startT},\Varid{startT})\;\mathrm{0}{}\<[E]%
-\\
-\>[5]{}\mathbf{let}\;\Varid{vT''}{}\<[16]%
-\>[16]{}\mathrel{=}\Varid{vT'}\mathbin{+}\Varid{t}{}\<[E]%
-\\
-\>[5]{}\Varid{setVirtualTime}\;\Varid{vT''}{}\<[E]%
-\\
-\>[5]{}\Varid{nowT}{}\<[16]%
-\>[16]{}\leftarrow \Varid{getCurrentTime}{}\<[E]%
-\\
-\>[5]{}\mathbf{let}\;\Varid{diffT}{}\<[16]%
-\>[16]{}\mathrel{=}\Varid{diffTime}\;\Varid{nowT}\;\Varid{startT}{}\<[E]%
-\\
-\>[5]{}\mathbf{if}\;(\Varid{vT''}\mathbin{<}\Varid{diffT}){}\<[E]%
-\\
-\>[5]{}\hsindent{2}{}\<[7]%
-\>[7]{}\mathbf{then}\;\Varid{return}\;(){}\<[E]%
-\\
-\>[5]{}\hsindent{2}{}\<[7]%
-\>[7]{}\mathbf{else}\;\Varid{kernelSleep}\;(\Varid{vT''}\mathbin{-}\Varid{diffT}){}\<[E]%
-\ColumnHook
-\end{hscode}\resethooks
+\begin{code}
+do  startT     <- getCurrentTime
+    (x, vT')   <- interpP (startT, startT) 0
+    let vT''   = vT' + t
+    setVirtualTime vT''
+    nowT       <- getCurrentTime
+    let diffT  = diffTime nowT startT
+    if (vT'' < diffT)
+      then return ()
+      else kernelSleep (vT'' - diffT)
+\end{code}
 %%
 which exhibits the temporal behaviour:
 %% 
