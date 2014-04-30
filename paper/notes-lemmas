@@ -31,20 +31,42 @@ Lemma - Sleep - L
 ******************************
 
 runTime $
-let p = do  vT      <- getVirtualTime
-       	    startT  <- start
-            nowT    <- time
-            let vT'   = vT + t
-            let diffT = diffTime nowT startT
-            if (vT' < diffT)
-                  then return () 
-                  else kernelSleep (vT' - diffT)
+let p = do  nowT      <- time
+	    vT        <- getVirtualTime
+            let vT'   = vT + delayT
             setVirtualTime vT'
-in (T p) >>= q  = T (\(startT, nowT) -> \vT -> 
-                     do  (x, vt')    <- p (startT, nowT) vt
-                         let (T q')  = q x
-                         thenT       <- getCurrentTime
-                         q' (startT, thenT) vt')
+            startT    <- start
+            let diffT = diffTime nowT startT
+            if (vT' < diffT) then return () 
+                             else kernelSleep (vT' - diffT) 
+            p
+-------
+
+do startT <- getCurrentTime
+   vT     <- getVirtualTime
+   let vT'   = vT + delayT
+   setVirtualTime vT'
+   startT    <- start
+   let diffT = diffTime startT startT
+   if (vT' < diffT) then return () 
+                    else kernelSleep (vT' - diffT) 
+   p
+
+--------
+
+-------
+
+do startT <- getCurrentTime
+   setVirtualTime delayT
+   startT    <- start
+   let diffT = diffTime startT startT
+   if (delayT < diffT) then return () 
+                       else kernelSleep (delayT - diffT) 
+   p
+
+--------
+
+
 --------
 
 runTime $
