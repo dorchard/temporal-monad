@@ -85,14 +85,19 @@ The underlying programming model of SonicPi provides a way to separate
 the ordering of effects from the timing of
 effects. Figure~\ref{three-chord-example} shows an example program
 where three chords are played in sequence, combining simple notions of 
-parallel, timed, and ordered effects. The first three statements play
-the notes of a C major chord in parallel. A \sleepOp{} statement then 
-provides a \emph{barrier}
+parallel, timed, and ordered effects.
 
+The first three statements play the notes of a C major chord in
+parallel.  A \sleepOp{} statement then provides a ``temporal barrier''
+which blocks the computation from continuing until 1 second has
+elapsed since the \emph{start} of the program (not since the end of
+playing the notes). Once one second has elapsed, the next three
+statements are executed which plays an F major chord. The next
+\sleepOp{} means that the final chord is not played until 1.5 seconds
+has elapsed since the start of the
+program. Figure~\ref{three-chord-timing} illustrates the timing.
 
-
-
-Thus ``$\sleep{} t$'' communicates that, after it has been evaluated, at least 
+Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated, at least 
 $t$ seconds has elapsed since the last \sleepOp{}. This provides a minimum
 time. In between calls to \sleepOp{}, any other statements can (with some limits)
 be considered task parallel. 
@@ -103,18 +108,20 @@ programming model is not suitable for realtime systems requiring hard
 deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
 the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
 
+\note{Contributions}
 
 \begin{itemize}
-\item A computational model of virtual and real time 
-      structured by an \emph{applicative functor} abstraction.
+\item Explain the core principles of the language related to timing
+(Section~\ref{}) and provide a monadic model this programming approach
+(Section~\ref{}) (embedded in Haskell).
 
-\item We show that the applicative approach extends
-      to a monadic approach, which can be composed with additional
-      monads to capture other useful notions of effect in \lang{} programs,
-      such as random numbers (Section~\ref{}).
+\item We show that the monadic approach can be composed with
+  additional monads to capture other useful notions of effect in
+  \lang{} programs, such as random numbers (Section~\ref{}).
 \end{itemize}
 
-Previously reported on the language~\cite{aaron2013sonic}
+%
+The \lang{} was previously discussed in~\cite{aaron2013sonic}
 
 \begin{figure}[t]
 \subfigure[Three chord program in \lang{}]{
@@ -157,18 +164,18 @@ closer together by $0.5s$.}
 demonstrate the programming model.}
 
 Figure~\ref{sleep-examples} shows four similar programs which each
-have different internal behaviours for \sleepOp, illustrating the
-semantics of \sleepOp{}. The first three take 3s to execute and the
+have different internal behaviours for \sleepOp, illustrating its semantics. 
+The first three take 3s to execute and the
 last takes 4s to execute, with the behaviours:
 %
 \begin{enumerate}[(a)]
 \item{3s -- sleeps for 1s then sleeps for 2s (two sleeps performed);}
 \item{3s -- performs a computation lasting 1s, ignores
-the first \sleepOp{} since its minimum deadline has been reached, 
+the first \sleepOp{} since its minimum duration has been reached, 
 and then sleeps for 2s (one sleep performed);}
 \item{3s -- performs a computation lasting 2s, which means that
 the first \sleepOp{} is ignored, and the second \sleepOp{} waits
-for only 1s to reach its minimum deadline (half a sleep performed);}
+for only 1s to reach its minimum duration (half a sleep performed);}
 \item{4s -- performs a computation lasting 2s, thus 
 the first \sleepOp{} is ignored, then performs a computation lasting
 2s, thus the second \sleepOp{} is ignored (no sleeps performed).}
@@ -260,8 +267,9 @@ The programming model of \lang{} distinguishes between the
 write as $\etime{P}$ and the \emph{virtual time} which is advanced by
 \sleepOp{} statements which we write as $\vtime{P}$.
 
-Since \sleepOp{} is the only operation that changes the virtual
-time, we can easily specify the definition of $\vtime{-}$ over all programs:
+The \sleepOp{} operation is the way to change the virtual
+time. Therefore, the definition of $\vtime{-}$ can be easily defined
+over all programs:
 %
 \begin{definition}
 Virtual time is specified for statements of \lang{} programs 
@@ -277,19 +285,26 @@ by the following (ordered) cases:
 for any statment other than \sleepOp{} or sequential composition.
 \label{sleep-spec}
 \end{definition}
+\note{I haven't included here expressions, for example, if a call
+to a function that did some sleeping happened, then this is not accounted
+for here. I could be easily incldued though.}
 
-Providing exact deadlines in real-time system is difficult due 
-to noise and overhead caused by execution. We do not wish to sweep
-this under the carpet in \lang{} or in our models. We therefore define
-a relation $\approx$ on actual time (non virtual times), where:
+\paragraph{Equality on time}
+
+Providing exact deadlines in real-time systems is difficult due 
+to noise and overhead caused by execution. We do not ignore
+this problem in the programming model of \lang{} and the discussion here. 
+We define the relation $\approx$ on actual time (non virtual times), where:
 %%
 \begin{equation}
 s \approx t
+\;
 \equiv
-t - \varepsilon \leq s \leq t + \varepsilon 
+\;
+(t - \epsilon) \leq s \leq (t + \epsilon)
 \end{equation}
 %
-for some value of $\varepsilon$ which is the maximum negligible 
+for some value of $\epsilon$ which is the maximum negligible 
 time value with respect to the application at hand. In the case of
 \lang{}, this is equal to the scheduling delay for the SuperCollider
 engine (and is machine dependent), which is roughly \note{X}.
@@ -298,16 +313,23 @@ engine (and is machine dependent), which is roughly \note{X}.
   able to say later that in some cases $\epsilon$ is the scheduling
   time for play statments?} 
 
-The virtual time and actual time of a single sleep statement (in
-isolation) are roughly the same, \ie{}, $\vtime{\sleep t} \approx
+
+The virtual time and actual time of a single sleep statement 
+ are roughly the same, \ie{}, $\vtime{\sleep t} \approx
 \etime{\sleep t}$ and thus $\etime{\sleep t} \approx t$ (by the
-specification in Definition~\ref{sleep-spec}). Note that this holds
+specification in Definition~\ref{sleep-spec}). This holds
 only when \sleepOp{} is used in isolation, that is, when it is the
 only statement in a program. As shown by the examples of
 Section~\ref{sec:examples}, the use of $\sleep t$ in a program does
 not mean that a program necessarily waits for $t$ seconds-- depending
 on the context, it may wait for anywhere between $0$ and $t$ seconds.
  
+\paragraph{Temporal properties of programs}
+
+We outline here some important temporal properties of our \lang{} programs
+that relates the virtual time and actual times. In Section~\ref{}, we
+replay these lemmas and prove the soundness: that these lemmas hold of our model.
+
 %For convenience, and to contrast with \sleepOp{}, we'll use an additional
 %statement \ksleepOp{} here (which is not available in the actual language)
 % which always sleeps for the number of seconds specified by its parameter.
@@ -341,25 +363,30 @@ For some program $P$ and time $t$:
 \label{lem:sleep-L}
 \end{lemma}
 
+\noindent
+These two lemmas illuminate something of the semantics of sleep,
+and its interaction with other statements in the language.
+
 \begin{lemma}
 For all programs $P$ then $\etime{P} \geq \vtime{P}$. 
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 
-\begin{theorem}
+\begin{lemma}
 For all programs $P$ and $Q$ then:
 %%
 \begin{equation}
 \vtime{P} + \vtime{Q} \leq \etime{P; Q} \lesssim \etime{P} + \etime{Q}
 \end{equation}
 \label{theorem:main}
-\end{theorem}
+\end{lemma}
 
+\note{It's possible that these lemmas should be in a different order--
+ we may need \ref{theorem:main} to prove \ref{lemma-rel-etime-vtime+}.}
 
-From these lemmas we can reason about the evaluation time of programs.
-For example, consider subprograms $A$, $B$, $C$ where 
-$\etime{A} = t_1$, $\etime{B} = t_2$, $\etime{C} = t_3$ and
-$\vtime{A} = \vtime{B} \vtime{C} = 0$, interposed with two
+From these lemmas we can reason about the evaluation time of 
+programs. For example, consider subprograms $A$, $B$, $C$ where 
+$\vtime{A} = \vtime{B} = \vtime{C} = 0$ interposed with two
 sleep statements of duration $s_1$ and $s_2$:
 %
 \begin{equation}
@@ -373,8 +400,9 @@ C
 \label{example:time1}
 \end{equation}
 %%
-Then by the above lemmas, we see that $\etime{eq. \eqref{example:time1}} = 
-s_1 + s_2 + t_3$, iff $t_1 \leq 1$ and $t_2 \leq 2$.
+Then by the above lemmas, we see that if $\etime{A} \leq s_1$ and
+$\etime{B} \leq s_2$ then $\etime{eq. \eqref{example:time1}} = 
+s_1 + s_2 + \etime{C}$.
 
 %\begin{equation*}
 %\begin{array}{lllll}
@@ -430,22 +458,23 @@ and |(>>=)| along with some intuition for their behaviour for
 \begin{itemize}
 \item |return :: a -> Temporal a| lifts a pure value into a trivially
 effectful computation by ignoring the time parameters and 
-providing the usual pure state behaviour: passing the state unchanged.
+providing the usual pure state behaviour of returning the parameter state unchanged
+(named \emph{vT} in this case). 
 
 \item |(>>=) :: Temporal a -> (a -> Temporal b) -> Temporal b| 
   composes two computations together.  The result of composing two
   temporal computations, with start time \emph{startT}, current time
   \emph{nowT}, and virtual time \emph{vT}, is the result of evaluating
-  first the left-hand side at time \emph{nowT} and then 
+  first the left-hand side at time \emph{nowT} and then right-hand side 
+  at the new current time \emph{thenT}. 
 
-right hand side, and then the left hand side.  Note that
-  |getCurrentTime :: IO Time| retrieves the time from the operation
-  system.
+  The expression |getCurrentTime :: IO Time| retrieves the time from
+  the operation system.
 \end{itemize}
 
-The |runTime| operation executes a temporal computation
-inside of the \emph{IO} monad by providing the start time of the
-computation, and with virtual time 0:
+To model the evaluation of a program, the |runTime| operation executes
+a temporal computation inside of the \emph{IO} monad by providing the
+start time of the computation and virtual time 0:
 %%
 \begin{code}
 runTime :: Temporal a -> IO a
@@ -456,12 +485,12 @@ runTime (T c) = do  startT <- getCurrentTime
 %%
 To illustrate the evalution of temporal computation and the
 ordering and interleaving of calls to the operation system for the
-current time, we consider a program:
+current time, consider the program:
 %%
 \begin{code}
 runTime (do { f; g; h; })
 \end{code}
-(where |f = T f', g = T g', h = T h'|) which 
+(where |f = (T f'), g = (T g'), h = (T h')|) which 
 desugars to the following \emph{IO} computation, 
 after some simplification: 
 %%
@@ -475,41 +504,14 @@ do  startT    <- getCurrentTime
     return y
 \end{code}
 %
-The above illustrates the repeated calls to |getCurrentTime|, the
+This illustrates the repeated calls to |getCurrentTime|, the
 constant start time parameter, and the threading of virtual time state
 throughout the computation. 
 
-Figure~\ref{core-functions} provides a number of effectul operations
-for \emph{Temporal} that access the current time, the start time, get
+Figure~\ref{core-functions} shows a number of effectul operations of 
+ the \emph{Temporal} monad that access the current time, the start time, get
 and set the virtual time, and cause a kernel sleep. These
 are used in the next part of the model. 
-
-\begin{figure}[t]
-\begin{code}
-time :: Temporal Time
-time  = T (\(_, nowT) -> \vT -> return (nowT, vT))
-
-
-start :: Temporal Time
-start = T (\(startT, _) -> \vT -> return (startT, vT))
-
-
-getVirtualTime :: Temporal VTime
-getVirtualTime = T (\(_, _) -> \vT -> return (vT, vT))
-
-
-setVirtualTime :: VTime -> Temporal ()
-setVirtualTime vT = T (\_ -> \_ -> return ((), vT))
-
-
-kernelSleep :: RealFrac a => a -> Temporal ()
-kernelSleep t =  T (\(_, _) -> \vT -> 
-                       do  threadDelay (round (t * 1000000))
-                           return ((), vT))
-\end{code}
-\caption{Simple \emph{Temporal} computations, used  by the model}
-\label{core-functions}
-\end{figure}
 
 \paragraph{Interpreting \lang{} statements}
 
@@ -538,16 +540,47 @@ sleep delayT = do  nowT      <- time
                    setVirtualTime vT'
                    startT    <- start
                    let diffT = diffTime nowT startT
-                   if (vT' < diffT) then return () 
-                                    else kernelSleep (vT' - diffT)
+                   if (vT' < diffT)  
+                     then return () 
+                     else kernelSleep (vT' - diffT)
 \end{code}
 %
-Thus, \emph{sleep} proceeds by getting the current time, calculating
-the new virtual time \emph{vT'} and updating the virtual time
-state. If the new virtual time is less than the elapsed time
-\emph{diffT} then no actual (kernel) sleeping happens. However, if the
-new virtual time is ahead of the elapsed time, then the process sleeps
-for the difference.
+where \emph{sleep} proceeds first by getting the current time
+\emph{nowT}, calculating the new virtual time \emph{vT'} and updating
+the virtual time state. If the new virtual time is less than the
+elapsed time \emph{diffT} since the start then no actual (kernel)
+sleeping happens. However, if the new virtual time is ahead of the
+elapsed time, then the process waits for the difference such that the
+elapsed time equals the virtual time.
+
+
+\begin{figure}[t]
+\begin{code}
+time :: Temporal Time
+time  = T (\(_, nowT) -> \vT -> return (nowT, vT))
+
+
+start :: Temporal Time
+start = T (\(startT, _) -> \vT -> return (startT, vT))
+
+
+getVirtualTime :: Temporal VTime
+getVirtualTime = T (\(_, _) -> \vT -> return (vT, vT))
+
+
+setVirtualTime :: VTime -> Temporal ()
+setVirtualTime vT = T (\_ -> \_ -> return ((), vT))
+
+
+kernelSleep :: RealFrac a => a -> Temporal ()
+kernelSleep t =  T (\(_, _) -> \vT -> 
+                       do  threadDelay (round (t * 1000000))
+                           return ((), vT))
+\end{code}
+\caption{Simple \emph{Temporal} computations, used  by the model}
+\label{core-functions}
+\end{figure}
+
 
 \subsection{Soundness}
 
@@ -599,19 +632,18 @@ do  startT     <- getCurrentTime
     let vT''   = vT' + t
     setVirtualTime vT''
     let diffT  = diffTime nowT startT
-    if (vT'' < diffT)
-      then return ()
-      else kernelSleep' (vT'' - diffT)
+    if (vT'' < diffT)  then return ()
+                       else kernelSleep' (vT'' - diffT)
 
 \end{code}
 %%
 where |kernelSleep' x = threadDelay (round (x * 1000000))| is used
-as an alias here (as per the definition of \emph{kernelSleep} in
-Figure~\ref{core-functions}.
+to simplify the code here (as per the definition of \emph{kernelSleep} in
+Figure~\ref{core-functions}).
 
 From this we see that $\emph{diffT} = \etime{P}$ and $\emph{vT'} = \vtime{P}$ and 
  $\emph{vT''} = \vtime{P} + t$. Therefore, the guard of the 
-\emph{if} expression is $(\vtime{P} + t) < \etime{P}$.
+|if| expression is $(\vtime{P} + t) < \etime{P}$.
 If the updating of the virtual time state and the computing of 
 the guard takes $e$ then the overall time taken is:
 %%
@@ -634,6 +666,12 @@ takes less than $\epsilon$:
  \end{cases}
 \end{align*}
 \end{proof}
+
+\note{I suppose this is ok- I'm a bit wary about saying the simplification
+takes less than $\epsilon$. It surely does, but I am only hand waving. 
+We could time $e$ though in the model and show it is less than the schedule
+time. We could go further and time the analogous parts of the SonicPi implementation
+to check that the real $e$ is less than $\epsilon$. This would be good.}
 
 \begin{replemma}{lem:sleep-L}
 For some program $P$ and time $t$:
@@ -676,6 +714,7 @@ account for as part of the error $\epsilon$.
 For all programs $P$ then $\etime{P} \geq \vtime{P}$. 
 \end{replemma}
 
+\note{Rough notes for the proof}
 \begin{proof}
 By induction % possibly by strong induction?
 
@@ -713,6 +752,10 @@ then $\etime{P; sleep t} \geq \vtime{P; sleep t}$
 since $\etime{P; sleep t} = \vtime{P; sleep t}$. 
 \end{itemize}
 
+\note{This is actually quite hard. I think I can do it
+by using Lemma 1 and 2 together with some reassociating, but
+haven't time to sort it right now.}
+
 \item case $P = P';P''$, $Q = Q';Q''$
 
 reassociate 
@@ -745,7 +788,7 @@ binding between statements (and thus no dataflow). In these case just
 an \emph{applicative functor}~\cite{mcbride2008functional} or even a
 monoid would suffice. These can be derived from the monad structure
 on \emph{Temporal} since all monads are applicative functors and all 
-monads define monoid over $m ()$.
+monads $m$ define a monoid over |m ()|.
 
 \paragraph{Applicative subset}
 
@@ -829,7 +872,7 @@ To see the difference, consider Lemma~\ref{lem:sleep-R}:
 For some program $P$ and time $t$: 
 %%
 \begin{align*}
-\etime{P; \sleep{} t} = 
+\etime{P; \sleep{} t} \approx 
  \begin{cases}
    \etime{P} & (\vtime{P} + t) < \etime{P} \\
    \vtime{P} + t  & \textit{otherwise}
@@ -881,8 +924,13 @@ a tighter bound on sleep behaviour that previously where the behaviour was:
 
 \paragraph{Overrun}
 
+\note{TODO: report warnings when overrun occurs- should be easy I think
+by adding stuff to sleep.}
+
 \paragraph{Overrun schedule}
 
+\note{TOOD: Again pretty easy, just need some info in the monad
+to say what counts as a bad overrun}
 
 \section{Related work}
 
@@ -910,6 +958,7 @@ completely informal but highly useful way.
 
 \section{Epilogue}
 
+\note{TODO}
 
 \paragraph{Acknowledgements}
 
@@ -917,7 +966,10 @@ completely informal but highly useful way.
 
 \appendix
 
+
+
 \paragraph{Proof} (of Theorem~\ref{theorem:main})
+\note{These are just rough notes}
 Since sequential composition is associative, we can reassociate
 $P; Q$ such that $P = P_1; P'$ where $P_1$ is a single statement
 
