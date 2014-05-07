@@ -1,0 +1,117 @@
+******************************
+Lemma - Sleep - R
+******************************
+
+runTime 
+  T (\(startT, nowT) -> \vT -> 
+     do  (x, vT')    <- p (startT, nowT) vT
+         thenT       <- getCurrentTime
+         let vT''   = vT' + t
+         let diffT = diffTime thenT startT
+         if (vT'' < diffT)
+         then return ()
+         else kernelSleep (vT'' - diffT)
+         setVirtualTime vT''
+
+--------------------------------
+
+do startT <- getCurrentTime
+   (x, vT')    <- p (startT, startT) 0
+   thenT       <- getCurrentTime
+   let vT''   = vT' + t
+   let diffT = diffTime thenT startT
+   if (vT'' < diffT)
+      then return ()
+      else kernelSleep (vT'' - diffT)
+   setVirtualTime vT''
+
+
+******************************
+Lemma - Sleep - L
+******************************
+
+runTime $
+let p = do  nowT      <- time
+	    vT        <- getVirtualTime
+            let vT'   = vT + delayT
+            setVirtualTime vT'
+            startT    <- start
+            let diffT = diffTime nowT startT
+            if (vT' < diffT) then return () 
+                             else kernelSleep (vT' - diffT) 
+            p
+-------
+
+do startT <- getCurrentTime
+   vT     <- getVirtualTime
+   let vT'   = vT + delayT
+   setVirtualTime vT'
+   startT    <- start
+   let diffT = diffTime startT startT
+   if (vT' < diffT) then return () 
+                    else kernelSleep (vT' - diffT) 
+   p
+
+--------
+
+-------
+
+do startT <- getCurrentTime
+   setVirtualTime delayT
+   startT    <- start
+   let diffT = diffTime startT startT
+   if (delayT < diffT) then return () 
+                       else kernelSleep (delayT - diffT) 
+   p
+
+--------
+
+
+--------
+
+runTime $
+ T (\(startT, nowT) -> \vT -> 
+   do  (x, vT')    <-  let vT'   = vT + t
+                       let diffT = diffTime nowT startT
+                       if (vT' < diffT)
+                           then return () 
+                           else kernelSleep (vT' - diffT)
+                       return ((), vT')
+       let (T q')  = q x
+       thenT       <- getCurrentTime
+       q' (startT, thenT) vt')
+
+--------
+
+runTime $ 
+T (\(startT, nowT) -> \vT -> 
+   do  let vT'   = vT + t
+       let diffT = diffTime nowT startT
+       if (vT' < diffT)
+           then return () 
+           else kernelSleep (vT' - diffT)
+       let (T q')  = q ()
+       thenT       <- getCurrentTime
+       q' (startT, thenT) vT')
+
+---------
+
+do  startT <- getCurrentTime
+    let vT'   = 0 + t
+    let diffT = diffTime startT startT
+    if (vT' < diffT)
+        then return () 
+        else kernelSleep (vT' - diffT)
+    let (T q')  = q ()
+    thenT       <- getCurrentTime
+    q' (startT, thenT) vT')
+
+---------
+
+do  startT <- getCurrentTime
+    if (t < 0)
+        then return () 
+        else kernelSleep (t - 0)
+    let (T q')  = q ()
+    thenT       <- getCurrentTime
+    q' (startT, thenT) t)
