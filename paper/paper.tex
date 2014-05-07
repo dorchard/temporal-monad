@@ -326,10 +326,30 @@
 
 \authorinfo{Sam Aaron}{}{}
 \authorinfo{Dominic Orchard}{}{}
-\title{A programming model for temporal coordination (in music)}
+\title{Temporal semantics for a live coding language} 
+% A programming model for temporal coordination (in music)}
 
 \begin{document}
 \maketitle
+
+\begin{abstract}
+Sonic Pi is a music live coding language that has been designed for
+educational use, as a first programming language. However, it is
+not straightforward to achieve the necessary simplicity of a first language
+in a music live coding setting, for reasons largely related to the
+manipulation of time. The original version of Sonic Pi used a 'sleep'
+function for managing time. However, whilst this approach was conceptually
+simple, it resulted in badly timed music - especially when multiple musical
+threads were executing concurrently. This paper describes an alternative
+programming approach for timing (implemented in Sonic Pi v2.0) which
+maintains syntactic compatibility with version 1, yet provides accurate
+timing via specific interaction between real time and a "virtual time".
+We provide a formal specification of the temporal behaviour of Sonic Pi,
+motivated in relation to other recent approaches to the semantics of time in
+live coding and general computation. We then define a monadic model of the
+Sonic Pi temporal semantics which is sound with respect to this
+specification, using Haskell as a metalanguage. 
+\end{abstract}
 
 \section{Introduction}
 \label{sec:introduction}
