@@ -33,6 +33,9 @@
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 
+
+\CustomVerbatimEnvironment{SVerbatim}{Verbatim}{fontsize=\footnotesize,xleftmargin=0.5cm,xrightmargin=0.5cm,framesep=3mm,commandchars=\\\{\}}
+
 \makeatletter
 \newtheorem*{rep@@lemma}{\rep@@title}
 \newcommand{\newreplemma}[2]{%
@@ -123,25 +126,40 @@ the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
 %
 The \lang{} was previously discussed in~\cite{aaron2013sonic}
 
+\begin{SaveVerbatim}{example1}
+play C
+play E
+play G
+sleep 1
+play F
+play A
+play C
+sleep 0.5
+play G
+play B
+play D
+\end{SaveVerbatim}
+
 \begin{figure}[t]
 \subfigure[Three chord program in \lang{}]{
 \begin{minipage}{0.46\linewidth}
-\[
-\hspace{-6em}
-\begin{array}{l}
-\play C \\
-\play E \\ 
-\play G \\
-\sleep 1 \\
-\play F \\
-\play A \\
-\play C \\
-\sleep 0.5 \\
-\play G \\
-\play B \\
-\play D \\
-\end{array}
-\]
+%\[
+%\hspace{-6em}
+%\begin{array}{l}
+%\play C \\
+%\play E \\ 
+%\play G \\
+%\sleep 1 \\
+%\play F \\
+%\play A \\
+%\play C \\
+%\sleep 0.5 \\
+%\play G \\
+%\play B \\
+%\play D \\
+%\end{array}
+%\]
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example1} \\
 \end{minipage}
 \label{three-chord-example}
 }
