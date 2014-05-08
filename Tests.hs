@@ -1,4 +1,6 @@
 import Temporal
+import Control.Applicative 
+import Data.Time
 
 tests slp = do putStrLn "test 1, expected = 2s, (2s, 1s, 3s)" 
                r1 <- getMean 5 (test1 slp)
@@ -40,9 +42,9 @@ test1 slp =
         b <- time
         slp 1
         c <- time
-        return $ (diffUTCTime b a, -- 2s
-                  diffUTCTime c b, -- 1s
-                  diffUTCTime c a) -- 3s
+        return $ (diffTime b a, -- 2s
+                  diffTime c b, -- 1s
+                  diffTime c a) -- 3s
 
 -- [test2]_t = 3
 test2 slp =
@@ -51,9 +53,9 @@ test2 slp =
          b <- time
          slp 2
          c <- time
-         return $ (diffUTCTime b a, -- 1s
-                   diffUTCTime c b, -- 2s
-                   diffUTCTime c a) -- 3s
+         return $ (diffTime b a, -- 1s
+                   diffTime c b, -- 2s
+                   diffTime c a) -- 3s
 
 -- [test3A]_t = 6
 test3A slp = (kernelSleep 2) *> (slp 1) *> (slp 2) *> (kernelSleep 3)
@@ -80,7 +82,7 @@ test4A slp = do slp 2
                 s <- start
                 e <- time
                 r <- getVirtualTime
-                return $ (diffUTCTime e s, r)
+                return $ (diffTime e s, r)
 
 -- [test4B]_t = 5
 test4B slp = do kernelSleep 5
@@ -88,7 +90,7 @@ test4B slp = do kernelSleep 5
                 s <- start
                 e <- time
                 r <- getVirtualTime
-                return $ (diffUTCTime e s, r)
+                return $ (diffTime e s, r)
 
 getMean :: (Fractional b) => Integer -> Temporal b -> IO (b, NominalDiffTime)
 getMean n k = do (r, d) <- getMean' n
@@ -135,9 +137,11 @@ assocLaw f g m = do left  <- runTime $ do { y <- do { x <- m; f x; }; g y }
                     putStrLn $ show right
 
 
-law1Foo = unitLaw (\t -> do { sleep t; time; }) 1.0
-law2Foo = unitLaw2 (T (\(t, t') _ -> return $ (diffUTCTime t' t, 0)))
+law1Foo = unitLaw (\t -> do { start <- start; sleep t; end <- time; return (diffTime end start) }) 1.0
+law2Foo = unitLaw2 $ do {kernelSleep 1; start <- start; end <- time; return (diffTime end start) }
 
-law3Foo = assocLaw sleep' sleep2 (T (\(t, t') _ -> return $ (diffUTCTime t' t, 0)))
+-- (T (\(t, t') _ -> return $ (diffTime t' t, 0)))
+
+law3Foo = assocLaw sleep' sleep2 (T (\(t, t') _ -> return $ (diffTime t' t, 0)))
                 where sleep' x = do { sleep x; return (x * 0.5); }
-                      sleep2 x = do { sleep x; sleep x; time }
+                      sleep2 x = duration $ do { sleep x; }

@@ -811,6 +811,43 @@ $\etime{P';Q'} = t + \etime{Q'}$
 
 \subsubsection{Monad laws}
 
+The |Temporal| moand is ``weak'', in the sense that the standard monad
+laws do not hold in general.  For example, one of the unit laws is that:
+%%
+\begin{equation}
+%|(return x) >>= (\y -> f y)| \equiv |f x|
+m >>= return \equiv m
+\label{law-example}
+\end{equation}
+%%
+where |m :: Temporal a|.  However, for |Temporal| this law is
+violated in cases where |m| depends on the current time. For example, let
+|m| be defined:
+%
+\begin{code}
+m = do   kernelSleep 1
+         start <- start
+         end <- time
+         return (diffTime end start) -- duration of computation
+\end{code}
+%%
+Then we can run an experiment in GHCi to see that different results are possible:
+%%
+\begin{code}
+*Main> runTime $ m >>= return
+1.001113s
+*Main> runTime $ m
+1.00114s
+\end{code}
+(note, these results are also non-deterministic).  The difference in
+results follows from the additional reduction required on |(>>=)| in
+the first case (left-hand side of \eqref{law-example}). Note that we
+calculate a duration here since using the absolute time produced by
+|time| would be disingenuous, since we are evaluating |m >>= return|
+and |m| at different start times.
+
+\paragraph{Laws with respect to $\epsilon$}
+
 \paragraph{Quotienting by non-time dependent functions}
 
 \note{This section is more of a marker for myself (Dom), I need
