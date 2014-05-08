@@ -979,9 +979,10 @@ time is less than $\epsilon$ ahead of virtual time. That is:
 %%
 
 \begin{code}
-data Warning = StrongOverrun VTime | WeakOverrun VTime
+data Warning = Strong VTime | Weak VTime
 
-data TemporalE a = TE (VTime -> Temporal (a, [Warning]))
+data TemporalE a = 
+    TE (VTime -> Temporal (a, [Warning]))
 
 instance Monad TemporalE where 
     return a = TE (\_ -> return (a, []))

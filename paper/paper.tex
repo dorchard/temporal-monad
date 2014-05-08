@@ -1458,9 +1458,12 @@ time is less than $\epsilon$ ahead of virtual time. That is:
 \column{5}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{35}{@{}>{\hspre}l<{\hspost}@{}}%
 \column{E}{@{}>{\hspre}l<{\hspost}@{}}%
-\>[B]{}\mathbf{data}\;\Conid{Warning}\mathrel{=}\Conid{StrongOverrun}\;\Conid{VTime}\mid \Conid{WeakOverrun}\;\Conid{VTime}{}\<[E]%
+\>[B]{}\mathbf{data}\;\Conid{Warning}\mathrel{=}\Conid{Strong}\;\Conid{VTime}\mid \Conid{Weak}\;\Conid{VTime}{}\<[E]%
 \\[\blanklineskip]%
-\>[B]{}\mathbf{data}\;\Conid{TemporalE}\;\Varid{a}\mathrel{=}\Conid{TE}\;(\Conid{VTime}\to \Conid{Temporal}\;(\Varid{a},[\mskip1.5mu \Conid{Warning}\mskip1.5mu])){}\<[E]%
+\>[B]{}\mathbf{data}\;\Conid{TemporalE}\;\Varid{a}\mathrel{=}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Conid{TE}\;(\Conid{VTime}\to \Conid{Temporal}\;(\Varid{a},[\mskip1.5mu \Conid{Warning}\mskip1.5mu])){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\mathbf{instance}\;\Conid{Monad}\;\Conid{TemporalE}\;\mathbf{where}{}\<[E]%
 \\
