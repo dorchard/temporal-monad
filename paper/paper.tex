@@ -133,7 +133,8 @@
    \advance\leftskip\mathindent
    \hscodestyle
    \let\\=\@normalcr
-   \(\pboxed}%
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
   {\endpboxed\)%
    \par\noindent
    \ignorespacesafterend}
@@ -324,8 +325,16 @@
 \newcommand{\ie}{\emph{i.e.}}
 \newcommand{\eg}{\emph{e.g.}}
 
-\authorinfo{Sam Aaron}{}{}
-\authorinfo{Dominic Orchard}{}{}
+\authorinfo{Sam Aaron}
+           {Computer Laboratory, University of Cambridge, UK}
+           {sam.saaron\ensuremath{\mathord{@}}cl.cam.ac.uk}
+\authorinfo{Dominic Orchard}
+           {Computer Laboratory, University of Cambridge, UK}
+           {dominic.orchard\ensuremath{\mathord{@}}cl.cam.ac.uk}
+\authorinfo{Alan Blackwell}
+           {Computer Laboratory, University of Cambridge, UK}
+           {alan.blackwell\ensuremath{\mathord{@}}cl.cam.ac.uk}
+
 \title{Temporal semantics for a live coding language} 
 % A programming model for temporal coordination (in music)}
 
@@ -747,7 +756,7 @@ The \emph{Monad} instance for \emph{Temporal} is then as follows:
 \\
 \>[B]{}\hsindent{3}{}\<[3]%
 \>[3]{}\Varid{return}\;\Varid{a}{}\<[16]%
-\>[16]{}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{a},\Varid{vT})){}\<[E]%
+\>[16]{}\mathrel{=}\Conid{T}\;(\mathbin{\char92 \char95 }\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{a},\Varid{vT})){}\<[E]%
 \\[\blanklineskip]%
 \>[B]{}\hsindent{3}{}\<[3]%
 \>[3]{}\\[-1.5em]{}\<[E]%
@@ -870,7 +879,7 @@ monad:
 \begin{align*}
 \interp{\emph{statement}} & : \emph{Temporal} \, () \\
 \interp{x = P; Q} & = \interp{P} \ensuremath{\bind (\lambda \Varid{x}\to } \interp{Q}) \\
-\interp{P; Q} & = \interp{P} \ensuremath{\bind (\lambda \anonymous \to } \interp{Q}) \\
+\interp{P; Q} & = \interp{P} \ensuremath{\bind (\mathbin{\char92 \char95 }\to } \interp{Q}) \\
 \interp{\sleep e} & = \emph{sleep} \, \interp{e}
 \end{align*}
 %%
@@ -936,19 +945,27 @@ elapsed time equals the virtual time.
 \\
 \>[B]{}\Varid{time}{}\<[7]%
 \>[7]{}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\Varid{nowT})\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{nowT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
+\\
+\>[B]{}\\[-1.5em]{}\<[E]%
+\\
 \>[B]{}\Varid{start}\mathbin{::}\Conid{Temporal}\;\Conid{Time}{}\<[E]%
 \\
 \>[B]{}\Varid{start}\mathrel{=}\Conid{T}\;(\lambda (\Varid{startT},\anonymous )\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{startT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
+\\
+\>[B]{}\\[-1.5em]{}\<[E]%
+\\
 \>[B]{}\Varid{getVirtualTime}\mathbin{::}\Conid{Temporal}\;\Conid{VTime}{}\<[E]%
 \\
 \>[B]{}\Varid{getVirtualTime}\mathrel{=}\Conid{T}\;(\lambda (\anonymous ,\anonymous )\to \lambda \Varid{vT}\to \Varid{return}\;(\Varid{vT},\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
+\\
+\>[B]{}\\[-1.5em]{}\<[E]%
+\\
 \>[B]{}\Varid{setVirtualTime}\mathbin{::}\Conid{VTime}\to \Conid{Temporal}\;(){}\<[E]%
 \\
-\>[B]{}\Varid{setVirtualTime}\;\Varid{vT}\mathrel{=}\Conid{T}\;(\lambda \anonymous \to \lambda \anonymous \to \Varid{return}\;((),\Varid{vT})){}\<[E]%
-\\[\blanklineskip]%
+\>[B]{}\Varid{setVirtualTime}\;\Varid{vT}\mathrel{=}\Conid{T}\;(\mathbin{\char92 \char95 }\to \mathbin{\char92 \char95 }\to \Varid{return}\;((),\Varid{vT})){}\<[E]%
+\\
+\>[B]{}\\[-1.5em]{}\<[E]%
+\\
 \>[B]{}\Varid{kernelSleep}\mathbin{::}\Conid{RealFrac}\;\Varid{a}\Rightarrow \Varid{a}\to \Conid{Temporal}\;(){}\<[E]%
 \\
 \>[B]{}\Varid{kernelSleep}\;\Varid{t}\mathrel{=}{}\<[18]%
@@ -1420,7 +1437,49 @@ a tighter bound on sleep behaviour that previously where the behaviour was:
 \end{align*}
 %
 
-\subsection{Emitting overrun exceptions}
+\subsection{Emitting overrun warnings}
+
+We extend the \ensuremath{\Conid{Temporal}} monad with an additional parameter for the
+$\epsilon$ time (maximum allowable overrun) and an output stream for
+sending ``warnings'' when overruns occur.
+
+Overrun warnings are either \emph{strong}, when the real time 
+is more than $\epsilon$ ahead of virtual time, or \emph{weak} when the real
+time is less than $\epsilon$ ahead of virtual time. That is:
+%%
+\begin{itemize}
+\item{$\etime{P} > (\vtime{P} + \epsilon) \Rightarrow \interp{P} \leadsto$ \emph{strong warning} }
+\item{$(\vtime{P} + \epsilon) \leq \etime{P} > \vtime{P} \Rightarrow \interp{P} \leadsto$ \emph{weak warning}}
+\end{itemize}
+%%
+
+\begin{hscode}\SaveRestoreHook
+\column{B}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{5}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{35}{@{}>{\hspre}l<{\hspost}@{}}%
+\column{E}{@{}>{\hspre}l<{\hspost}@{}}%
+\>[B]{}\mathbf{data}\;\Conid{Warning}\mathrel{=}\Conid{StrongOverrun}\;\Conid{VTime}\mid \Conid{WeakOverrun}\;\Conid{VTime}{}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{data}\;\Conid{TemporalE}\;\Varid{a}\mathrel{=}\Conid{TE}\;(\Conid{VTime}\to \Conid{Temporal}\;(\Varid{a},[\mskip1.5mu \Conid{Warning}\mskip1.5mu])){}\<[E]%
+\\[\blanklineskip]%
+\>[B]{}\mathbf{instance}\;\Conid{Monad}\;\Conid{TemporalE}\;\mathbf{where}{}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}\Varid{return}\;\Varid{a}\mathrel{=}\Conid{TE}\;(\mathbin{\char92 \char95 }\to \Varid{return}\;(\Varid{a},[\mskip1.5mu \mskip1.5mu])){}\<[E]%
+\\
+\>[B]{}\hsindent{5}{}\<[5]%
+\>[5]{}(\Conid{TE}\;\Varid{p})\bind \Varid{q}\mathrel{=}\Conid{TE}\;(\lambda \Varid{eps}\to \mathbf{do}\;(\Varid{a},\Varid{es})\leftarrow \Varid{p}\;\Varid{eps}{}\<[E]%
+\\
+\>[5]{}\hsindent{30}{}\<[35]%
+\>[35]{}\mathbf{let}\;(\Conid{TE}\;\Varid{q'})\mathrel{=}\Varid{q}\;\Varid{a}{}\<[E]%
+\\
+\>[5]{}\hsindent{30}{}\<[35]%
+\>[35]{}(\Varid{b},\Varid{es'})\leftarrow \Varid{q'}\;\Varid{eps}{}\<[E]%
+\\
+\>[5]{}\hsindent{30}{}\<[35]%
+\>[35]{}\Varid{return}\;(\Varid{b},\Varid{es}\plus \Varid{es'})){}\<[E]%
+\ColumnHook
+\end{hscode}\resethooks
 
 \paragraph{Overrun}
 

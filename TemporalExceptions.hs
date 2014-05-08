@@ -11,18 +11,19 @@ import Debug.Trace
 import Temporal (Temporal(..), Time, VTime, diffTime)
 import qualified Temporal as Temporal
 
-data Excp = StrongOverrun VTime | WeakOverrun VTime deriving Show
+data Warning = StrongOverrun VTime | WeakOverrun VTime deriving Show
 
-data TemporalE a = TE (VTime -> Temporal (a, [Excp]))
+data TemporalE a = TE (VTime -> Temporal (a, [Warning]))
 
 instance Monad TemporalE where 
     return a = TE (\_ -> return (a, []))
-    (TE p) >>= q = TE (\eps -> (p eps) >>= (\(a, es) -> do let (TE q') = q a
-                                                           (b, es') <- q' eps
-                                                           return (b, es++es')))
+    (TE p) >>= q = TE (\eps -> do (a, es) <- p eps
+                                  let (TE q') = q a
+                                  (b, es') <- q' eps
+                                  return (b, es++es'))
 
 -- Evaluate a temporal computation
-runTime :: VTime -> TemporalE a -> IO (a, [Excp])
+runTime :: VTime -> TemporalE a -> IO (a, [Warning])
 runTime eps (TE c) = do startT <- getCurrentTime
                         let (T c') = c eps
                         (y, _) <- c' (startT, startT) 0
@@ -64,8 +65,8 @@ sleep delayT = do nowT      <- time
                   eps       <- epsilonTime
                   let diffT = diffTime nowT startT
                   if (vT' < diffT) then if ((vT' + eps) < diffT) 
-                                        then weakException (diffT - vT')
-                                        else strongException (diffT - vT')
+                                        then strongException (diffT - vT')
+                                        else weakException (diffT - vT')
                                    else kernelSleep (vT' - diffT)
 
 duration :: TemporalE b -> TemporalE (b, VTime)
