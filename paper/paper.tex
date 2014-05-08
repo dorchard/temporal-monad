@@ -1245,11 +1245,14 @@ Then we can run an experiment in GHCi to see that different results are possible
 \>[B]{}\mathrm{1.00114}\;\Varid{s}{}\<[E]%
 \ColumnHook
 \end{hscode}\resethooks
-% The difference in results follows from the additional reduction
-required on \ensuremath{(\bind )} in the first case (left-hand side of
-\eqref{law-example}).
+(note, these results are also non-deterministic).  The difference in
+results follows from the additional reduction required on \ensuremath{(\bind )} in
+the first case (left-hand side of \eqref{law-example}). Note that we
+calculate a duration here since using the absolute time produced by
+\ensuremath{\Varid{time}} would be disingenuous, since we are evaluating \ensuremath{\Varid{m}\bind \Varid{return}}
+and \ensuremath{\Varid{m}} at different start times.
 
-
+\paragraph{Laws with respect to $\epsilon$}
 
 \paragraph{Quotienting by non-time dependent functions}
 

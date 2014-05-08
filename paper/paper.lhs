@@ -816,7 +816,7 @@ laws do not hold in general.  For example, one of the unit laws is that:
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
-m >>= return \equiv m
+|m >>= return| \equiv |m|
 \label{law-example}
 \end{equation}
 %%
