@@ -72,8 +72,16 @@
 \newcommand{\ie}{\emph{i.e.}}
 \newcommand{\eg}{\emph{e.g.}}
 
-\authorinfo{Sam Aaron}{}{}
-\authorinfo{Dominic Orchard}{}{}
+\authorinfo{Sam Aaron}
+           {Computer Laboratory, University of Cambridge, UK}
+           {sam.saaron|@|cl.cam.ac.uk}
+\authorinfo{Dominic Orchard}
+           {Computer Laboratory, University of Cambridge, UK}
+           {dominic.orchard|@|cl.cam.ac.uk}
+\authorinfo{Alan Blackwell}
+           {Computer Laboratory, University of Cambridge, UK}
+           {alan.blackwell|@|cl.cam.ac.uk}
+
 \title{Temporal semantics for a live coding language} 
 % A programming model for temporal coordination (in music)}
 
@@ -596,20 +604,16 @@ elapsed time equals the virtual time.
 \begin{code}
 time :: Temporal Time
 time  = T (\(_, nowT) -> \vT -> return (nowT, vT))
-
-
+newline
 start :: Temporal Time
 start = T (\(startT, _) -> \vT -> return (startT, vT))
-
-
+newline
 getVirtualTime :: Temporal VTime
 getVirtualTime = T (\(_, _) -> \vT -> return (vT, vT))
-
-
+newline
 setVirtualTime :: VTime -> Temporal ()
 setVirtualTime vT = T (\_ -> \_ -> return ((), vT))
-
-
+newline
 kernelSleep :: RealFrac a => a -> Temporal ()
 kernelSleep t =  T (\(_, _) -> \vT -> 
                        do  threadDelay (round (t * 1000000))
@@ -958,7 +962,35 @@ a tighter bound on sleep behaviour that previously where the behaviour was:
 \end{align*}
 %
 
-\subsection{Emitting overrun exceptions}
+\subsection{Emitting overrun warnings}
+
+We extend the |Temporal| monad with an additional parameter for the
+$\epsilon$ time (maximum allowable overrun) and an output stream for
+sending ``warnings'' when overruns occur.
+
+Overrun warnings are either \emph{strong}, when the real time 
+is more than $\epsilon$ ahead of virtual time, or \emph{weak} when the real
+time is less than $\epsilon$ ahead of virtual time. That is:
+%%
+\begin{itemize}
+\item{$\etime{P} > (\vtime{P} + \epsilon) \Rightarrow \interp{P} \leadsto$ \emph{strong warning} }
+\item{$(\vtime{P} + \epsilon) \leq \etime{P} > \vtime{P} \Rightarrow \interp{P} \leadsto$ \emph{weak warning}}
+\end{itemize}
+%%
+
+\begin{code}
+data Warning = Strong VTime | Weak VTime
+
+data TemporalE a = 
+    TE (VTime -> Temporal (a, [Warning]))
+
+instance Monad TemporalE where 
+    return a = TE (\_ -> return (a, []))
+    (TE p) >>= q = TE (\eps -> do (a, es) <- p eps
+                                  let (TE q') = q a
+                                  (b, es') <- q' eps
+                                  return (b, es++es'))
+\end{code}
 
 \paragraph{Overrun}
 

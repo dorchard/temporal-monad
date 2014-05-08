@@ -20,5 +20,3 @@ quick:
 	lhs2TeX -o paper.tex paper.lhs
 	pdflatex paper.tex
 
-nolhs:  
-	pdflatex "\def\nolhs{}\input{paper.lhs}"
