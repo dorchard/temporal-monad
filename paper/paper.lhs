@@ -469,7 +469,7 @@ s_1 + s_2 + \etime{C}$.
 In the following, we use Haskell as our meta language for the
 semantics (since it provides convenient syntax for working with
 monads)\footnote{The source code for the model is avilable at
-  \url{https://github.com/dorchard/time-monad}}.
+  \url{https://github.com/dorchard/temporal-monad}}.
 \lang{} computations are modelled by the \emph{Temporal} data type, defined:
 %%
 \begin{code}
