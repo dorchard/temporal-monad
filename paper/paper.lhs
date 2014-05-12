@@ -62,7 +62,7 @@
 \newcommand{\ksleep}{\mathsf{kernelSleep}\;}
 \newcommand{\ksleepOp}{\textsf{kernelSleep}}
 
-\newcommand{\lang}{SonicPi}
+\newcommand{\lang}{Sonic Pi}
 
 \newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
 \newcommand{\etime}[1]{[#1]_{\mathsf{t}}}
