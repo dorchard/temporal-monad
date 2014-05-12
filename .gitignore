@@ -5,3 +5,5 @@
 *.ptb
 *.bbl
 *.blg
+*.tex
+*.dvi
