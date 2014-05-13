@@ -134,18 +134,19 @@ component of system behaviour (as it is in music) then an event that
 occurs too soon may be just as incorrect as one that occurs too late.
 
 In music, it is clear that we must be able to speak about the precise
-location of events in time, and hence that any music programming language
-must of necessity provide some kind of time semantics, even if these are
-only informal. In the case of live coding languages, an additional
-consideration is that the time at which the program is edited may coincide
-or overlap with the time at which it is executed. This overlap between
-execution and creation time is of broader value in software engineering, as
-noted for example by McDirmid, whose Glitch system allows the user to adjust
-the notional execution time relative to a point in the source code editing
-environment. Tools of this kind can also benefit from a formal semantics in
-which to define the relationship between changes or navigation within the
-code, and changes or navigation within the cause-effect sequence of
-execution time.
+location of events in time, and hence that any music programming
+language must of necessity provide some kind of time semantics, even if
+these are only informal. In the case of live coding languages, an
+additional consideration is that the time at which the program is edited
+may coincide or overlap with the time at which it is executed. This
+overlap between execution and creation time is of broader value in
+software engineering, as noted for example by<
+McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
+adjust the notional execution time relative to a point in the source
+code editing environment. Tools of this kind can also benefit from a
+formal semantics in which to define the relationship between changes or
+navigation within the code, and changes or navigation within the
+cause-effect sequence of execution time.
 
 Reasoning about the temporal component of events and action is a classic
 problem in artificial intelligence (e.g. Shoham 1988,
@@ -174,13 +175,168 @@ combinations of cyclical and linear time that result in musical
 perception of pattern and tempo.
 
 
-\note{Introduction to SonicPi}
+\section{Sonic Pi}
 
-The underlying programming model of SonicPi provides a way to separate
-the ordering of effects from the timing of
-effects. Figure~\ref{three-chord-example} shows an example program
-where three chords are played in sequence, combining simple notions of
-parallel, timed, and ordered effects.
+Sonic Pi is a Domain Specific Language for manipulating synthesisers
+through time~\cite{Aaron2013}. It was designed for teaching core
+computing notations to school students using live-coding music as a
+means for engaging students. One of the core concepts Sonic Pi has been
+used to teach is the sequential ordering of effects in imperative
+programs such as playing successive notes in an arpegio, see
+Figure~\ref{eminor-chord}.
+
+\begin{SaveVerbatim}{example0}
+play 52
+play 55
+play 59
+\end{SaveVerbatim}
+
+\begin{figure}[t]
+\begin{minipage}{0.46\linewidth}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0}
+\end{minipage}
+\label{eminor-chord}
+\caption{Playing the (MIDI) notes of the chord E minor in succession.)}
+\end{figure}
+
+However, given the clockspeeds of modern processors, these instructions
+are likely to be executed so quickly in succession that they will be
+perceived as a chord i.e. all the note being played simultaneously. It
+is therefore necessary to separate the triggering of these notes out
+through time. This can be achieved by sleeping the current thread, see
+Figure~\ref{eminor-chord-spaced}.
+
+\begin{SaveVerbatim}{example0b}
+play 52
+sleep 1
+play 55
+sleep 1
+play 59
+\end{SaveVerbatim}
+
+\begin{figure}[t]
+\begin{minipage}{0.46\linewidth}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0b}
+\end{minipage}
+\label{eminor-chord-spaced}
+\caption{Playing the (MIDI) notes of the chord E minor as an arpegio.)}
+\end{figure}
+
+Whilst these time semantics worked well in a computing education context
+for demonstrating effect execution order, they didn't translate well to
+music contexts due to a mismatch with user expectations. This mismatch
+was particularly emphasised when Sonic Pi gained the ability to play
+drum samples. Consider the example in
+Figure~\ref{example-drum-loop}. Here we're attempting to regularly play
+note 30 at the same time as the drum sample with half a second between
+each onset.
+
+\begin{SaveVerbatim}{example-drums}
+loop do
+  play 30                  ;;A
+  sample :drum_heavy_kick  ;;B
+  sleep 0.5                ;;C
+end
+\end{SaveVerbatim}
+
+\begin{figure}[t]
+\begin{minipage}{0.46\linewidth}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-drums}
+\end{minipage}
+\label{example-drum-loop}
+\caption{A continuously repeating bass and drum hit.)}
+\end{figure}
+
+Unfortunately the execution will not produce exactly the desired
+behaviour and the rhythm will drift in time due to the addition of the
+execution time to the sleep time. After line A has completed executing,
+wall-clock time will have moved on by the amount of time it took to
+execute the line. Similarly for line B. Line C introduces two extra
+sources of time, the sleep time and the time spent waiting for the
+scheduler to pick up and continue executing the thread. Therefore,
+instead of each iteration taking precisely 0.5s, the actual time is the
+summation of the computation time of A, the computation time of B, 0.5
+and the scheduler pick-up time. Depending on load and processor speed,
+these extra times can produce dramatically noticeable results. This is
+profoundly apprent when the user requests two threads to work in
+synchronisation such as in Figure~\ref{example-threaded-drum-loop}.
+
+\begin{SaveVerbatim}{example-t-drums}
+in_thread
+  loop do
+    play 30
+    sleep 0.5
+  end
+end
+
+in_thread
+  loop do
+    sample :drum_heavy_kick
+    sleep 1
+  end
+end
+\end{SaveVerbatim}
+
+\begin{figure}[t]
+\begin{minipage}{0.46\linewidth}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-t-drums}
+\end{minipage}
+\label{example-threaded-drum-loop}
+\caption{Two concurrent threads playing in synchronisation)}
+\end{figure}
+
+
+
+The timing issues are further compounded by the fact that calls to
+$play$ and $sample$ are asynchronous, and there is an additional time
+cose for a trigger message to be sent and interpreted by the external
+synth process. This then adds additional varying time (jitter) to each
+sound trigger.
+
+%% However, the way in which it did not meet expectations is related to the
+%% nature of those expectations:
+
+%% Explicit representation of rhythm: In general was functionally accurate in
+%% v1 (correct number of beats etc). As in conventional computational semantics
+%% - everything gets done, and there is not missing or extra events
+
+%% Implicit representation from the experience of rhythm: It's done at a time
+%% that reduces the quality of the musical experience - for example variability
+%% in the beat due to garbage collection
+
+%% So less expert musicians might be able to identify more explicit problems
+%% (extra beats), but find it harder to say precisely what the problem is when
+%% that problem is related to their implicit expectations.
+
+%% This is something that they *expect* to happen, but unless they are
+%% experienced musicians, may not be able to explain that they want it to
+%% happen.
+
+%% In this second case, even if you can hear the mistakes, you might not know
+%% how to fix them. We would like to create behaviour that is useful to
+%% experienced musicians (they know what they want to achieve, and could do
+%% with a way to express it), and acceptable to inexperienced musicians (they
+%% do not articulate what they want to achieve, but know when it is wrong).
+
+%% So this is why we needed to keep the conceptual simplicity of the original
+%% approach, while providing an improved time semantics that satisfied not only
+%% explicit expectations of the musical listener, but also these implicit
+%% expectations.
+
+%% The underlying programming model of SonicPi provides a way to separate
+%% the ordering of effects from the timing of
+%% effects. Figure~\ref{three-chord-example} shows an example program
+%% where three chords are played in sequence, combining simple notions of
+%% parallel, timed, and ordered effects.
+
+
+%% *** Sam will write an engineering description of what he actually changed in
+%% the execution model to achieve the new time semantics.
+
+%% *** Sam will possibly write a section comparing the new Sonic Pi time
+%% semantics to the time semantics of ChucK
+
+\section{Re-inventing Sleep}
 
 The first three statements play the notes of a C major chord in
 parallel.  A \sleepOp{} statement then provides a ``temporal barrier''
