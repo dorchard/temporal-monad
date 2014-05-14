@@ -56,8 +56,8 @@
 \newcommand{\play}{\mathsf{play}\;}
 \newcommand{\playOp}{\textsf{play}}
 
-\newcommand{\sleep}{\mathsf{sleep}\;}
-\newcommand{\sleepOp}{\textsf{sleep}}
+\newcommand{\sleep}{\textnormal{\texttt{sleep}}\;}
+\newcommand{\sleepOp}{\texttt{sleep}}
 
 \newcommand{\ksleep}{\mathsf{kernelSleep}\;}
 \newcommand{\ksleepOp}{\textsf{kernelSleep}}
@@ -524,9 +524,9 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \section{Model}
 
 \paragraph{Terminology and notation}
-We refer to closed sequences of statements (\ie{}, without free
-variables) as \emph{programs}. Throughout, $P$, $Q$ range over programs,
-and $s, t$ range over times (usually in seconds).
+We refer to sequences statements as \emph{programs}. Throughout, $P$,
+$Q$ range over programs, and $s, t$ range over times (usually in
+seconds).
 
 \subsection{Virtual time and real time}
 
@@ -560,9 +560,9 @@ for here. I could be easily incldued though.}
 \paragraph{Equality on time}
 
 Providing exact deadlines in real-time systems is difficult due
-to noise and overhead caused by execution. We do not ignore
+to non-determinism combined with overheads caused by execution. We do not ignore
 this problem in the programming model of \lang{} and the discussion here.
-We define the relation $\approx$ on actual time (non virtual times), where:
+We define the relation $\approx$ on actual times, where:
 %%
 \begin{equation}
 s \approx t
@@ -575,7 +575,7 @@ s \approx t
 for some value of $\epsilon$ which is the maximum negligible
 time value with respect to the application at hand. In the case of
 \lang{}, this is equal to the scheduling delay for the SuperCollider
-engine (and is machine dependent), which is roughly \note{X}.
+engine, which is roughly \note{X}.
 
 \note{Discuss this further, may be
   able to say later that in some cases $\epsilon$ is the scheduling
@@ -596,7 +596,8 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 
 We outline here some important temporal properties of our \lang{} programs
 that relates the virtual time and actual times. In Section~\ref{}, we
-replay these lemmas and prove the soundness: that these lemmas hold of our model.
+replay these lemmas and prove a soundness result: that these lemmas are true 
+for our model.
 
 %For convenience, and to contrast with \sleepOp{}, we'll use an additional
 %statement \ksleepOp{} here (which is not available in the actual language)
