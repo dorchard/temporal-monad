@@ -310,49 +310,47 @@ implicit computation time to the explicit timing statements produces
 sporadic timing of the musical events which reduces the quality of the
 musical experience.
 
-%% So less expert musicians might be able to identify more explicit problems
-%% (extra beats), but find it harder to say precisely what the problem is when
-%% that problem is related to their implicit expectations.
+Less expert musicians might be able to identify more explicit problems
+(such as extra beats), but find it harder to say precisely what the
+problem is when that problem is related to their implicit
+expectations. This is something that they expect to happen, but unless
+they are experienced musicians, may not be able to explain that they
+want it to happen. In this second case, even if the user can perceive
+the timing mistakes, they language provides no means to fix them. One of
+the goals of Sonic Pi is to to create a system that is useful to
+experienced musicians (with clear musical goals) acceptable to
+inexperienced musicians that may not be able to clearly articulate what
+they want to achieve, but know when it is wrong.
 
-%% This is something that they *expect* to happen, but unless they are
-%% experienced musicians, may not be able to explain that they want it to
-%% happen.
+It is therefore important to maintain the conceptual simplicity of the
+original approach, while providing an improved time semantics that
+satisfied not only explicit expectations of the musical listener, but
+also these implicit expectations.
 
-%% In this second case, even if you can hear the mistakes, you might not know
-%% how to fix them. We would like to create behaviour that is useful to
-%% experienced musicians (they know what they want to achieve, and could do
-%% with a way to express it), and acceptable to inexperienced musicians (they
-%% do not articulate what they want to achieve, but know when it is wrong).
-
-%% So this is why we needed to keep the conceptual simplicity of the original
-%% approach, while providing an improved time semantics that satisfied not only
-%% explicit expectations of the musical listener, but also these implicit
-%% expectations.
-
-%% The underlying programming model of SonicPi provides a way to separate
-%% the ordering of effects from the timing of
-%% effects. Figure~\ref{three-chord-example} shows an example program
-%% where three chords are played in sequence, combining simple notions of
-%% parallel, timed, and ordered effects.
-
-
-%% *** Sam will write an engineering description of what he actually changed in
-%% the execution model to achieve the new time semantics.
 
 %% *** Sam will possibly write a section comparing the new Sonic Pi time
 %% semantics to the time semantics of ChucK
 
 \section{Re-inventing Sleep}
 
+Sonic Pi 2.0 introduces a new implementation of the sleep command which
+maintains syntactic and conceptual compatibility with the previous
+implementation yet modifies the temporal semantics to match the implicit
+rhythmical expectations previously described. The underlying programming
+model of Sonic Pi 2.0 provides a way to separate the ordering of effects
+from the timing of effects. Figure~\ref{three-chord-example} shows an
+example program where three chords are played in sequence, combining
+simple notions of parallel, timed, and ordered effects.
+
 The first three statements play the notes of a C major chord in
 parallel.  A \sleepOp{} statement then provides a ``temporal barrier''
-which blocks the computation from continuing until 1 second has
-elapsed since the \emph{start} of the program (not since the end of
-playing the notes). Once one second has elapsed, the next three
-statements are executed which plays an F major chord. The next
-\sleepOp{} means that the final chord is not played until 1.5 seconds
-has elapsed since the start of the
-program. Figure~\ref{three-chord-timing} illustrates the timing.
+which blocks the computation from continuing until 1 second has elapsed
+since the \emph{start} of the program (not since the end of playing the
+notes). Once one second has elapsed, the next three statements are
+executed which plays an F major chord. The next \sleepOp{} means that
+the final chord is not played until 1.5 seconds has elapsed since the
+start of the program. Figure~\ref{three-chord-timing} illustrates the
+timing.
 
 Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated, at least
 $t$ seconds has elapsed since the last \sleepOp{}. This provides a minimum
@@ -364,8 +362,6 @@ can overrun; that is, run longer than the sleep time.  Thus, the
 programming model is not suitable for realtime systems requiring hard
 deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
 the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
-
-
 
 \note{Contributions}
 
@@ -637,7 +633,7 @@ The following two small programs, both of which have actual time 2,
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
 
 \begin{itemize}
-\item[] 
+\item[]
 $\vtime{P} = 0$ and
 $\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
 \end{itemize}
@@ -646,7 +642,7 @@ $\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
 \item[--] $\etime{\texttt{kernelSleep 1; sleep 2}} \approx 2$
 
 \begin{itemize}
-\item[] 
+\item[]
 $\vtime{P} = 0$ and
 $\etime{P} = 1$, thus $(\vtime{P} + 2) > \etime{P}$ (case 2)
 \end{itemize}
@@ -662,7 +658,7 @@ For some program $P$ and time $t$:
 \label{lem:sleep-L}
 \end{lemma}
 %
-%The implication of this lemma is that a preceding sleep does not affect 
+%The implication of this lemma is that a preceding sleep does not affect
 
 \noindent
 These two lemmas illuminate something of the semantics of sleep,
