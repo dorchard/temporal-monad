@@ -176,6 +176,7 @@ perception of pattern and tempo.
 
 
 \section{Sonic Pi}
+\label{sec:sp-1}
 
 Sonic Pi is a Domain Specific Language for manipulating synthesisers
 through time~\cite{Aaron2013}. It was designed for teaching core
@@ -222,12 +223,12 @@ play 59
 \caption{Playing the (MIDI) notes of the chord E minor as an arpegio.)}
 \end{figure}
 
-Whilst these time semantics worked well in a computing education context
-for demonstrating effect execution order, they didn't translate well to
-music contexts due to a mismatch with user expectations. This mismatch
-was particularly emphasised when Sonic Pi gained the ability to play
-drum samples. Consider the example in
-Figure~\ref{example-drum-loop}. Here we're attempting to regularly play
+Whilst these temporal semantics worked well in a computing education
+context for demonstrating effect execution order, they didn't translate
+well to music contexts due to a mismatch with user expectations. This
+mismatch was particularly emphasised when Sonic Pi gained the ability to
+play drum samples. Consider the example in
+Figure~\ref{example-drum-loop}. Here we are attempting to regularly play
 note 30 at the same time as the drum sample with half a second between
 each onset.
 
@@ -249,17 +250,21 @@ end
 
 Unfortunately the execution will not produce exactly the desired
 behaviour and the rhythm will drift in time due to the addition of the
-execution time to the sleep time. After line A has completed executing,
-wall-clock time will have moved on by the amount of time it took to
-execute the line. Similarly for line B. Line C introduces two extra
-sources of time, the sleep time and the time spent waiting for the
-scheduler to pick up and continue executing the thread. Therefore,
-instead of each iteration taking precisely 0.5s, the actual time is the
-summation of the computation time of A, the computation time of B, 0.5
-and the scheduler pick-up time. Depending on load and processor speed,
-these extra times can produce dramatically noticeable results. This is
-profoundly apprent when the user requests two threads to work in
-synchronisation such as in Figure~\ref{example-threaded-drum-loop}.
+execution time itself to the sleep time. For example, after line A in
+Figure~\ref{example-drum-loop} has completed executing, wall-clock time
+will have moved on by the amount of time it took to execute the
+line. Similarly for line B. Line C introduces two extra sources of time,
+the sleep time and the time spent waiting for the scheduler to pick up
+and continue executing the thread. Therefore, instead of each iteration
+taking precisely 0.5s, the actual time is the summation of the
+computation time of A, the computation time of B, 0.5 and the scheduler
+pick-up time. Depending on load and processor speed, these extra times
+can produce dramatically noticeable results. This is profoundly apprent
+when the user requests two threads to work in synchronisation such as in
+Figure~\ref{example-threaded-drum-loop}. The threads may start out in
+synchronisation, but because the extra computation time will differ
+across the threads, they will drift at varying rates and move out of
+synchronisation.
 
 \begin{SaveVerbatim}{example-t-drums}
 in_thread
@@ -285,81 +290,99 @@ end
 \caption{Two concurrent threads playing in synchronisation)}
 \end{figure}
 
+Sonic Pi's timing issues are further compounded by the fact that calls
+to $play$ and $sample$ are asynchronous messages, and there is an
+additional time cost for these messages to be sent and interpreted by
+the external synth process. This then adds additional varying time
+(jitter) to each sound trigger.
 
+\section{Temporal expectations}
 
-The timing issues are further compounded by the fact that calls to
-$play$ and $sample$ are asynchronous, and there is an additional time
-cose for a trigger message to be sent and interpreted by the external
-synth process. This then adds additional varying time (jitter) to each
-sound trigger.
+The temporal semantics present in the initial version of Sonic Pi as
+described in Section~\ref{sec:sp-1} did not meet user expectations in
+ways specicially related to the nature of these expectations. From a
+functional perspective, the explicit representation of rhythm provided
+computationally accurate semantics. All expressed computation happens
+(i.e. all notes are played, and all sleeps are honoured) and the
+execution happens in the defined order. However, when we consider the
+implicit representation from the experience of rhythm, the addition of
+implicit computation time to the explicit timing statements produces
+sporadic timing of the musical events which reduces the quality of the
+musical experience.
 
-%% However, the way in which it did not meet expectations is related to the
-%% nature of those expectations:
+Less expert musicians might be able to identify more explicit problems
+(such as extra beats), but find it harder to say precisely what the
+problem is when that problem is related to their implicit
+expectations. This is something that they expect to happen, but unless
+they are experienced musicians, may not be able to explain that they
+want it to happen. In this second case, even if the user can perceive
+the timing mistakes, they language provides no means to fix them. One of
+the goals of Sonic Pi is to to create a system that is useful to
+experienced musicians (with clear musical goals) acceptable to
+inexperienced musicians that may not be able to clearly articulate what
+they want to achieve, but know when it is wrong.
 
-%% Explicit representation of rhythm: In general was functionally accurate in
-%% v1 (correct number of beats etc). As in conventional computational semantics
-%% - everything gets done, and there is not missing or extra events
+It is therefore important to maintain the conceptual simplicity of the
+original approach, while providing an improved time semantics that
+satisfied not only explicit expectations of the musical listener, but
+also these implicit expectations.
 
-%% Implicit representation from the experience of rhythm: It's done at a time
-%% that reduces the quality of the musical experience - for example variability
-%% in the beat due to garbage collection
-
-%% So less expert musicians might be able to identify more explicit problems
-%% (extra beats), but find it harder to say precisely what the problem is when
-%% that problem is related to their implicit expectations.
-
-%% This is something that they *expect* to happen, but unless they are
-%% experienced musicians, may not be able to explain that they want it to
-%% happen.
-
-%% In this second case, even if you can hear the mistakes, you might not know
-%% how to fix them. We would like to create behaviour that is useful to
-%% experienced musicians (they know what they want to achieve, and could do
-%% with a way to express it), and acceptable to inexperienced musicians (they
-%% do not articulate what they want to achieve, but know when it is wrong).
-
-%% So this is why we needed to keep the conceptual simplicity of the original
-%% approach, while providing an improved time semantics that satisfied not only
-%% explicit expectations of the musical listener, but also these implicit
-%% expectations.
-
-%% The underlying programming model of SonicPi provides a way to separate
-%% the ordering of effects from the timing of
-%% effects. Figure~\ref{three-chord-example} shows an example program
-%% where three chords are played in sequence, combining simple notions of
-%% parallel, timed, and ordered effects.
-
-
-%% *** Sam will write an engineering description of what he actually changed in
-%% the execution model to achieve the new time semantics.
 
 %% *** Sam will possibly write a section comparing the new Sonic Pi time
 %% semantics to the time semantics of ChucK
 
 \section{Re-inventing Sleep}
 
+Sonic Pi 2.0 introduces a new implementation of the sleep command which
+maintains syntactic and conceptual compatibility with the previous
+implementation yet modifies the temporal semantics to match the implicit
+rhythmical expectations previously described. The underlying programming
+model of Sonic Pi 2.0 provides a way to separate the ordering of effects
+from the timing of effects. Figure~\ref{three-chord-example} shows an
+example program where three chords are played in sequence, combining
+simple notions of parallel, timed, and ordered effects.
+
 The first three statements play the notes of a C major chord in
 parallel.  A \sleepOp{} statement then provides a ``temporal barrier''
-which blocks the computation from continuing until 1 second has
-elapsed since the \emph{start} of the program (not since the end of
-playing the notes). Once one second has elapsed, the next three
-statements are executed which plays an F major chord. The next
-\sleepOp{} means that the final chord is not played until 1.5 seconds
-has elapsed since the start of the
-program. Figure~\ref{three-chord-timing} illustrates the timing.
+which blocks the computation from continuing until 1 second has elapsed
+since the \emph{start} of the program (not since the end of playing the
+notes). Once one second has elapsed, the next three statements are
+executed which plays an F major chord. The next \sleepOp{} means that
+the final chord is not played until 1.5 seconds has elapsed since the
+start of the program. Figure~\ref{three-chord-timing} illustrates the
+timing.
 
-Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated, at least
-$t$ seconds has elapsed since the last \sleepOp{}. This provides a minimum
-time. In between calls to \sleepOp{}, any other statements can (with some limits)
-be considered task parallel.
+Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated,
+at least $t$ seconds has elapsed since the last \sleepOp{}. This
+provides a minimum time. In between calls to \sleepOp{}, any other
+statements can (with some limits) be considered task parallel.
 
-In \lang{}, it is possible that a computation proceeding a \sleepOp{}
-can overrun; that is, run longer than the sleep time.  Thus, the
-programming model is not suitable for realtime systems requiring hard
-deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
-the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
+These semantics are achieved by represing virtual time as a thread-local
+variable which is only advanced as part of the new implementation of
+$sleep$. Therefore, each thread has access to both real time and virtual
+time, with the virtual time used to schedule external effects. In order
+to keep the execution of the program in synchronisation with the
+explicit timing requirements of the program, $sleep$ takes into account
+the execution time since the last $sleep$ and reduces the requested
+sleep time appropriately. Therefore if the user issues a $sleep 1$
+statement, and the current execution time since the last $sleep$
+statement is 0.1 seconds, the implementation only sleeps the current
+thread for 0.9s. This ensures that no drifting occurs. In order to deal
+with relative execution times within a sleep barrier and also the
+message transmission costs for schedululing external effects, a constant
+$schedule_ahead_time$ value is added to the current virtual time for all
+asynchronously scheduled effects. Provided that the addition of the
+jitter time and the execution time between calls to $sleep$ never
+exceeds this value, the temporal expectations of the system are met as
+we will demonstrate more formally in the subsequent sections.
 
 
+It is important to not that in \lang{}, it is possible that a
+computation proceeding a \sleepOp{} can overrun; that is, run longer
+than the sleep time.  Thus, the programming model is not suitable for
+realtime systems requiring hard deadlines but \sleepOp{} instead
+provides a \emph{soft deadline} (using the terminology of Hansson and
+Jonsson~\cite{hansson1994logic}).
 
 \note{Contributions}
 
@@ -596,7 +619,7 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 
 We outline here some important temporal properties of our \lang{} programs
 that relates the virtual time and actual times. In Section~\ref{}, we
-replay these lemmas and prove a soundness result: that these lemmas are true 
+replay these lemmas and prove a soundness result: that these lemmas are true
 for our model.
 
 %For convenience, and to contrast with \sleepOp{}, we'll use an additional
@@ -633,7 +656,7 @@ The following two small programs, both of which have actual time 2,
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
 
 \begin{itemize}
-\item[] 
+\item[]
 $\vtime{P} = 0$ and
 $\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
 \end{itemize}
@@ -642,7 +665,7 @@ $\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
 \item[--] $\etime{\texttt{kernelSleep 1; sleep 2}} \approx 2$
 
 \begin{itemize}
-\item[] 
+\item[]
 $\vtime{P} = 0$ and
 $\etime{P} = 1$, thus $(\vtime{P} + 2) > \etime{P}$ (case 2)
 \end{itemize}
@@ -658,7 +681,7 @@ For some program $P$ and time $t$:
 \label{lem:sleep-L}
 \end{lemma}
 %
-%The implication of this lemma is that a preceding sleep does not affect 
+%The implication of this lemma is that a preceding sleep does not affect
 
 \noindent
 These two lemmas illuminate something of the semantics of sleep,
