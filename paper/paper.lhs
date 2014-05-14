@@ -176,6 +176,7 @@ perception of pattern and tempo.
 
 
 \section{Sonic Pi}
+\label{sec:sp-1}
 
 Sonic Pi is a Domain Specific Language for manipulating synthesisers
 through time~\cite{Aaron2013}. It was designed for teaching core
@@ -222,12 +223,12 @@ play 59
 \caption{Playing the (MIDI) notes of the chord E minor as an arpegio.)}
 \end{figure}
 
-Whilst these time semantics worked well in a computing education context
-for demonstrating effect execution order, they didn't translate well to
-music contexts due to a mismatch with user expectations. This mismatch
-was particularly emphasised when Sonic Pi gained the ability to play
-drum samples. Consider the example in
-Figure~\ref{example-drum-loop}. Here we're attempting to regularly play
+Whilst these temporal semantics worked well in a computing education
+context for demonstrating effect execution order, they didn't translate
+well to music contexts due to a mismatch with user expectations. This
+mismatch was particularly emphasised when Sonic Pi gained the ability to
+play drum samples. Consider the example in
+Figure~\ref{example-drum-loop}. Here we are attempting to regularly play
 note 30 at the same time as the drum sample with half a second between
 each onset.
 
@@ -249,17 +250,21 @@ end
 
 Unfortunately the execution will not produce exactly the desired
 behaviour and the rhythm will drift in time due to the addition of the
-execution time to the sleep time. After line A has completed executing,
-wall-clock time will have moved on by the amount of time it took to
-execute the line. Similarly for line B. Line C introduces two extra
-sources of time, the sleep time and the time spent waiting for the
-scheduler to pick up and continue executing the thread. Therefore,
-instead of each iteration taking precisely 0.5s, the actual time is the
-summation of the computation time of A, the computation time of B, 0.5
-and the scheduler pick-up time. Depending on load and processor speed,
-these extra times can produce dramatically noticeable results. This is
-profoundly apprent when the user requests two threads to work in
-synchronisation such as in Figure~\ref{example-threaded-drum-loop}.
+execution time itself to the sleep time. For example, after line A in
+Figure~\ref{example-drum-loop} has completed executing, wall-clock time
+will have moved on by the amount of time it took to execute the
+line. Similarly for line B. Line C introduces two extra sources of time,
+the sleep time and the time spent waiting for the scheduler to pick up
+and continue executing the thread. Therefore, instead of each iteration
+taking precisely 0.5s, the actual time is the summation of the
+computation time of A, the computation time of B, 0.5 and the scheduler
+pick-up time. Depending on load and processor speed, these extra times
+can produce dramatically noticeable results. This is profoundly apprent
+when the user requests two threads to work in synchronisation such as in
+Figure~\ref{example-threaded-drum-loop}. The threads may start out in
+synchronisation, but because the extra computation time will differ
+across the threads, they will drift at varying rates and move out of
+synchronisation.
 
 \begin{SaveVerbatim}{example-t-drums}
 in_thread
@@ -285,24 +290,25 @@ end
 \caption{Two concurrent threads playing in synchronisation)}
 \end{figure}
 
+Sonic Pi's timing issues are further compounded by the fact that calls
+to $play$ and $sample$ are asynchronous messages, and there is an
+additional time cost for these messages to be sent and interpreted by
+the external synth process. This then adds additional varying time
+(jitter) to each sound trigger.
 
+\section{Temporal expectations}
 
-The timing issues are further compounded by the fact that calls to
-$play$ and $sample$ are asynchronous, and there is an additional time
-cose for a trigger message to be sent and interpreted by the external
-synth process. This then adds additional varying time (jitter) to each
-sound trigger.
-
-%% However, the way in which it did not meet expectations is related to the
-%% nature of those expectations:
-
-%% Explicit representation of rhythm: In general was functionally accurate in
-%% v1 (correct number of beats etc). As in conventional computational semantics
-%% - everything gets done, and there is not missing or extra events
-
-%% Implicit representation from the experience of rhythm: It's done at a time
-%% that reduces the quality of the musical experience - for example variability
-%% in the beat due to garbage collection
+The temporal semantics present in the initial version of Sonic Pi as
+described in Section~\ref{sec:sp-1} did not meet user expectations in
+ways specicially related to the nature of these expectations. From a
+functional perspective, the explicit representation of rhythm provided
+computationally accurate semantics. All expressed computation happens
+(i.e. all notes are played, and all sleeps are honoured) and the
+execution happens in the defined order. However, when we consider the
+implicit representation from the experience of rhythm, the addition of
+implicit computation time to the explicit timing statements produces
+sporadic timing of the musical events which reduces the quality of the
+musical experience.
 
 %% So less expert musicians might be able to identify more explicit problems
 %% (extra beats), but find it harder to say precisely what the problem is when
@@ -596,7 +602,7 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 
 We outline here some important temporal properties of our \lang{} programs
 that relates the virtual time and actual times. In Section~\ref{}, we
-replay these lemmas and prove a soundness result: that these lemmas are true 
+replay these lemmas and prove a soundness result: that these lemmas are true
 for our model.
 
 %For convenience, and to contrast with \sleepOp{}, we'll use an additional
