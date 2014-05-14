@@ -624,6 +624,8 @@ For some program $P$ and time $t$:
 \end{lemma}
 %%
 \noindent
+\note{Could just write this as a maximum, but later its useful to see the cases
+when thinking about an alternate model}
 The following two small programs, both of which have actual time 2,
  illustrate each case of this lemma:
 %%
@@ -662,10 +664,20 @@ For some program $P$ and time $t$:
 These two lemmas illuminate something of the semantics of sleep,
 and its interaction with other statements in the language.
 
+\begin{equation}
+[
+\end{equation}
+
+
 \begin{lemma}
 For all programs $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
+
+
+
+
+
 
 \begin{lemma}
 For all programs $P$ and $Q$ then:

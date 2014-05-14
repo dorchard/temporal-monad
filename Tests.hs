@@ -131,8 +131,8 @@ unitLaw2 m = do left  <- runTime $ do { x <- m;  return x }
                 putStrLn $ show right
 
 
-assocLaw f g m = do left  <- runTime $ do { y <- do { x <- m; f x; }; g y } 
-                    right <- runTime $ do { x <- m; do { y <- f x; g y }; }
+assocLaw f g m = do left  <- runTime $ duration $ do { y <- do { x <- m; f x; }; g y } 
+                    right <- runTime $ duration $ do { x <- m; do { y <- f x; g y }; }
                     putStrLn $ show left
                     putStrLn $ show right
 
@@ -145,3 +145,7 @@ law2Foo = unitLaw2 $ do {kernelSleep 1; start <- start; end <- time; return (dif
 law3Foo = assocLaw sleep' sleep2 (T (\(t, t') _ -> return $ (diffTime t' t, 0)))
                 where sleep' x = do { sleep x; return (x * 0.5); }
                       sleep2 x = duration $ do { sleep x; }
+
+law3Foo' = assocLaw f g m where m = kernelSleep 1
+                                f = \_ -> sleep 3
+                                g = \_ -> sleep 2
