@@ -59,8 +59,8 @@
 \newcommand{\sleep}{\textnormal{\texttt{sleep}}\;}
 \newcommand{\sleepOp}{\texttt{sleep}}
 
-\newcommand{\ksleep}{\mathsf{kernelSleep}\;}
-\newcommand{\ksleepOp}{\textsf{kernelSleep}}
+\newcommand{\ksleep}{\textnormal{\texttt{kernelSleep}}\;}
+\newcommand{\ksleepOp}{\texttt{kernelSleep}}
 
 \newcommand{\lang}{Sonic Pi}
 
@@ -622,6 +622,30 @@ For some program $P$ and time $t$:
 %\end{align*}
 \label{lem:sleep-R}
 \end{lemma}
+%%
+\noindent
+The following two small programs, both of which have actual time 2,
+ illustrate each case of this lemma:
+%%
+\begin{itemize}
+\item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
+
+\begin{itemize}
+\item[] 
+$\vtime{P} = 0$ and
+$\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
+\end{itemize}
+\vspace{0.5em}
+
+\item[--] $\etime{\texttt{kernelSleep 1; sleep 2}} \approx 2$
+
+\begin{itemize}
+\item[] 
+$\vtime{P} = 0$ and
+$\etime{P} = 1$, thus $(\vtime{P} + 2) > \etime{P}$ (case 2)
+\end{itemize}
+\end{itemize}
+%%
 
 \begin{lemma}
 For some program $P$ and time $t$:
@@ -631,6 +655,8 @@ For some program $P$ and time $t$:
 \end{align*}
 \label{lem:sleep-L}
 \end{lemma}
+%
+%The implication of this lemma is that a preceding sleep does not affect 
 
 \noindent
 These two lemmas illuminate something of the semantics of sleep,
