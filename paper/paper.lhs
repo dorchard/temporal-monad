@@ -352,16 +352,37 @@ the final chord is not played until 1.5 seconds has elapsed since the
 start of the program. Figure~\ref{three-chord-timing} illustrates the
 timing.
 
-Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated, at least
-$t$ seconds has elapsed since the last \sleepOp{}. This provides a minimum
-time. In between calls to \sleepOp{}, any other statements can (with some limits)
-be considered task parallel.
+Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated,
+at least $t$ seconds has elapsed since the last \sleepOp{}. This
+provides a minimum time. In between calls to \sleepOp{}, any other
+statements can (with some limits) be considered task parallel.
 
-In \lang{}, it is possible that a computation proceeding a \sleepOp{}
-can overrun; that is, run longer than the sleep time.  Thus, the
-programming model is not suitable for realtime systems requiring hard
-deadlines but \sleepOp{} instead provides a \emph{soft deadline} (using
-the terminology of Hansson and Jonsson~\cite{hansson1994logic}).
+These semantics are achieved by represing virtual time as a thread-local
+variable which is only advanced as part of the new implementation of
+$sleep$. Therefore, each thread has access to both real time and virtual
+time, with the virtual time used to schedule external effects. In order
+to keep the execution of the program in synchronisation with the
+explicit timing requirements of the program, $sleep$ takes into account
+the execution time since the last $sleep$ and reduces the requested
+sleep time appropriately. Therefore if the user issues a $sleep 1$
+statement, and the current execution time since the last $sleep$
+statement is 0.1 seconds, the implementation only sleeps the current
+thread for 0.9s. This ensures that no drifting occurs. In order to deal
+with relative execution times within a sleep barrier and also the
+message transmission costs for schedululing external effects, a constant
+$schedule_ahead_time$ value is added to the current virtual time for all
+asynchronously scheduled effects. Provided that the addition of the
+jitter time and the execution time between calls to $sleep$ never
+exceeds this value, the temporal expectations of the system are met as
+we will demonstrate more formally in the subsequent sections.
+
+
+It is important to not that in \lang{}, it is possible that a
+computation proceeding a \sleepOp{} can overrun; that is, run longer
+than the sleep time.  Thus, the programming model is not suitable for
+realtime systems requiring hard deadlines but \sleepOp{} instead
+provides a \emph{soft deadline} (using the terminology of Hansson and
+Jonsson~\cite{hansson1994logic}).
 
 \note{Contributions}
 
