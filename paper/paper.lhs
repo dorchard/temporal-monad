@@ -1034,7 +1034,7 @@ $\etime{P';Q'} = t + \etime{Q'}$
 \subsubsection{Monad laws}
 
 The |Temporal| moand is ``weak'', in the sense that the standard monad
-laws do not hold in general.  For example, one of the unit laws is that:
+laws do not always hold.  For example, one of the unit laws is that:
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
@@ -1042,9 +1042,16 @@ laws do not hold in general.  For example, one of the unit laws is that:
 \label{law-example}
 \end{equation}
 %%
-where |m :: Temporal a|.  However, for |Temporal| this law is
-violated in cases where |m| depends on the current time. For example, let
-|m| be defined:
+where |m :: Temporal a|. In our model this corresponds to the following
+equality on programs:
+%%
+\begin{equation*}
+\interp{x = P; y = x} \equiv \interp{y = P}
+\end{equation*}
+%%
+This should seem an intuitive rule to most programmings.  However, for
+the |Temporal| monad this law is violated in cases where |m| depends
+on the current time. For example, let |m| be defined:
 %
 \begin{code}
 m = do   kernelSleep 1
