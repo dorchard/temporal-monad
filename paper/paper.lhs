@@ -185,22 +185,9 @@ Figure~\ref{eminor-chord}.
 play 52
 play 55
 play 59
+
+
 \end{SaveVerbatim}
-
-\begin{figure}[t]
-\begin{minipage}{0.46\linewidth}
-\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0}
-\end{minipage}
-\label{eminor-chord}
-\caption{Playing the (MIDI) notes of the chord E minor in succession.)}
-\end{figure}
-
-However, given the clockspeeds of modern processors, these instructions
-are likely to be executed so quickly in succession that they will be
-perceived as a chord i.e. all the note being played simultaneously. It
-is therefore necessary to separate the triggering of these notes out
-through time. This can be achieved by sleeping the current thread, see
-Figure~\ref{eminor-chord-spaced}.
 
 \begin{SaveVerbatim}{example0b}
 play 52
@@ -211,12 +198,33 @@ play 59
 \end{SaveVerbatim}
 
 \begin{figure}[t]
-\begin{minipage}{0.46\linewidth}
+\subfigure[Chord; notes together]{
+\hspace{2.5em}
+\begin{minipage}{0.34\linewidth}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0}
+\vspace{0.5em}
+\end{minipage}
+\label{eminor-chord}
+}
+\subfigure[Arpegio; notes in succession]{
+\hspace{1.5em}
+\begin{minipage}{0.4\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0b}
+\vspace{0.5em}
 \end{minipage}
 \label{eminor-chord-spaced}
-\caption{Playing the (MIDI) notes of the chord E minor as an arpegio.)}
+}
+\caption{Playing the (MIDI) notes of the E minor chord.}
 \end{figure}
+
+However, given the clockspeeds of modern processors, these instructions
+are likely to be executed so quickly in succession that they will be
+perceived as a chord i.e. all the note being played simultaneously. It
+is therefore necessary to separate the triggering of these notes out
+through time. This can be achieved by sleeping the current thread, see
+Figure~\ref{eminor-chord-spaced}.
+
+
 
 Whilst these temporal semantics worked well in a computing education
 context for demonstrating effect execution order, they didn't translate
@@ -577,11 +585,6 @@ We refer to sequences statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
 seconds). 
 
-As described previously, the programming model of \lang{}
-distinguishes between the actual time elapsed since the start of a
-program $P$ which we write here as $\etime{P}$ and the virtual time which
-is advanced by \sleepOp{} statements which we write as $\vtime{P}$.
-
 \paragraph{A core fragment of Sonic Pic}
 
 Throughout the rest of this section, we model a core subset of
@@ -591,52 +594,58 @@ programs, $S$ statements, and $E$ expressions:
 \begin{align*}
 P & ::= P; S \mid \emptyset \\
 S & ::= E \mid \emph{var} = E \\
-E  & ::= \sleep \mathbb{N} \mid A^i_t \mid \emph{var}
+E  & ::= \sleep \mathbb{R}_{\geq 0} \mid A^i \mid \emph{var}
 \end{align*}
 %%
-where $A^i_t$ represents the $i$^th expression in Sonic Pi which 
-takes $t$ seconds of actual time to run, for example, some $A$ might be
- a \texttt{play} expression. We use this to abstract over operations
-in the language which do not modify virtual time. 
+where $A^i$ represents operations in Sonic Pi other than \sleepOp,
+\eg{}, some $A^j$ is the \texttt{play} operation. We use this to
+abstract over operations in the language which do not modify virtual
+time.
 
-The definition of $P$ above is as a ``snoc''-list (\ie{}, elements are consed
-onto the end, not front) where $\emptyset$ represents empty lists. This
-shape will aid some of the proofs later. 
-
-Statements may be expressions on their own, or may have (pure) bindings
-to variables. 
+By the above definition, programs $P$ are a ``snoc''-list 
+(\ie{}, elements are consed onto the end, not front) where $\emptyset$
+is the empty list. This structure aids later proofs. 
+Statements $S$ may be expressions on their own, or may have (pure)
+bindings to variables. Throughout we consider the first case of $S$ a 
+degenerate case of the second where the variable is irrelevant \eg{}, $? = E$.
 
 \subsection{Virtual time and real time}
 \label{sec:spec}
 
+As described previously, the programming model of \lang{}
+distinguishes between the actual time elapsed since the start of a
+program $P$ which we write here as $\etime{P}$ and the virtual time
+which is advanced by \sleepOp{} statements which we write as
+$\vtime{P}$. In this section we give specifications on the functions
+$[-]_v$ and $[-]_t$ to given axiomatic model of the temporal behaviour
+of Sonic Pi programs. We'll treat these operations as overloaded for
+programs $P$, statements $S$ and epxresions $E$. 
 
-
-The \sleepOp{} operation is the only way to change the virtual
-time. Therefore, the definition of $\vtime{-}$ can be easily defined
-over all programs:
+Virtual time $\vtime{-}$ can be easily defined over all programs,
+since the \sleepOp{} operation is the only expression changing virtual
+time: 
 %
 \begin{definition}
 Virtual time is specified for statements of \lang{} programs
-by the following (ordered) cases:
+by the following cases:
 %
 \begin{align*}
-\vtime{\sleep t} & = t \\
-\vtime{P; Q} & = \vtime{P} + \vtime{Q} \\
-\vtime{-} & = 0
+\begin{array}{llll}
+\vtime{P; \emph{var} = E} & = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & = t \\
+\vtime{\emptyset } & = 0 &  \qquad \vtime{A^i} & = 0 
+\end{array}
 \end{align*}
-%
-\ie{}, the virtual time is $0$
-for any statment other than \sleepOp{} or sequential composition.
+% 
+Thus, the virtual time is $0$ for anything other than \sleepOp{} or sequential composition. 
 \label{sleep-spec}
 \end{definition}
-\note{I haven't included here expressions, for example, if a call
-to a function that did some sleeping happened, then this is not accounted
-for here. I could be easily incldued though.}
+\note{I haven't included here functional calls (that might do some sleeping).
+I could be easily include this though. What do you think Sam?}
 
 \paragraph{Equality on time}
 
 Providing exact deadlines in real-time systems is difficult due
-to non-determinism combined with overheads caused by execution. We do not ignore
+to non-determinism combined with execution overheads. We do not ignore
 this problem in the programming model of \lang{} and the discussion here.
 We define the relation $\approx$ on actual times, where:
 %%
@@ -657,6 +666,7 @@ engine, which is roughly \note{X}.
   able to say later that in some cases $\epsilon$ is the scheduling
   time for play statments?}
 
+\paragraph{Axioms of actual time}
 
 The virtual time and actual time of a single sleep statement
  are roughly the same, \ie{}, $\vtime{\sleep t} \approx
@@ -668,12 +678,10 @@ Section~\ref{sec:examples}, the use of $\sleep t$ in a program does
 not mean that a program necessarily waits for $t$ seconds-- depending
 on the context, it may wait for anywhere between $0$ and $t$ seconds.
 
-\paragraph{Temporal properties of programs}
-
-We outline here some important temporal properties of our \lang{} programs
-that relates the virtual time and actual times. In Section~\ref{}, we
-replay these lemmas and prove a soundness result: that these lemmas are true
-for our model.
+We outline here some important temporal properties of our \lang{}
+programs that relates the virtual time and actual times. In
+Section~\ref{sec:soundness}, we replay these lemmas and prove a
+soundness result: that these lemmas are true for our model.
 
 %For convenience, and to contrast with \sleepOp{}, we'll use an additional
 %statement \ksleepOp{} here (which is not available in the actual language)
@@ -683,35 +691,33 @@ for our model.
 For some program $P$ and time $t$:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} \approx
- \begin{cases}
-   \etime{P} & (\vtime{P} + t) < \etime{P} \\
-   \vtime{P} + t  & \textit{otherwise}
- \end{cases}
+\etime{P; \sleep{} t} \,\approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
 \end{align*}
-%\begin{align*}
-%\etime{P; \sleep{} t} =
+%
+% CASE VERSION
+%
+%\etime{P; \sleep{} t} \approx
 % \begin{cases}
-%   \etime{P} & t < \etime{P} \\
-%   \vtime{P} + t & t \geq \etime{P}
+%   \etime{P} & (\vtime{P} + t) < \etime{P} \\
+%   \vtime{P} + t  & \textit{otherwise}
 % \end{cases}
 %\end{align*}
 \label{lem:sleep-R}
+\vspace{-1em}
 \end{lemma}
 %%
 \noindent
-\note{Could just write this as a maximum, but later its useful to see the cases
-when thinking about an alternate model}
 The following two small programs, both of which have actual time 2,
- illustrate each case of this lemma:
+ illustrate this lemma. 
 %%
 \begin{itemize}
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
 
 \begin{itemize}
 \item[]
-$\vtime{P} = 0$ and
-$\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
+$\vtime{P} = 0$, $t = 1$, and
+$\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$ 
 \end{itemize}
 \vspace{0.5em}
 
@@ -719,37 +725,50 @@ $\etime{P} = 2$, thus $(\vtime{P} + 1) < \etime{P}$ (case 1)
 
 \begin{itemize}
 \item[]
-$\vtime{P} = 0$ and
-$\etime{P} = 1$, thus $(\vtime{P} + 2) > \etime{P}$ (case 2)
+$\vtime{P} = 0$, $t = 2$, and
+$\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 \end{itemize}
 \end{itemize}
 %%
-
-\begin{lemma}
-For some program $P$ and time $t$:
-%%
-\begin{align*}
-\etime{\sleep{} t; P} \approx t + \etime{P}
-\end{align*}
-\label{lem:sleep-L}
-\end{lemma}
+%\begin{lemma}
+%For some program $P$ and time $t$:
+%%%
+%\begin{align*}
+%\etime{\sleep{} t; P} \approx t + \etime{P}
+%\end{align*}
+%\label{lem:sleep-L}
+%\end{lemma}
 %
 %The implication of this lemma is that a preceding sleep does not affect
 
 \noindent
-These two lemmas illuminate something of the semantics of sleep,
+This lemma illuminate something of the semantics of sleep,
 and its interaction with other statements in the language.
-
-\begin{equation}
-[
-\end{equation}
-
 
 \begin{lemma}
 For all programs $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 
+\begin{proof}
+By induction on the structure of programs.
+%
+\begin{itemize}
+\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$.
+\item $P = (P'; \emph{var} = E)$, split on $E$
+  \begin{itemize}
+    \item $E = \sleep t$ 
+
+      By Definition~\ref{sleep-spec}, $\vtime{P'; \sleep t} = \vtime{P'} + t$.
+      
+      By Lemma~\ref{lem:sleep-R} $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$. 
+
+      By the inductive hypothesis, $\etime{P'} \geq \vtime{P'}$ therefore 
+      By monotonicity of $+$, $\etime{P'} + t \geq \vtime{P'} + t$
+       
+  \end{itemize}
+\end{itemize}
+\end{proof}
 
 
 
