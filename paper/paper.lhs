@@ -7,6 +7,7 @@
 %format <*> = "<\!\!\!*\!\!\!>"
 %format newline = "\\[-1.5em]"
 %format interpP = "\interp{P}"
+%format lamWild = "{\backslash}{\anonymous}"
 
 \usepackage{enumerate}
 \usepackage{subfigure}
@@ -821,7 +822,7 @@ By induction on the structure of programs.
 \end{proof}
 %
 \noindent
-The abstraction specification of the temporal behaviour here gives us a reasonable model
+The abstraction specification of the temporal behaviour here gives us a model 
 with which we can reason about time in Sonic Pi programs. 
 %%
 \begin{example}
@@ -849,38 +850,59 @@ $\etime{B} \leq s_2$ then $\etime{P} = s_1 + s_2 + \etime{C}$.
 %\end{equation*}
 
 \noindent
-We now move on to a denotational style model. We'll prove this
-sound with respect to the specifications of Definition~\ref{def:vtime}
-and ~\ref{def:etime}, linking the two levels of model. 
+We now move on to a denotational model, which provides a semantics for
+the core subset of the language described here. We'll prove this sound
+semantics with respect to the axiomatic model of this section, linking
+the two levels of model.
 
 
 \newcommand{\TM}{\mathsf{TM}}
 
-\subsection{Monadic structure on computation}
+\subsection{Monadic modal}
 \label{sec:time-monad}
 
-In the following, we use Haskell as our meta language for the
-semantics (since it provides convenient syntax for working with
-monads)\footnote{The source code for the model is available at
-  \url{https://github.com/dorchard/temporal-monad}}.
-\lang{} computations are modelled by the \emph{Temporal} data type, defined:
+In the following, we use Haskell as a meta language for a denotational
+model (semantics) since it provides a convenient syntax for working
+with monads. This approach also provides an executable semantics that
+is useful for experimentation and integrating into other approaches.
+The source code is available at
+\url{https://github.com/dorchard/temporal-monad}.
+
+\paragraph{The \emph{Temporal} monad}
+
+We define an interpretation $\interp{-}$ that maps programs and
+statements to a parametric data structure, named \emph{Temporal},
+which encapsulates the effects of the Sonic Pi programs.  For closed
+programs (those without free variables) the type of this
+interpretation is $\interp{\emph{P}} : \emph{Temporal} \,
+()$. Temporal computations, encapsulated by |Temporal| are functions
+of the form:
+%%
+\begin{align*}
+& (\textit{start time}, \textit{current time}) \\ 
+& \quad \rightarrow (\textit{old vtime} \rightarrow
+\textit{kernel-access} \, (\textit{result}, \textit{new vtime}))
+\end{align*}
+%%
+that is, mapping a pair of two times: the start time and current time
+of the computation, to a stateful computation on virtual times
+(mapping from an old virtual time to a new virtual time) which may
+access the kernel to get the actual clock time, and produces a result
+along with the new vritual time.  Concretely, |Temporal| is defined:
 %%
 \begin{code}
 data Temporal a =
     T ((Time, Time) -> (VTime -> IO (a, VTime)))
 \end{code}
 %
-Thus, temporal computations map a pair of two times, which will be
-the start time of the computation and current time, to a stateful
-computation with a single location storing a virtual time, over the
-\emph{IO} type.  The \emph{IO} computation provides underlying access
-to the actual time from kernel.
+where |IO| encapsulates access to 
+the actual clock time from operation system.
 
-The \emph{Monad} instance for \emph{Temporal} is then as follows:
+|Temporal| has a monad structure, defined by the following instance of the |Monad| class:
 %
 \begin{code}
 instance Monad Temporal where
-  return a     = T ( \_ -> \vT -> return (a, vT))
+  return a     = T ( lamWild -> \vT -> return (a, vT))
 
   newline
   (T p) >>= q  = T (\(startT, nowT) -> \vT ->
@@ -891,14 +913,15 @@ instance Monad Temporal where
 \end{code}
 %
 To ease understanding, we recall the types of \emph{return}
-and |(>>=)| along with some intuition for their behaviour for
+and |(>>=)| and give some intuition for their behaviour for
 \emph{Temporal}:
 %
 \begin{itemize}
 \item |return :: a -> Temporal a| lifts a pure value into a trivially
 effectful computation by ignoring the time parameters and
-providing the usual pure state behaviour of returning the parameter state unchanged
-(named \emph{vT} in this case).
+providing the usual pure state behaviour of returning the parameter state |vT| unchanged
+along with the result. The nested use of |return|, on the right, comes from the |IO| monad,
+thus |return :: a -> IO a|. 
 
 \item |(>>=) :: Temporal a -> (a -> Temporal b) -> Temporal b|
   composes two computations together.  The result of composing two
@@ -911,9 +934,10 @@ providing the usual pure state behaviour of returning the parameter state unchan
   the operation system.
 \end{itemize}
 
+\noindent
 To model the evaluation of a program, the |runTime| operation executes
 a temporal computation inside of the \emph{IO} monad by providing the
-start time of the computation and virtual time 0:
+start time of the computation, from the operating system and the virtual time 0:
 %%
 \begin{code}
 runTime :: Temporal a -> IO a
@@ -922,7 +946,8 @@ runTime (T c) = do  startT <- getCurrentTime
                     return x
 \end{code}
 %%
-To illustrate the evaluation of temporal computation and the
+\begin{example}
+To illustrate the evaluation of temporal computations and the
 ordering and interleaving of calls to the operation system for the
 current time, consider the program:
 %%
@@ -946,6 +971,7 @@ do  startT    <- getCurrentTime
 This illustrates the repeated calls to |getCurrentTime|, the
 constant start time parameter, and the threading of virtual time state
 throughout the computation.
+\end{example}
 
 Figure~\ref{core-functions} shows a number of effectful operations of
  the \emph{Temporal} monad that access the current time, the start time, get
