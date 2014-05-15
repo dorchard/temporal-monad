@@ -21,6 +21,9 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{color}
+\usepackage[pdftex]{graphicx}
+
+\DeclareGraphicsExtensions{.png,.jpg,.pdf} % used graphic file format for pdflatex
 
 \bibliographystyle{amsalpha}
 
@@ -59,6 +62,9 @@
 \newcommand{\ksleep}{\textnormal{\texttt{kernelSleep}}\;}
 \newcommand{\ksleepOp}{\texttt{kernelSleep}}
 
+\newcommand{\schedAheadT}{\textnormal{\texttt{schedule_ahead_time}}\;}
+\newcommand{\schedAheadTOp}{\texttt{scheduleAheadTime}}
+
 \newcommand{\lang}{Sonic Pi}
 
 \newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
@@ -71,13 +77,13 @@
 \newcommand{\ie}{\emph{i.e.}}
 \newcommand{\eg}{\emph{e.g.}}
 
-\authorinfo{Sam Aaron}
+\authorinfo{Samuel Aaron}
            {Computer Laboratory, University of Cambridge, UK}
            {sam.saaron|@|cl.cam.ac.uk}
 \authorinfo{Dominic Orchard}
            {Computer Laboratory, University of Cambridge, UK}
            {dominic.orchard|@|cl.cam.ac.uk}
-\authorinfo{Alan Blackwell}
+\authorinfo{Alan F. Blackwell}
            {Computer Laboratory, University of Cambridge, UK}
            {alan.blackwell|@|cl.cam.ac.uk}
 
@@ -179,18 +185,16 @@ perception of pattern and tempo.
 
 Sonic Pi is a Domain Specific Language for manipulating synthesisers
 through time~\cite{Aaron2013}. It was designed for teaching core
-computing notations to school students using live-coding music as a
-means for engaging students. One of the core concepts Sonic Pi has been
-used to teach is the sequential ordering of effects in imperative
-programs such as playing successive notes in an arpeggio, see
-Figure~\ref{eminor-chord}.
+computing notations to school students using creative programming,
+specically live-coding music, as a means for engaging students. One of
+the core computing concepts Sonic Pi has been used to teach is the
+sequential ordering of effects in imperative programs such as playing
+successive notes in an arpeggio, see Figure~\ref{eminor-chord}.
 
 \begin{SaveVerbatim}{example0}
 play 52
 play 55
 play 59
-
-
 \end{SaveVerbatim}
 
 \begin{SaveVerbatim}{example0b}
@@ -227,8 +231,6 @@ perceived as a chord i.e. all the note being played simultaneously. It
 is therefore necessary to separate the triggering of these notes out
 through time. This can be achieved by sleeping the current thread, see
 Figure~\ref{eminor-chord-spaced}.
-
-
 
 Whilst these temporal semantics worked well in a computing education
 context for demonstrating effect execution order, they didn't translate
@@ -297,11 +299,35 @@ end
 \caption{Two concurrent threads playing in synchronisation)}
 \end{figure}
 
+
 Sonic Pi's timing issues are further compounded by the fact that calls
 to $play$ and $sample$ are asynchronous messages, and there is an
 additional time cost for these messages to be sent and interpreted by
 the external synth process. This then adds additional varying time
 (jitter) to each sound trigger.
+
+
+\begin{figure}[htbp!]
+        \centering
+                \includegraphics[width=1\columnwidth]{assets/timing-version1-diagram.pdf}
+        \caption{The timing behaviour in Sonic Pi 1.0}
+        \label{fig:sp-timing1.0}
+\end{figure}
+
+The temporal issues described in this section are summarised in
+Figure~\ref{fig:sp-timing1.0}, which describes the timing behavour of
+Sonic Pi code triggering three successive chords. Each of the Delta
+times in the far left column represents the real computation time of
+each statement. Notice how they are all unique, the precise duration is
+related to aspects such as the amount of processing required for the
+computation, the current load of the system and the processor speed. The
+duration of deltas is therefore undeterministic and will not be
+consistent across runs of identical programs. As
+Figure~\ref{fig:sp-timing1.0} illustrates, the actual run time of the
+program is a summation of all these Delta times in addition to the
+requested sleep durations. This results in both drift and jitter of the
+timing of the sounds produced by the program.
+
 
 \section{Temporal expectations}
 
@@ -366,22 +392,29 @@ statements can (with some limits) be considered task parallel.
 
 These semantics are achieved by repressing virtual time as a thread-local
 variable which is only advanced as part of the new implementation of
-$sleep$. Therefore, each thread has access to both real time and virtual
+\sleepOp{}. Therefore, each thread has access to both real time and virtual
 time, with the virtual time used to schedule external effects. In order
 to keep the execution of the program in synchronisation with the
-explicit timing requirements of the program, $sleep$ takes into account
-the execution time since the last $sleep$ and reduces the requested
-sleep time appropriately. Therefore if the user issues a $sleep 1$
-statement, and the current execution time since the last $sleep$
+explicit timing requirements of the program, \sleepOp{} takes into account
+the execution time since the last \sleepOp{} and reduces the requested
+sleep time appropriately. Therefore if the user issues a \sleepOp{} 1
+statement, and the current execution time since the last \sleepOp{}
 statement is 0.1 seconds, the implementation only sleeps the current
 thread for 0.9s. This ensures that no drifting occurs. In order to deal
 with relative execution times within a sleep barrier and also the
 message transmission costs for scheduling external effects, a constant
-$schedule_ahead_time$ value is added to the current virtual time for all
+\schedAheadTOp{} value is added to the current virtual time for all
 asynchronously scheduled effects. Provided that the addition of the
-jitter time and the execution time between calls to $sleep$ never
+jitter time and the execution time between calls to \sleepOp{} never
 exceeds this value, the temporal expectations of the system are met as
 we will demonstrate more formally in the subsequent sections.
+
+\begin{figure}[htbp!]
+        \centering
+                \includegraphics[width=1\columnwidth]{assets/timing-diagram.pdf}
+        \caption{Timing behaviour of Sonic Pi 2.0 including virtual and scheduled time with a \schedAheadTOp{} of 0.5.}
+        \label{fig:reich}
+\end{figure}
 
 
 It is important to not that in \lang{}, it is possible that a
@@ -443,13 +476,7 @@ play D
 \end{minipage}
 \label{three-chord-example}
 }
-\subfigure[Timing of the three chord program]{
-\begin{minipage}{0.46\linewidth}
-\note{insert nice diagram that shows when the notes
-occur over the 1.5s duration} \\
-\end{minipage}
-\label{three-chord-timing}
-}
+
 \caption{Playing three chords (C major, F major, G major)
 in \lang{} with the second two chords played
 closer together by $0.5s$.}
@@ -554,11 +581,11 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \section{Modelling Sonic Pi's temporal semantics}
 
 From our experiences, we've found that the programming model of Sonic
-Pi, particularly its temporal model, is easy to understand by even 
-complete beginners, including children. By a few simple examples it 
+Pi, particularly its temporal model, is easy to understand by even
+complete beginners, including children. By a few simple examples it
 is easy to demonstrate the temporal semantics, using sounds as output,
 without having to appeal to any meta-theory; Sonic Pi attains the goal
-of being a good first language. 
+of being a good first language.
 
 In this section, we approach the programming model of Sonic Pi from a
 more theoretical angle, in order to develop a specification of our
@@ -573,7 +600,7 @@ Firstly, we define an abstract specification of virtual time and
 actual elapsed time in a simple core subset of Sonic Pi
 (Section~\ref{sec:spec}). This gives an abstract, axiomatic
 model of the semantics. We then make the model more concrete by
-providing a denotational-style, monadic semantics 
+providing a denotational-style, monadic semantics
 (Section~\ref{sec:time-monad}), introducing the \emph{temporal
   monad}. We use Haskell as a meta language for defining this model
 for ease of understanding. We then prove the monadic model sound with
@@ -587,12 +614,12 @@ errors that can occur at runtime (Section~\ref{sec:temporal-warnings}).
 \paragraph{Terminology and notation}
 We refer to sequences statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
-seconds). 
+seconds).
 
 \paragraph{A core fragment of Sonic Pic}
 
 Throughout the rest of this section, we model a core subset of
-the Sonic Pi language with the following grammar, where $P$ are 
+the Sonic Pi language with the following grammar, where $P$ are
 programs, $S$ statements, and $E$ expressions:
 %%
 \begin{align*}
@@ -627,14 +654,14 @@ As described previously, the programming model of \lang{}
 distinguishes between the actual time elapsed since the start of a
 program $P$ which we write here as $\etime{P}$ and the virtual time
 which is advanced by \sleepOp{} statements which we write as
-$\vtime{P}$. Both these abstract functions return time values, 
+$\vtime{P}$. Both these abstract functions return time values,
 thus, $\vtime{-},\etime{-} \in \mathbb{R}_{\geq 0}$, \ie{}, both
-return positive, real-number values. 
+return positive, real-number values.
 
 In this section we give specifications on the functions
 $[-]_v$ and $[-]_t$ to given axiomatic model of the temporal behaviour
 of Sonic Pi programs. We'll treat these operations as overloaded for
-programs $P$, statements $S$ and expressions $E$. 
+programs $P$, statements $S$ and expressions $E$.
 
 Virtual time $\vtime{-}$ can be easily defined over all programs,
 statements, and expressions, since the \sleepOp{} operation is the
@@ -647,14 +674,14 @@ by the following cases:
 \begin{align*}
 \begin{array}{crl}
 \vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
-\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0 
+\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
 \end{array}
 \end{align*}
-% 
+%
 Therefore for anything other than \sleepOp{} or sequential composition,
 the virtual time is $0$. Note that the equations on the left define $\vtime{-}$ for
 programs (with statements covered by the single case for $P; \synVar = E$,
-and on the right for expressions. 
+and on the right for expressions.
 \label{def:vtime}
 \end{definition}
 \note{I haven't included calls to functions (that might do some sleeping).
@@ -702,7 +729,7 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 %soundness result: that these lemmas are true for our model.
 
 \begin{definition}
-The actual elapsed time $\etime{-}$ can be specified at the level of programs 
+The actual elapsed time $\etime{-}$ can be specified at the level of programs
 by the following equations:
 %%
 \begin{align*}
@@ -722,13 +749,13 @@ by the following equations:
 % \end{cases}
 %\end{align*}
 %
-In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$. 
+In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$.
 \label{def:etime}
 \end{definition}
 
 \begin{example}
-The following two small example programs illustrate this definition, 
-and both have actual time 2. 
+The following two small example programs illustrate this definition,
+and both have actual time 2.
 %%
 \begin{itemize}
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
@@ -736,7 +763,7 @@ and both have actual time 2.
 \begin{itemize}
 \item[]
 $\vtime{P} = 0$, $t = 1$, and
-$\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$ 
+$\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$
 \end{itemize}
 \vspace{0.5em}
 
@@ -762,25 +789,25 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 %
 %The implication of this lemma is that a preceding sleep does not affect
 
-Definition~\ref{def:etime} illuminates the semantics of \sleepOp, 
-showing the interaction between actual time $\etime{-}$ 
+Definition~\ref{def:etime} illuminates the semantics of \sleepOp,
+showing the interaction between actual time $\etime{-}$
 and virtual time $\vtime{-}$ in the case for \sleepOp{}.
-Note that the definition of $\etime{-}$ (in the \sleepOp{} case) 
-is not a straightforward recursive decomposition on 
-programs, statements, and expressions as in the 
+Note that the definition of $\etime{-}$ (in the \sleepOp{} case)
+is not a straightforward recursive decomposition on
+programs, statements, and expressions as in the
 definition of $\vtime{-}$ (Definition~\ref{def:etime}). Instead,
 the actual time of a \sleepOp{} depends on its \emph{context}, which
-is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$. 
+is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$.
 This is why we have structured the core subset language here
- in terms of ``snoc''-list since the temporal semantics of an individual 
+ in terms of ``snoc''-list since the temporal semantics of an individual
 statement can depend on the program that has \emph{come before} it (the tail
 of the list ``snoc''-list).
 
 This definition provides us with the following lemma about
-the temporal semantics of any Sonic Pi program: 
+the temporal semantics of any Sonic Pi program:
 %
 \begin{lemma}
-For some program $P$ then $\etime{P} \geq \vtime{P}$. 
+For some program $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 %
@@ -792,26 +819,26 @@ specification.
 By induction on the structure of programs.
 %
 \begin{itemize}
-\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$ by Definition~\ref{def:vtime}. 
+\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$ by Definition~\ref{def:vtime}.
 \item $P = (P'; \synVar = E)$, split on $E$
   \begin{itemize}
-    \item $E = \sleep t$ 
+    \item $E = \sleep t$
 
       (a) by Definition~\ref{def:vtime}, $\vtime{P'; \sleep t} = \vtime{P'} + t$.
-      
+
       (b) by Definition~\ref{def:etime}, $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$.
 
       (c) by (b) $(\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'} \geq \vtime{P'} + t$
-      
+
       $\therefore$ by (a) and (c) then $\etime{P'; \sleep t} \geq \vtime{P' \sleep t}$
 
-     \item otherwise $E = A^i$ 
-       
+     \item otherwise $E = A^i$
+
      (a) by Definition~\ref{def:vtime}), $\vtime{P'; \synVar = A^i} = \vtime{P'}$
-     
-     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$ 
-     
-     (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$. 
+
+     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$
+
+     (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$.
 
      (d) since $\etime{-} \in \mathbb{R}_{\geq 0}$, by monotonicity and (c)
       $\etime{P'} + \etime{A^1} \geq \vtime{P'}$.
@@ -854,7 +881,6 @@ We now move on to a denotational model, which provides a semantics for
 the core subset of the language described here. We'll prove this sound
 semantics with respect to the axiomatic model of this section, linking
 the two levels of model.
-
 
 \newcommand{\TM}{\mathsf{TM}}
 
@@ -1071,7 +1097,7 @@ For some program $P$ and time $t$:
 %%
 \begin{align*}
 \etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
 \end{align*}
 \end{replemma}
 
@@ -1323,7 +1349,7 @@ For some program $P$ and time $t$:
 %%
 \begin{align*}
 \etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
 \end{align*}
 \end{replemma}
 %
