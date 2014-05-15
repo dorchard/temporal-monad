@@ -20,6 +20,9 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{color}
+\usepackage[pdftex]{graphicx}
+
+\DeclareGraphicsExtensions{.png,.jpg,.pdf} % used graphic file format for pdflatex
 
 \bibliographystyle{amsalpha}
 
@@ -227,7 +230,12 @@ is therefore necessary to separate the triggering of these notes out
 through time. This can be achieved by sleeping the current thread, see
 Figure~\ref{eminor-chord-spaced}.
 
-
+\begin{figure}[htbp!]
+        \centering
+                \includegraphics[width=1\columnwidth]{assets/timing-version1-diagram.pdf}
+        \caption{The timing behaviour in Sonic Pi 1.0}
+        \label{fig:sp-timing1.0}
+\end{figure}
 
 Whilst these temporal semantics worked well in a computing education
 context for demonstrating effect execution order, they didn't translate
@@ -295,6 +303,16 @@ end
 \label{example-threaded-drum-loop}
 \caption{Two concurrent threads playing in synchronisation)}
 \end{figure}
+
+
+\begin{figure}[htbp!]
+        \centering
+                \includegraphics[width=1\columnwidth]{assets/timing-diagram.pdf}
+        \caption{Timing behaviour of Sonic Pi 2.0 including virtual and scheduled time.}
+        \label{fig:reich}
+\end{figure}
+
+
 
 Sonic Pi's timing issues are further compounded by the fact that calls
 to $play$ and $sample$ are asynchronous messages, and there is an
@@ -553,11 +571,11 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \section{Modelling Sonic Pi's temporal semantics}
 
 From our experiences, we've found that the programming model of Sonic
-Pi, particularly its temporal model, is easy to understand by even 
-complete beginners, including children. By a few simple examples it 
+Pi, particularly its temporal model, is easy to understand by even
+complete beginners, including children. By a few simple examples it
 is easy to demonstrate the temporal semantics, using sounds as output,
 without having to appeal to any meta-theory; Sonic Pi attains the goal
-of being a good first language. 
+of being a good first language.
 
 In this section, we approach the programming model of Sonic Pi from a
 more theoretical angle, in order to develop a specification of our
@@ -572,7 +590,7 @@ Firstly, we define an abstract specification of virtual time and
 actual elapsed time in a simple core subset of Sonic Pi
 (Section~\ref{sec:spec}). This gives an abstract, axiomatic
 model of the semantics. We then make the model more concrete by
-providing a denotational-style, monadic semantics 
+providing a denotational-style, monadic semantics
 (Section~\ref{sec:time-monad}), introducing the \emph{temporal
   monad}. We use Haskell as a meta language for defining this model
 for ease of understanding. We then prove the monadic model sound with
@@ -586,12 +604,12 @@ errors that can occur at runtime (Section~\ref{sec:temporal-warnings}).
 \paragraph{Terminology and notation}
 We refer to sequences statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
-seconds). 
+seconds).
 
 \paragraph{A core fragment of Sonic Pic}
 
 Throughout the rest of this section, we model a core subset of
-the Sonic Pi language with the following grammar, where $P$ are 
+the Sonic Pi language with the following grammar, where $P$ are
 programs, $S$ statements, and $E$ expressions:
 %%
 \begin{align*}
@@ -626,14 +644,14 @@ As described previously, the programming model of \lang{}
 distinguishes between the actual time elapsed since the start of a
 program $P$ which we write here as $\etime{P}$ and the virtual time
 which is advanced by \sleepOp{} statements which we write as
-$\vtime{P}$. Both these abstract functions return time values, 
+$\vtime{P}$. Both these abstract functions return time values,
 thus, $\vtime{-},\etime{-} \in \mathbb{R}_{\geq 0}$, \ie{}, both
-return positive, real-number values. 
+return positive, real-number values.
 
 In this section we give specifications on the functions
 $[-]_v$ and $[-]_t$ to given axiomatic model of the temporal behaviour
 of Sonic Pi programs. We'll treat these operations as overloaded for
-programs $P$, statements $S$ and expressions $E$. 
+programs $P$, statements $S$ and expressions $E$.
 
 Virtual time $\vtime{-}$ can be easily defined over all programs,
 statements, and expressions, since the \sleepOp{} operation is the
@@ -646,14 +664,14 @@ by the following cases:
 \begin{align*}
 \begin{array}{crl}
 \vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
-\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0 
+\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
 \end{array}
 \end{align*}
-% 
+%
 Therefore for anything other than \sleepOp{} or sequential composition,
 the virtual time is $0$. Note that the equations on the left define $\vtime{-}$ for
 programs (with statements covered by the single case for $P; \synVar = E$,
-and on the right for expressions. 
+and on the right for expressions.
 \label{def:vtime}
 \end{definition}
 \note{I haven't included calls to functions (that might do some sleeping).
@@ -701,7 +719,7 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 %soundness result: that these lemmas are true for our model.
 
 \begin{definition}
-The actual elapsed time $\etime{-}$ can be specified at the level of programs 
+The actual elapsed time $\etime{-}$ can be specified at the level of programs
 by the following equations:
 %%
 \begin{align*}
@@ -721,13 +739,13 @@ by the following equations:
 % \end{cases}
 %\end{align*}
 %
-In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$. 
+In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$.
 \label{def:etime}
 \end{definition}
 
 \begin{example}
-The following two small example programs illustrate this definition, 
-and both have actual time 2. 
+The following two small example programs illustrate this definition,
+and both have actual time 2.
 %%
 \begin{itemize}
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
@@ -735,7 +753,7 @@ and both have actual time 2.
 \begin{itemize}
 \item[]
 $\vtime{P} = 0$, $t = 1$, and
-$\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$ 
+$\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$
 \end{itemize}
 \vspace{0.5em}
 
@@ -761,25 +779,25 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 %
 %The implication of this lemma is that a preceding sleep does not affect
 
-Definition~\ref{def:etime} illuminates the semantics of \sleepOp, 
-showing the interaction between actual time $\etime{-}$ 
+Definition~\ref{def:etime} illuminates the semantics of \sleepOp,
+showing the interaction between actual time $\etime{-}$
 and virtual time $\vtime{-}$ in the case for \sleepOp{}.
-Note that the definition of $\etime{-}$ (in the \sleepOp{} case) 
-is not a straightforward recursive decomposition on 
-programs, statements, and expressions as in the 
+Note that the definition of $\etime{-}$ (in the \sleepOp{} case)
+is not a straightforward recursive decomposition on
+programs, statements, and expressions as in the
 definition of $\vtime{-}$ (Definition~\ref{def:etime}). Instead,
 the actual time of a \sleepOp{} depends on its \emph{context}, which
-is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$. 
+is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$.
 This is why we have structured the core subset language here
- in terms of ``snoc''-list since the temporal semantics of an individual 
+ in terms of ``snoc''-list since the temporal semantics of an individual
 statement can depend on the program that has \emph{come before} it (the tail
 of the list ``snoc''-list).
 
 This definition provides us with the following lemma about
-the temporal semantics of any Sonic Pi program: 
+the temporal semantics of any Sonic Pi program:
 %
 \begin{lemma}
-For some program $P$ then $\etime{P} \geq \vtime{P}$. 
+For some program $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 %
@@ -791,26 +809,26 @@ specification.
 By induction on the structure of programs.
 %
 \begin{itemize}
-\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$ by Definition~\ref{def:vtime}. 
+\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$ by Definition~\ref{def:vtime}.
 \item $P = (P'; \synVar = E)$, split on $E$
   \begin{itemize}
-    \item $E = \sleep t$ 
+    \item $E = \sleep t$
 
       (a) by Definition~\ref{def:vtime}, $\vtime{P'; \sleep t} = \vtime{P'} + t$.
-      
+
       (b) by Definition~\ref{def:etime}, $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$.
 
       (c) by (b) $(\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'} \geq \vtime{P'} + t$
-      
+
       $\therefore$ by (a) and (c) then $\etime{P'; \sleep t} \geq \vtime{P' \sleep t}$
 
-     \item otherwise $E = A^i$ 
-       
+     \item otherwise $E = A^i$
+
      (a) by Definition~\ref{def:vtime}), $\vtime{P'; \synVar = A^i} = \vtime{P'}$
-     
-     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$ 
-     
-     (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$. 
+
+     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$
+
+     (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$.
 
      (d) since $\etime{-} \in \mathbb{R}_{\geq 0}$, by monotonicity and (c)
       $\etime{P'} + \etime{A^1} \geq \vtime{P'}$.
@@ -822,7 +840,7 @@ By induction on the structure of programs.
 %
 \noindent
 The abstraction specification of the temporal behaviour here gives us a reasonable model
-with which we can reason about time in Sonic Pi programs. 
+with which we can reason about time in Sonic Pi programs.
 %%
 \begin{example}
 Consider subprograms $A$, $B$, $C$ where
@@ -851,7 +869,7 @@ $\etime{B} \leq s_2$ then $\etime{P} = s_1 + s_2 + \etime{C}$.
 \noindent
 We now move on to a denotational style model. We'll prove this
 sound with respect to the specifications of Definition~\ref{def:vtime}
-and ~\ref{def:etime}, linking the two levels of model. 
+and ~\ref{def:etime}, linking the two levels of model.
 
 
 \newcommand{\TM}{\mathsf{TM}}
@@ -1045,7 +1063,7 @@ For some program $P$ and time $t$:
 %%
 \begin{align*}
 \etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
 \end{align*}
 \end{replemma}
 
@@ -1297,7 +1315,7 @@ For some program $P$ and time $t$:
 %%
 \begin{align*}
 \etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
 \end{align*}
 \end{replemma}
 %
