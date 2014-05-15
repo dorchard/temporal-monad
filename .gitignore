@@ -1,7 +1,7 @@
 *.aux
 *.log
 *.out
-*.pdf
+paper/*.pdf
 *.ptb
 *.bbl
 *.blg
