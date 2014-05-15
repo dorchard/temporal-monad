@@ -21,11 +21,6 @@
 \usepackage{url}
 \usepackage{color}
 
-\ifdefined\nolhs
-\DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
-\else
-\fi
-
 \bibliographystyle{amsalpha}
 
 \newcommand{\note}[1]{{\color{blue}{#1}}}
@@ -562,19 +557,61 @@ necessary for programmers of Sonic Pi to understand this theory, but
 the contribution here is useful for future language design and
 implementation research.
 
+Firstly, we define an abstract specification of virtual time and
+actual elapsed time in a simple core subset of Sonic Pi
+(Section~\ref{sec:spec}). This gives an abstract, axiomatic
+model of the semantics. We then make the model more concrete by
+providing a denotational-style, monadic semantics 
+(Section~\ref{sec:time-monad}), introducing the \emph{temporal
+  monad}. We use Haskell as a meta language for defining this model
+for ease of understanding. We then prove the monadic model sound with
+respect to the initial axiomatic specification, up to ``small'' permutations
+in time delay (Section~\ref{sec:soundness}). We consider alternate,
+simplified models using applicative functors or monoids in Section~\ref{sec:alternate},
+along with alternate models for \sleepOp{}. Lastly, we extend the model
+to incorporate ``temporal warnings'' to describe temporal
+errors that can occur at runtime (Section~\ref{sec:temporal-warnings}).
+
 \paragraph{Terminology and notation}
 We refer to sequences statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
-seconds).
+seconds). 
+
+As described previously, the programming model of \lang{}
+distinguishes between the actual time elapsed since the start of a
+program $P$ which we write here as $\etime{P}$ and the virtual time which
+is advanced by \sleepOp{} statements which we write as $\vtime{P}$.
+
+\paragraph{A core fragment of Sonic Pic}
+
+Throughout the rest of this section, we model a core subset of
+the Sonic Pi language with the following grammar, where $P$ are 
+programs, $S$ statements, and $E$ expressions:
+%%
+\begin{align*}
+P & ::= P; S \mid \emptyset \\
+S & ::= E \mid \emph{var} = E \\
+E  & ::= \sleep \mathbb{N} \mid A^i_t \mid \emph{var}
+\end{align*}
+%%
+where $A^i_t$ represents the $i$^th expression in Sonic Pi which 
+takes $t$ seconds of actual time to run, for example, some $A$ might be
+ a \texttt{play} expression. We use this to abstract over operations
+in the language which do not modify virtual time. 
+
+The definition of $P$ above is as a ``snoc''-list (\ie{}, elements are consed
+onto the end, not front) where $\emptyset$ represents empty lists. This
+shape will aid some of the proofs later. 
+
+Statements may be expressions on their own, or may have (pure) bindings
+to variables. 
 
 \subsection{Virtual time and real time}
+\label{sec:spec}
 
-The programming model of \lang{} distinguishes between the
-\emph{actual time} elapsed since the start of a program $P$ which we
-write as $\etime{P}$ and the \emph{virtual time} which is advanced by
-\sleepOp{} statements which we write as $\vtime{P}$.
 
-The \sleepOp{} operation is the way to change the virtual
+
+The \sleepOp{} operation is the only way to change the virtual
 time. Therefore, the definition of $\vtime{-}$ can be easily defined
 over all programs:
 %
@@ -765,6 +802,7 @@ s_1 + s_2 + \etime{C}$.
 \newcommand{\TM}{\mathsf{TM}}
 
 \subsection{Monadic structure on computation}
+\label{sec:time-monad}
 
 In the following, we use Haskell as our meta language for the
 semantics (since it provides convenient syntax for working with
@@ -924,7 +962,8 @@ kernelSleep t =  T (\(_, _) -> \vT ->
 \end{figure}
 
 
-\subsection{Soundness}
+\subsection{Soundness of the temporal monad}
+\label{sec:soundness}
 
 We replay the previous lemmas on the temporal behaviour of \lang{} programs,
 and show that the monadic model is sound with respect to these, \ie{},
@@ -1166,7 +1205,10 @@ In L, there is no expression which returns the current time;
 That is, for all expressions $e$, then the denotation
 $\interp{e}$ factors through
 
-\subsection{Subsets of the semantics}
+\subsection{Alternate definitions}
+\label{sec:alternate}
+
+\subsubsection{Subsets of the semantics}
 
 For the examples of Section~\ref{sec:introduction}, the full structure
 of monad is not needed to give their semantics as there is no using of
@@ -1231,7 +1273,8 @@ instance Monoid (Temporal ()) where
 with the interpretation $\interp{P; Q} = \interp{P} |`mappend`| Q$ and
 where |mempty| provides a \emph{no-op}.
 
-\subsection{Alternate definition of \emph{sleep}}
+\subsubsection{Alternate definition of \emph{sleep}}
+
 
 \begin{code}
 sleep' :: VTime -> Temporal ()
@@ -1307,6 +1350,7 @@ a tighter bound on sleep behaviour that previously where the behaviour was:
 %
 
 \subsection{Emitting overrun warnings}
+\label{sec:temporal-warnings}
 
 We extend the |Temporal| monad with an additional parameter for the
 $\epsilon$ time (maximum allowable overrun) and an output stream for
