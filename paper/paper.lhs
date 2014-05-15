@@ -44,6 +44,7 @@
 
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
+\newtheorem{example}{Example}
 
 \newreplemma{definition}{Definition}
 
@@ -61,6 +62,8 @@
 
 \newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
 \newcommand{\etime}[1]{[#1]_{\mathsf{t}}}
+
+\newcommand{\synVar}{\mathit{var}}
 
 \newcommand{\interp}[1]{\llbracket{#1}\rrbracket}
 
@@ -178,7 +181,7 @@ through time~\cite{Aaron2013}. It was designed for teaching core
 computing notations to school students using live-coding music as a
 means for engaging students. One of the core concepts Sonic Pi has been
 used to teach is the sequential ordering of effects in imperative
-programs such as playing successive notes in an arpegio, see
+programs such as playing successive notes in an arpeggio, see
 Figure~\ref{eminor-chord}.
 
 \begin{SaveVerbatim}{example0}
@@ -262,7 +265,7 @@ and continue executing the thread. Therefore, instead of each iteration
 taking precisely 0.5s, the actual time is the summation of the
 computation time of A, the computation time of B, 0.5 and the scheduler
 pick-up time. Depending on load and processor speed, these extra times
-can produce dramatically noticeable results. This is profoundly apprent
+can produce dramatically noticeable results. This is profoundly apparent
 when the user requests two threads to work in synchronisation such as in
 Figure~\ref{example-threaded-drum-loop}. The threads may start out in
 synchronisation, but because the extra computation time will differ
@@ -303,7 +306,7 @@ the external synth process. This then adds additional varying time
 
 The temporal semantics present in the initial version of Sonic Pi as
 described in Section~\ref{sec:sp-1} did not meet user expectations in
-ways specicially related to the nature of these expectations. From a
+ways specially related to the nature of these expectations. From a
 functional perspective, the explicit representation of rhythm provided
 computationally accurate semantics. All expressed computation happens
 (i.e. all notes are played, and all sleeps are honoured) and the
@@ -360,7 +363,7 @@ at least $t$ seconds has elapsed since the last \sleepOp{}. This
 provides a minimum time. In between calls to \sleepOp{}, any other
 statements can (with some limits) be considered task parallel.
 
-These semantics are achieved by represing virtual time as a thread-local
+These semantics are achieved by repressing virtual time as a thread-local
 variable which is only advanced as part of the new implementation of
 $sleep$. Therefore, each thread has access to both real time and virtual
 time, with the virtual time used to schedule external effects. In order
@@ -372,7 +375,7 @@ statement, and the current execution time since the last $sleep$
 statement is 0.1 seconds, the implementation only sleeps the current
 thread for 0.9s. This ensures that no drifting occurs. In order to deal
 with relative execution times within a sleep barrier and also the
-message transmission costs for schedululing external effects, a constant
+message transmission costs for scheduling external effects, a constant
 $schedule_ahead_time$ value is added to the current virtual time for all
 asynchronously scheduled effects. Provided that the addition of the
 jitter time and the execution time between calls to $sleep$ never
@@ -593,8 +596,8 @@ programs, $S$ statements, and $E$ expressions:
 %%
 \begin{align*}
 P & ::= P; S \mid \emptyset \\
-S & ::= E \mid \emph{var} = E \\
-E  & ::= \sleep \mathbb{R}_{\geq 0} \mid A^i \mid \emph{var}
+S & ::= E \mid \synVar = E \\
+E  & ::= \sleep \mathbb{R}_{\geq 0} \mid A^i \mid \synVar
 \end{align*}
 %%
 where $A^i$ represents operations in Sonic Pi other than \sleepOp,
@@ -602,12 +605,19 @@ where $A^i$ represents operations in Sonic Pi other than \sleepOp,
 abstract over operations in the language which do not modify virtual
 time.
 
-By the above definition, programs $P$ are a ``snoc''-list 
-(\ie{}, elements are consed onto the end, not front) where $\emptyset$
-is the empty list. This structure aids later proofs. 
-Statements $S$ may be expressions on their own, or may have (pure)
-bindings to variables. Throughout we consider the first case of $S$ a 
-degenerate case of the second where the variable is irrelevant \eg{}, $? = E$.
+By the above definition, programs $P$ are a ``snoc''-list (\ie{},
+elements are ``consed'' onto the end, not front as is standard for
+inductively-defined lists) where $\emptyset$ is the empty list. This
+structure aids later proofs.  Statements $S$ may be expressions on
+their own, or may have (pure) bindings to variables. Throughout we
+consider the first case of $S$ a degenerate case of the second where
+the variable is irrelevant \eg{}, $? = E$.
+
+We'll add a unary operation \ksleepOp{} to the core subset here which
+blocks the current computation for the time specified by its
+parameter.  This operation is not available in the actual language,
+but we introduce it to aid with examples in the section, and to
+contrast with \sleepOp{}.
 
 \subsection{Virtual time and real time}
 \label{sec:spec}
@@ -616,30 +626,37 @@ As described previously, the programming model of \lang{}
 distinguishes between the actual time elapsed since the start of a
 program $P$ which we write here as $\etime{P}$ and the virtual time
 which is advanced by \sleepOp{} statements which we write as
-$\vtime{P}$. In this section we give specifications on the functions
+$\vtime{P}$. Both these abstract functions return time values, 
+thus, $\vtime{-},\etime{-} \in \mathbb{R}_{\geq 0}$, \ie{}, both
+return positive, real-number values. 
+
+In this section we give specifications on the functions
 $[-]_v$ and $[-]_t$ to given axiomatic model of the temporal behaviour
 of Sonic Pi programs. We'll treat these operations as overloaded for
-programs $P$, statements $S$ and epxresions $E$. 
+programs $P$, statements $S$ and expressions $E$. 
 
 Virtual time $\vtime{-}$ can be easily defined over all programs,
-since the \sleepOp{} operation is the only expression changing virtual
-time: 
+statements, and expressions, since the \sleepOp{} operation is the
+only expression changing virtual time:
 %
 \begin{definition}
 Virtual time is specified for statements of \lang{} programs
 by the following cases:
 %
 \begin{align*}
-\begin{array}{llll}
-\vtime{P; \emph{var} = E} & = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & = t \\
-\vtime{\emptyset } & = 0 &  \qquad \vtime{A^i} & = 0 
+\begin{array}{crl}
+\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
+\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0 
 \end{array}
 \end{align*}
 % 
-Thus, the virtual time is $0$ for anything other than \sleepOp{} or sequential composition. 
-\label{sleep-spec}
+Therefore for anything other than \sleepOp{} or sequential composition,
+the virtual time is $0$. Note that the equations on the left define $\vtime{-}$ for
+programs (with statements covered by the single case for $P; \synVar = E$,
+and on the right for expressions. 
+\label{def:vtime}
 \end{definition}
-\note{I haven't included here functional calls (that might do some sleeping).
+\note{I haven't included calls to functions (that might do some sleeping).
 I could be easily include this though. What do you think Sam?}
 
 \paragraph{Equality on time}
@@ -664,35 +681,35 @@ engine, which is roughly \note{X}.
 
 \note{Discuss this further, may be
   able to say later that in some cases $\epsilon$ is the scheduling
-  time for play statments?}
+  time for play statements?}
 
 \paragraph{Axioms of actual time}
 
 The virtual time and actual time of a single sleep statement
  are roughly the same, \ie{}, $\vtime{\sleep t} \approx
 \etime{\sleep t}$ and thus $\etime{\sleep t} \approx t$ (by the
-specification in Definition~\ref{sleep-spec}). This holds
+specification in Definition~\ref{def:vtime}). This holds
 only when \sleepOp{} is used in isolation, that is, when it is the
 only statement in a program. As shown by the examples of
 Section~\ref{sec:examples}, the use of $\sleep t$ in a program does
 not mean that a program necessarily waits for $t$ seconds-- depending
 on the context, it may wait for anywhere between $0$ and $t$ seconds.
 
-We outline here some important temporal properties of our \lang{}
-programs that relates the virtual time and actual times. In
-Section~\ref{sec:soundness}, we replay these lemmas and prove a
-soundness result: that these lemmas are true for our model.
+%We outline here some important temporal properties of our \lang{}
+%programs that relates the virtual time and actual times. In
+%Section~\ref{sec:soundness}, we replay these lemmas and prove a
+%soundness result: that these lemmas are true for our model.
 
-%For convenience, and to contrast with \sleepOp{}, we'll use an additional
-%statement \ksleepOp{} here (which is not available in the actual language)
-% which always sleeps for the number of seconds specified by its parameter.
-
-\begin{lemma}
-For some program $P$ and time $t$:
+\begin{definition}
+The actual elapsed time $\etime{-}$ can be specified at the level of programs 
+by the following equations:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} \,\approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
+\etime{\emptyset} & \, \approx \, 0 \\
+\etime{P; \sleep{} t} & \,\approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} \\
+\etime{P; A^i} & \,\approx\,
+ \etime{P} + \etime{A^i}
 \end{align*}
 %
 % CASE VERSION
@@ -703,13 +720,14 @@ For some program $P$ and time $t$:
 %   \vtime{P} + t  & \textit{otherwise}
 % \end{cases}
 %\end{align*}
-\label{lem:sleep-R}
-\vspace{-1em}
-\end{lemma}
-%%
-\noindent
-The following two small programs, both of which have actual time 2,
- illustrate this lemma. 
+%
+In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$. 
+\label{def:etime}
+\end{definition}
+
+\begin{example}
+The following two small example programs illustrate this definition, 
+and both have actual time 2. 
 %%
 \begin{itemize}
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
@@ -729,6 +747,8 @@ $\vtime{P} = 0$, $t = 2$, and
 $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 \end{itemize}
 \end{itemize}
+\end{example}
+
 %%
 %\begin{lemma}
 %For some program $P$ and time $t$:
@@ -741,70 +761,81 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 %
 %The implication of this lemma is that a preceding sleep does not affect
 
-\noindent
-This lemma illuminate something of the semantics of sleep,
-and its interaction with other statements in the language.
+Definition~\ref{def:etime} illuminates the semantics of \sleepOp, 
+showing the interaction between actual time $\etime{-}$ 
+and virtual time $\vtime{-}$ in the case for \sleepOp{}.
+Note that the definition of $\etime{-}$ (in the \sleepOp{} case) 
+is not a straightforward recursive decomposition on 
+programs, statements, and expressions as in the 
+definition of $\vtime{-}$ (Definition~\ref{def:etime}). Instead,
+the actual time of a \sleepOp{} depends on its \emph{context}, which
+is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$. 
+This is why we have structured the core subset language here
+ in terms of ``snoc''-list since the temporal semantics of an individual 
+statement can depend on the program that has \emph{come before} it (the tail
+of the list ``snoc''-list).
 
+This definition provides us with the following lemma about
+the temporal semantics of any Sonic Pi program: 
+%
 \begin{lemma}
-For all programs $P$ then $\etime{P} \geq \vtime{P}$.
+For some program $P$ then $\etime{P} \geq \vtime{P}$. 
 \label{lemma-rel-etime-vtime}
 \end{lemma}
+%
+That is, the actual running time of a program is always at least the
+virtual time; a Sonic Pi program never ``under-runs'' its virtual time
+specification.
 
 \begin{proof}
 By induction on the structure of programs.
 %
 \begin{itemize}
-\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$.
-\item $P = (P'; \emph{var} = E)$, split on $E$
+\item $P = \emptyset$. Trivial since $\vtime{\emptyset} = 0$ by Definition~\ref{def:vtime}. 
+\item $P = (P'; \synVar = E)$, split on $E$
   \begin{itemize}
     \item $E = \sleep t$ 
 
-      By Definition~\ref{sleep-spec}, $\vtime{P'; \sleep t} = \vtime{P'} + t$.
+      (a) by Definition~\ref{def:vtime}, $\vtime{P'; \sleep t} = \vtime{P'} + t$.
       
-      By Lemma~\ref{lem:sleep-R} $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$. 
+      (b) by Definition~\ref{def:etime}, $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$.
 
-      By the inductive hypothesis, $\etime{P'} \geq \vtime{P'}$ therefore 
-      By monotonicity of $+$, $\etime{P'} + t \geq \vtime{P'} + t$
+      (c) by (b) $(\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'} \geq \vtime{P'} + t$
+      
+      $\therefore$ by (a) and (c) then $\etime{P'; \sleep t} \geq \vtime{P' \sleep t}$
+
+     \item otherwise $E = A^i$ 
        
+     (a) by Definition~\ref{def:vtime}), $\vtime{P'; \synVar = A^i} = \vtime{P'}$
+     
+     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$ 
+     
+     (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$. 
+
+     (d) since $\etime{-} \in \mathbb{R}_{\geq 0}$, by monotonicity and (c)
+      $\etime{P'} + \etime{A^1} \geq \vtime{P'}$.
+
+      $\therefore$ (a), (b) and (d) then $\etime{P'; \synVar = A^i} \geq \vtime{P'; \synVar = A^i}$.
   \end{itemize}
 \end{itemize}
 \end{proof}
-
-
-
-
-
-\begin{lemma}
-For all programs $P$ and $Q$ then:
+%
+\noindent
+The abstraction specification of the temporal behaviour here gives us a reasonable model
+with which we can reason about time in Sonic Pi programs. 
 %%
-\begin{equation}
-\vtime{P} + \vtime{Q} \leq \etime{P; Q} \lesssim \etime{P} + \etime{Q}
-\end{equation}
-\label{theorem:main}
-\end{lemma}
-
-\note{It's possible that these lemmas should be in a different order--
- we may need \ref{theorem:main} to prove \ref{lemma-rel-etime-vtime+}.}
-
-From these lemmas we can reason about the evaluation time of
-programs. For example, consider subprograms $A$, $B$, $C$ where
-$\vtime{A} = \vtime{B} = \vtime{C} = 0$ interposed with two
+\begin{example}
+Consider subprograms $A$, $B$, $C$ where
+$\vtime{A} = \vtime{B} = \vtime{C} = 0$ which are interposed with two
 sleep statements of duration $s_1$ and $s_2$:
 %
-\begin{equation}
-\begin{array}{l}
-A \\
-\sleep s_1 \\
-B  \\
-\sleep s_2 \\
-C
-\end{array}
-\label{example:time1}
-\end{equation}
+\[
+P = A; \, \sleep s_1; \, B; \, \sleep s_2; \, C
+\]
 %%
-Then by the above lemmas, we see that if $\etime{A} \leq s_1$ and
-$\etime{B} \leq s_2$ then $\etime{eq. \eqref{example:time1}} =
-s_1 + s_2 + \etime{C}$.
+Then by the above definitions, we see that if $\etime{A} \leq s_1$ and
+$\etime{B} \leq s_2$ then $\etime{P} = s_1 + s_2 + \etime{C}$.
+\end{example}
 
 %\begin{equation*}
 %\begin{array}{lllll}
@@ -817,6 +848,11 @@ s_1 + s_2 + \etime{C}$.
 %\end{array}
 %\end{equation*}
 
+\noindent
+We now move on to a denotational style model. We'll prove this
+sound with respect to the specifications of Definition~\ref{def:vtime}
+and ~\ref{def:etime}, linking the two levels of model. 
+
 
 \newcommand{\TM}{\mathsf{TM}}
 
@@ -825,7 +861,7 @@ s_1 + s_2 + \etime{C}$.
 
 In the following, we use Haskell as our meta language for the
 semantics (since it provides convenient syntax for working with
-monads)\footnote{The source code for the model is avilable at
+monads)\footnote{The source code for the model is available at
   \url{https://github.com/dorchard/temporal-monad}}.
 \lang{} computations are modelled by the \emph{Temporal} data type, defined:
 %%
@@ -886,7 +922,7 @@ runTime (T c) = do  startT <- getCurrentTime
                     return x
 \end{code}
 %%
-To illustrate the evalution of temporal computation and the
+To illustrate the evaluation of temporal computation and the
 ordering and interleaving of calls to the operation system for the
 current time, consider the program:
 %%
@@ -911,7 +947,7 @@ This illustrates the repeated calls to |getCurrentTime|, the
 constant start time parameter, and the threading of virtual time state
 throughout the computation.
 
-Figure~\ref{core-functions} shows a number of effectul operations of
+Figure~\ref{core-functions} shows a number of effectful operations of
  the \emph{Temporal} monad that access the current time, the start time, get
 and set the virtual time, and cause a kernel sleep. These
 are used in the next part of the model.
@@ -930,7 +966,7 @@ monad:
 \end{align*}
 %%
 Note that $\interp{-}$ is overloaded in the rule for \sleepOp{} for (pure) expressions.
-The concrete interpreation of other statements in the language, such as \playOp, is
+The concrete interpretation of other statements in the language, such as \playOp, is
 elided here since it does not relate directly to the temporal semantics.
 
 The key primitive \emph{sleep} provides the semantics for \sleepOp{} as:
@@ -989,7 +1025,7 @@ and show that the monadic model is sound with respect to these, \ie{},
 that the lemmas hold of the model.
 
 \noindent
-\begin{repdefinition}{sleep-spec}
+\begin{repdefinition}{def:vtime}
 \begin{align*}
 \vtime{\sleep t} & = t \\
 \vtime{P; Q} & = \vtime{P} + \vtime{Q} \\
@@ -1004,15 +1040,12 @@ time is only ever increasing, and can only ever be incremented by sleep.
 \note{Could put more here}
 \end{proof}
 
-\begin{replemma}{lem:sleep-R}
+\begin{replemma}{def:etime}
 For some program $P$ and time $t$:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} \approx
- \begin{cases}
-   \etime{P} & (\vtime{P} + t) < \etime{P} \\
-   \vtime{P} + t  & \textit{otherwise}
- \end{cases}
+\etime{P; \sleep{} t} \approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
 \end{align*}
 \end{replemma}
 
@@ -1055,7 +1088,7 @@ the guard takes $e$ then the overall time taken is:
  \end{cases}
 \end{align*}
 %%
-which is equivalent to the statment of the lemma if $e \leq \epsilon$
+which is equivalent to the statement of the lemma if $e \leq \epsilon$
 and if the reduction to the interpretation to get to the above code
 takes less than $\epsilon$:
 \begin{align*}
@@ -1070,7 +1103,7 @@ takes less than $\epsilon$:
 \note{I suppose this is ok- I'm a bit wary about saying the simplification
 takes less than $\epsilon$. It surely does, but I am only hand waving.
 We could time $e$ though in the model and show it is less than the schedule
-time. We could go further and time the analogous parts of the SonicPi implementation
+time. We could go further and time the analogous parts of the Sonic Pi implementation
 to check that the real $e$ is less than $\epsilon$. This would be good.}
 
 \begin{replemma}{lem:sleep-L}
@@ -1110,66 +1143,9 @@ steps in the computation (such as the guard test in sleep), which we
 account for as part of the error $\epsilon$.
 \end{proof}
 
-\begin{replemma}{lemma-rel-etime-vtime}
-For all programs $P$ then $\etime{P} \geq \vtime{P}$.
-\end{replemma}
+\subsubsection{Equational theory for Sonic Pi programs}
 
-\note{Rough notes for the proof}
-\begin{proof}
-By induction % possibly by strong induction?
-
-$\interp{sleep t} = $
-|runTime (sleep t)| $\leadsto$ |kernelSleep' delayT|
-
-$\etime{P;Q} = $
-Inductive hypothesis: $\etime{P} \geq \vtime{P}$
-              $\etime{Q} \geq \vtime{Q}$
-
-
-\begin{itemize}
-\item case $P = sleep t$
-
-$\etime{sleep t; Q} = t + \etime{Q}$
-$\vtime{sleep t; Q} = t + \vtime{Q}$
-by inductive hypothesis $t + \etime{Q} \geq t + \vtime{Q}$.
-
-\item case $Q = sleep t$
-
-$\vtime{P; sleep t} = \vtime{P} + t$
-By inductive hypothesis ($\etime{P} \geq \vtime{P}$) then
-
-
-\begin{itemize}
-\item case $\vtime{P} + t \leq \etime{P}$ then
-
-$\etime{P; sleep t} = \etime{P}$
-therefore $\etime{P; sleep t} \geq \vtime{P; sleep t}$
-since $\etime{P} \geq \vtime{P} + t$ by the case.
-
-\item case $\vtime{P} + t \geq \etime{P}$ then
- $\etime{P; sleep t} = \vtime{P} + t$
-then $\etime{P; sleep t} \geq \vtime{P; sleep t}$
-since $\etime{P; sleep t} = \vtime{P; sleep t}$.
-\end{itemize}
-
-\note{This is actually quite hard. I think I can do it
-by using Lemma 1 and 2 together with some reassociating, but
-haven't time to sort it right now.}
-
-\item case $P = P';P''$, $Q = Q';Q''$
-
-reassociate
-
-case P' = sleep t,
-
-$\etime{P';Q'} = t + \etime{Q'}$
-\end{itemize}
-
-\end{proof}
-
-\subsubsection{Monad laws}
-
-The |Temporal| moand is ``weak'', in the sense that the standard monad
+The |Temporal| monad is ``weak'', in the sense that the standard monad
 laws do not always hold.  For example, one of the unit laws is that:g
 %%
 \begin{equation}
@@ -1185,7 +1161,7 @@ equality on programs:
 \interp{x = P; y = x} \equiv \interp{y = P}
 \end{equation*}
 %%
-This should seem an intuitive rule to most programmings.  However, for
+This should seem an intuitive rule to most programmers.  However, for
 the |Temporal| monad this law is violated in cases where |m| depends
 on the current time. For example, let |m| be defined:
 %
@@ -1314,23 +1290,20 @@ and updated before the current time is retrieved in case the additional
 time taken in updating the virtual time means that the elapsed time
 catches up with the virtual time.
 
-To see the difference, consider Lemma~\ref{lem:sleep-R}:
+To see the difference, consider Lemma~\ref{def:etime}:
 
-\begin{replemma}{lem:sleep-R}
+\begin{replemma}{def:etime}
 For some program $P$ and time $t$:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} \approx
- \begin{cases}
-   \etime{P} & (\vtime{P} + t) < \etime{P} \\
-   \vtime{P} + t  & \textit{otherwise}
- \end{cases}
+\etime{P; \sleep{} t} \approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} 
 \end{align*}
 \end{replemma}
 %
 \noindent
 If the above alternate definition \emph{sleep'} is used, then
-the interpreation of $(P; \sleep t)$
+the interpretation of $(P; \sleep t)$
 desugars and simplifies to the following:
 %
 \begin{code}
@@ -1423,10 +1396,10 @@ the CTL connective for \emph{along all paths} and $F$ for
 prescriptive and explicit, but has some resemblance in the use of
 \sleepOp{}. For example, the program $\sleep t ; P$ roughly
 corresponds to $AF^{\leq t} \interp{P}$, \ie{}, after at leat $t$ then
-whatever $P$ does will have happend. Our framework is not motivated by
+whatever $P$ does will have happened. Our framework is not motivated by
 logic and we do not have a model checking process for answering
 questions such as, at time $t$ what formula hold (what statements have
-been evluated).  The properties of Lemmas 1 to 5 however provide some
+been evaluated).  The properties of Lemmas 1 to 5 however provide some
 basis for programmers to reason about time in their programs. In
 practice, we find that such reasoning can be done by children in a
 completely informal but highly useful way.
@@ -1442,70 +1415,5 @@ completely informal but highly useful way.
 \bibliography{references}
 
 \appendix
-
-
-
-\paragraph{Proof} (of Theorem~\ref{theorem:main})
-\note{These are just rough notes}
-Since sequential composition is associative, we can reassociate
-$P; Q$ such that $P = P_1; P'$ where $P_1$ is a single statement
-
-\begin{itemize}
-\item $P = \sleep t$
-
-\begin{align*}
-\begin{array}{ll}
-       & \etime{\sleep t; Q} \\[0.5em]
-\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-L}\} \\[0.1em]
-       & s + \etime{Q} \\[0.5em]
-\equiv & \; \{\textit{Definition}~\ref{}\} \\[0.1em]
-       & \etime{\sleep t} + \etime{Q}
-\end{array}
-\end{align*}
-
-\item $Q = \sleep t$ by Lemma~\ref{lem:sleep-R} then
-there are two cases:
-
-\begin{itemize}
-\item $\etime{P} \leq t$ then:
-
-\begin{align*}
-\begin{array}{ll}
-       & \etime{P; \sleep t} \\[0.5em]
-\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
-       & \vtime{P} + t \\[0.5em]
-\equiv & \; \{\textit{Definition}~\ref{sleep-spec}\} \\[0.1em]
-       & \vtime{P} + \vtime{\sleep t}
-\end{array}
-\end{align*}
-
-\item $\etime{P} > t$ then:
-
-\begin{align*}
-\begin{array}{ll}
-       & \etime{P; \sleep t} \\[0.5em]
-\equiv & \; \{\textit{Lemma}~\ref{lem:sleep-R}\} \\[0.1em]
-       & \etime{P} \\[0.5em]
-\leq   & \etime{P} + \etime{\sleep t}
-\end{array}
-\end{align*}
-
-\end{itemize}
-
-\item $P = P';P'', Q = Q';Q''$
-
-Ressociate so that $P'; (P''; (Q'; Q''))$ then
-
-By induction:
-%%
-\begin{align}
-\vtime{P'} + \vtime{P''} \leq \etime{P'; P''} \leq \vtime{P'} + \vtime{P''} \\
-\vtime{Q'} + \vtime{Q''} \leq \etime{Q'; Q''} \leq \vtime{Q'} + \vtime{Q''} \\
-\end{align}
-
-and
-\note{STUCK!}
-\end{itemize}
-
 
 \end{document}
