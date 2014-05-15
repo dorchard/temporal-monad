@@ -98,8 +98,8 @@
 			<integer>122</integer>
 			<key>Points</key>
 			<array>
-				<string>{175.5, 458.5}</string>
-				<string>{367, 458.5}</string>
+				<string>{175.5, 456.5}</string>
+				<string>{367, 456.5}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -118,7 +118,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{367, 446.5}, {106.25, 24}}</string>
+			<string>{{367, 444.5}, {106.25, 24}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>ID</key>
@@ -2733,7 +2733,7 @@ Time}</string>
 			<key>Points</key>
 			<array>
 				<string>{106, 49.5}</string>
-				<string>{107, 437}</string>
+				<string>{106, 468.5}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -2933,7 +2933,7 @@ Time}</string>
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2014-05-15 15:36:13 +0000</string>
+	<string>2014-05-15 20:41:47 +0000</string>
 	<key>Modifier</key>
 	<string>Samuel Aaron</string>
 	<key>NotesVisible</key>
@@ -3014,7 +3014,7 @@ Time}</string>
 			</dict>
 		</array>
 		<key>Frame</key>
-		<string>{{-281, 106}, {1498, 922}}</string>
+		<string>{{-281, 4}, {1713, 1024}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -3028,15 +3028,15 @@ Time}</string>
 		<key>SidebarWidth</key>
 		<integer>120</integer>
 		<key>VisibleRegion</key>
-		<string>{{1, 6}, {681.5, 391.5}}</string>
+		<string>{{-230, -51}, {1578, 885}}</string>
 		<key>Zoom</key>
-		<real>2</real>
+		<real>1</real>
 		<key>ZoomValues</key>
 		<array>
 			<array>
 				<string>Canvas 1</string>
-				<real>2</real>
 				<real>1</real>
+				<real>2</real>
 			</array>
 		</array>
 	</dict>
