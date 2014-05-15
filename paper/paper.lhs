@@ -1034,7 +1034,7 @@ $\etime{P';Q'} = t + \etime{Q'}$
 \subsubsection{Monad laws}
 
 The |Temporal| moand is ``weak'', in the sense that the standard monad
-laws do not always hold.  For example, one of the unit laws is that:
+laws do not always hold.  For example, one of the unit laws is that:g
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
