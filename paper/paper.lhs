@@ -544,7 +544,23 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \label{sleep-examples}
 \end{figure}
 
-\section{Model}
+\section{Modelling Sonic Pi's temporal semantics}
+
+From our experiences, we've found that the programming model of Sonic
+Pi, particularly its temporal model, is easy to understand by even 
+complete beginners, including children. By a few simple examples it 
+is easy to demonstrate the temporal semantics, using sounds as output,
+without having to appeal to any meta-theory; Sonic Pi attains the goal
+of being a good first language. 
+
+In this section, we approach the programming model of Sonic Pi from a
+more theoretical angle, in order to develop a specification of our
+programming model that can be reused for other applications and
+languages outside of the Sonic Pi context. From our model we prove a
+number of core properties of Sonic Pi as well. It is in no way
+necessary for programmers of Sonic Pi to understand this theory, but
+the contribution here is useful for future language design and
+implementation research.
 
 \paragraph{Terminology and notation}
 We refer to sequences statements as \emph{programs}. Throughout, $P$,
