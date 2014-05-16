@@ -153,22 +153,24 @@ The core contributions of this paper are three-fold:
 %%
 \begin{itemize}
 \item We present a new programming approach for precisely timing
-  effects (Section~\ref{sec:language}), which is implemented as part
-  of the Sonic Pi language for music live conding. We explain how
-  this programming approach has evolved to replace the previous version
-  of the Sonic Pi language, providing a syntactically identical language
-  but with an improved approach to timing. 
+  effects, which is implemented as part of the Sonic Pi language for
+  music live coding. We explain how this programming approach has
+  evolved to replace the previous version of the Sonic Pi language
+  (Section~\ref{sec:sp-1}), providing a syntactically identical
+  language but with an improved approach to timing (Section~\ref{sec:new-sleep}).
 
-\item We formalise the temporal semantics of this approach, introducing 
-  a \emph{time system} for analysing the temporal behaviour of Sonic Pi
-  programs. 
+\item We formalise the temporal semantics of this approach,
+  introducing a specification of the temporal behaviour of Sonic Pi
+  programs: a \emph{time system} (Section~\ref{sec:axiomatic}).
 
-\item We give a denotational semantics to a core subset of the language
-and prove it sound with respect to the time system, \ie{}, the language
-is \emph{time safe}. 
+\item We give a denotational semantics to a core subset of the
+  language (Section~\ref{sec:time-monad}) and prove it sound with
+  respect to the time system, \ie{}, the language is \emph{time
+    safe}. We later extend this model to include temporal warnings
+  (Section~\ref{sec:temporal-warnings}).
 \end{itemize}
 
-\subsection{Live coding}
+\subsection{The live coding context}
 
 A first programming language should be conceptually straightforward
 and syntactically uncluttered. However, it is not straightforward to
@@ -201,6 +203,20 @@ year-old children) to express the temporal structure in terms that
 have an intuitive correspondence to the experience and production of
 musical sounds.
 
+In music, it is clear that we must be able to speak about the precise
+location of events in time, and hence that any music programming
+language must of necessity provide some kind of time semantics, even if
+these are only informal. In the case of live coding languages, an
+additional consideration is that the time at which the program is edited
+may coincide or overlap with the time at which it is executed. This
+overlap between execution and creation time is of broader value in
+software engineering, as noted for example by 
+McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
+adjust the notional execution time relative to a point in the source
+code editing environment. Tools of this kind can also benefit from a
+formal semantics in which to define the relationship between changes or
+navigation within the code, and changes or navigation within the
+cause-effect sequence of execution time.
 
 \section{Problems with timing in Sonic Pi 1.0}
 \label{sec:sp-1}
@@ -353,7 +369,7 @@ timing of the sounds produced by the program.
 The temporal semantics of initial version of Sonic Pi (as
 described above) did not meet user expectations.% in
 %ways specially related to the nature of these expectations.
-From a functional-requirements perspective, the explicit representation of rhythm provided
+ From a functional-requirements perspective, the explicit representation of rhythm provided
 computationally accurate semantics. All expressed computation happens
 (\ie{}, all notes are played, and all sleeps are honoured) and the
 execution happens in the defined order. However, when we consider the
@@ -384,6 +400,7 @@ also these implicit expectations.
 %% semantics to the time semantics of ChucK
 
 \section{Re-inventing Sleep}
+\label{sec:new-sleep}
 
 Sonic Pi 2.0 introduces a new implementation of the sleep command which
 maintains syntactic and conceptual compatibility with the previous
@@ -436,7 +453,7 @@ we will demonstrate more formally in the subsequent sections.
 \end{figure}
 
 
-It is important to not that in \lang{}, it is possible that a
+It is important to note that in \lang{}, it is possible that a
 computation proceeding a \sleepOp{} can overrun; that is, run longer
 than the sleep time.  Thus, the programming model is not suitable for
 realtime systems requiring hard deadlines but \sleepOp{} instead
@@ -583,6 +600,7 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \end{figure}
 
 \section{A ``time system'' for Sonic Pi}
+\label{sec:axiomatic}
 
 From our experiences, we've found that the programming model of Sonic
 Pi, particularly its temporal model, is easy to understand by even
@@ -916,7 +934,8 @@ of the form:
 \end{align*}
 %%
 that is, mapping a pair of two times: the start time and current time
-of the computation, to a stateful computation on virtual times
+of the computation (which are used to compute the time elapsed
+since the start of the program), to a stateful computation on virtual times
 (mapping from an old virtual time to a new virtual time) which may
 access the kernel to get the actual clock time, and produces a result
 along with the new vritual time.  Concretely, |Temporal| is defined:
@@ -926,7 +945,7 @@ data Temporal a =
     T ((Time, Time) -> (VTime -> IO (a, VTime)))
 \end{code}
 %
-where |IO| encapsulates access to 
+where |IO| is part of the Haskell implementation and encapsulates access to 
 the actual clock time from operation system.
 
 |Temporal| has a monad structure, defined by the following instance of the |Monad| class:
@@ -1239,6 +1258,18 @@ In L, there is no expression which returns the current time;
 That is, for all expressions $e$, then the denotation
 $\interp{e}$ factors through
 
+
+\begin{align*}
+\begin{array}{rll}
+        |(return x) >>= f| &
+\equiv & |f x|  \\[0.5em]
+        |m >>= return|     & 
+\equiv & |m|    \\[0.5em]
+        |m >>= (\x -> (f x) >>= g)| &  
+\equiv & |(m >>= f) >>= g| 
+\end{array}
+\end{align*}
+
 \subsection{Alternate definitions}
 \label{sec:alternate}
 
@@ -1518,20 +1549,6 @@ be simply to create a faster computer), if time is taken seriously as a
 component of system behaviour (as it is in music) then an event that
 occurs too soon may be just as incorrect as one that occurs too late.
 
-In music, it is clear that we must be able to speak about the precise
-location of events in time, and hence that any music programming
-language must of necessity provide some kind of time semantics, even if
-these are only informal. In the case of live coding languages, an
-additional consideration is that the time at which the program is edited
-may coincide or overlap with the time at which it is executed. This
-overlap between execution and creation time is of broader value in
-software engineering, as noted for example by 
-McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
-adjust the notional execution time relative to a point in the source
-code editing environment. Tools of this kind can also benefit from a
-formal semantics in which to define the relationship between changes or
-navigation within the code, and changes or navigation within the
-cause-effect sequence of execution time.
 
 \paragraph{Logics}
 
