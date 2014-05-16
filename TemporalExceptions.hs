@@ -42,19 +42,27 @@ start = lift (Temporal.start)
 getVirtualTime = lift (Temporal.getVirtualTime)
 setVirtualTime vT = lift (Temporal.setVirtualTime vT)
 
+warn :: String -> TemporalE ()
+warn s = lift (T (\_ -> \vt -> do {putStrLn s; return ((), vt)}))
+
 -- Lift an IO computation to a temporal computation
 liftIO :: IO a -> TemporalE a
 liftIO k = lift (Temporal.liftIO k)
+
+liftIO' :: IO a -> TemporalE a
+liftIO' k = lift (T (\_ -> \vt -> do {x <- k; return (x, vt)}))
 
 {-# INLINE kernelSleep #-}
 kernelSleep :: RealFrac a => a -> TemporalE ()
 kernelSleep x = lift (Temporal.kernelSleep x)
 
-
+weakException :: VTime -> TemporalE ()
 weakException t = TE (\_ -> return ((), [WeakOverrun t])) >>
-                    (liftIO . putStrLn $ "warning: overran by " ++ (show t))
+                    (warn $ "warning: overran by " ++ (show t))
+
+strongException :: VTime -> TemporalE ()
 strongException t = TE (\_ -> return ((), [StrongOverrun t])) >>
-                    (liftIO . putStrLn $ "WARNING: overran by " ++ (show t))
+                    (warn $ "WARNING: overran by " ++ (show t))
 
 sleep :: VTime -> TemporalE ()
 sleep delayT = do nowT      <- time
