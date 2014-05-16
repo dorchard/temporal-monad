@@ -33,3 +33,6 @@ in example 1, say P = kernelSleep 2, and t = 1.
 mention 'time safety' in 5.1
 
 dom: finish 5.1.1 
+
+sam: related work: ChucK
+-----------------------
