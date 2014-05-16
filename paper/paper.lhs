@@ -188,8 +188,12 @@ approach complements the abstract time system model.
 \end{itemize}
 
 \noindent
-We begin with a discussion of the research context of first
-programming languages and live coding (particularly for music) as  
+We use the phrases \emph{time system} and \emph{time safety} to draw
+analogy with traditional notions of \emph{type system} and \emph{type
+  safety}.
+
+We begin with a discussion of the first
+programming language and live coding contexts (particularly for music), as  
  these aspects motivate the language design.  Readers who are 
 keen to get to the language design may skip over this discussion 
 to Section~\ref{sec:sp-1}.
@@ -197,7 +201,7 @@ to Section~\ref{sec:sp-1}.
 \subsection{The first language and live coding contexts}
 \label{sec:context}
 
-A first programming language should be conceptually straightforward
+A first programming language should be conceptually simple 
 and syntactically uncluttered. However, it is not straightforward to
 achieve this simplicity in a music live coding language, for reasons
 largely related to the representation of time. Representing musical
@@ -310,6 +314,7 @@ end
 \end{SaveVerbatim}
 
 \begin{figure}[t]
+\vspace{-0.4em}
 \begin{minipage}{0.46\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-drums}
 \end{minipage}
@@ -368,6 +373,7 @@ end
 \end{minipage}
 \caption{Two concurrent threads playing in synchronisation.}
 \label{example-threaded-drum-loop}
+\vspace{-0.7em}
 \end{figure}
 
 
@@ -754,8 +760,8 @@ By the above definition, programs $P$ are a ``snoc''-list (\ie{},
 elements are ``consed'' onto the end, not front as is standard for
 inductively-defined lists) where $\emptyset$ is the empty list. This
 structure aids later proofs since it allows inductive reasoning on
-a statement of a program and its preceding program, which is necessary
-for modelling \texttt{sleep}. 
+a statement of a program and its preceding program, which is key to
+accurately modelling \texttt{sleep}. 
 
 Statements $S$ may be expressions on
 their own, or may have (pure) bindings to variables. Throughout we
@@ -768,12 +774,13 @@ parameter, \ie{}, it has the semantics of POSIX \emph{sleep}.
 This operation is not available in the actual language,
 but it is useful for examples and contrasting with \sleepOp{}.
 
-This core subset is a zero-order language, in the sense that we do including
-the definition or calling of user-defined functions.  Nor do we incorporate threading
-constructs that are provided by Sonic Pi. Extending the model here to
-include these is however relatively straightforward, but we stick with a simple
-language for the sake of succinctly introducing and reasoning about the
-core temporal behaviour. 
+This core subset is a zero-order language, in the sense that we do not
+include the definition or calling of user-defined
+functions; nor do we incorporate the threading constructs 
+provided by Sonic Pi. Extending the model here to include these is
+however straightforward, but we stick with a simple
+language for the sake of succinctly introducing and reasoning about
+the core temporal behaviour.
 
 \subsection{Virtual time and real time}
 \label{sec:spec}
@@ -936,27 +943,29 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 Definition~\ref{def:etime} illuminates the semantics of \sleepOp,
 showing the interaction between actual time $\etime{-}$
 and virtual time $\vtime{-}$ in the case for \sleepOp{}.
-Note that the definition of $\etime{-}$ (in the \sleepOp{} case)
+
+The definition of $\etime{-}$ (in the \sleepOp{} case)
 is not a straightforward recursive decomposition on
 programs, statements, and expressions as in the
-definition of $\vtime{-}$ (Definition~\ref{def:etime}). Instead,
+definition of $\vtime{-}$. Instead,
 the actual time of a \sleepOp{} depends on its \emph{context}, which
 is the pre-composed (preceding) program $P$ and its actual time $\etime{P}$.
 This is why we have structured the core subset language here
  in terms of ``snoc''-list since the temporal semantics of an individual
 statement can depend on the program that has \emph{come before} it (the tail
-of the list ``snoc''-list).
+of the ``snoc''-list). Thus, the syntactic structure here facilitates the 
+modelling of \sleepOp{} and subsequent proofs on program properties (coming up next). 
 
-This definition provides us with the following lemma about
-the temporal semantics of any Sonic Pi program:
+The specifications on $\vtime{-}$ and $\etime{-}$ provide
+ the following lemma about the temporal semantics of Sonic Pi programs:
 %
 \begin{lemma}
-For some program $P$ then $\etime{P} \geq \vtime{P}$.
+For any program $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 %
 That is, the actual running time of a program is always at least the
-virtual time; a Sonic Pi program never ``under-runs'' its virtual time
+virtual time; a Sonic Pi program never ``under runs'' its virtual time
 specification.
 
 \begin{proof}
@@ -1000,7 +1009,7 @@ respect to the two definitions and get the above lemma for free following from t
 proof. \\
 
 \noindent
-The abstraction specification of the temporal behaviour here gives us a model
+The abstract specification of the temporal behaviour here gives us a model
 to reason about time in Sonic Pi programs.
 %%
 \begin{example}
@@ -1564,7 +1573,7 @@ and accessing the $\epsilon$ parameter.
 weakWarn :: VTime -> TemporalE ()
 weakWarn t = TE (lamWild -> return ((), [Weak t])) >>
         (warn $ "warning: overran by " ++ (show t))
-newlinee
+newline
 strongWarn :: VTime -> TemporalE ()
 strongWarn t = TE (lamWild -> return ((), [Strong t])) >>
         (warn $ "WARNING: overran by " ++ (show t))
@@ -1638,7 +1647,7 @@ that in the true-branch of the conditional there is additional testing to see if
 a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilon$
 (in which case a weak exception is raised).
 
-The implementation of Sonic Pi has a similar semantis and warning system, for
+The implementation of Sonic Pi has a similar semantics and warning system, for
 which this provides a general description. 
 
 \section{Related work}
@@ -1722,7 +1731,7 @@ manipulated). Bellingham et al.~\cite{Bellingham2014} provide a survey of
 32 algorithmic composition systems, in which they apply Honing's
 framework to discuss the problem of notating the hierarchical
 combinations of cyclical and linear time that result in musical
-perception of pattern and tempo.
+perception of pattern and tempo. 
 
 \section{Conclusion}
 
@@ -1737,16 +1746,18 @@ implementing behaviour that is simple and predictable from a
 programmer perspective. Other music programming systems often provide
 similar mechanisms in order to achieve predictable timing behaviour,
 and our solution is comparable to those that have been implemented in
-other systems. We therefore introduce a formal semantics that can be
+other systems. We therefore introduced a formal semantics that can be
 used to prove the desirable properties of this kind of temporal
 behaviour. This combination of simple syntax, with formally defined
 semantics that correspond to user expectations, promises to be
 beneficial beyond the domain of music programming, to other types of
-physical world interface.
+physical world interface. We used the phrases \emph{time system}
+and \emph{time safety} to draw analogy with traditional notions of
+\emph{type system} and \emph{type safety}. 
 
-Further work is to expand the notion of \emph{time safety} and
-\emph{time systems}, which we have introduced here, and explore their
-use in live coding languages and languages for temporal coordination
+Further work is to expand the power of time systems and the
+notion of time safety, beyond what we have introduced here, exploring
+their use in live coding languages and languages for temporal coordination
 (such as in robotics).  We considered the safety property of ``not
 being too early'', which is an invariant of the Sonic Pi language.
 Further work is to explore language invariants relating to deadlines (similar
