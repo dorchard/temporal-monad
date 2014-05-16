@@ -731,7 +731,7 @@ time value with respect to the application at hand.
 For example, if $\epsilon = 0.1$ then $3 \approx 3.05 \approx 2.92$. 
 
 In the case of
-\lang{}, we set $\epsilon$ equal to the schedule ahead time (\schedAheadTop{}, in Section~\ref{sec:new-sleep}), which in our earlier examples was 0.5 seconds. 
+\lang{}, we set $\epsilon$ equal to the schedule ahead time (\schedAheadTOp{}, in Section~\ref{sec:new-sleep}), which in our earlier examples was 0.5 seconds. 
 
 \note{Discuss this further, may be
   able to say later that in some cases $\epsilon$ is the scheduling
