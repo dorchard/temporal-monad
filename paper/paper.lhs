@@ -285,9 +285,9 @@ each onset.
 
 \begin{SaveVerbatim}{example-drums}
 loop do
-  play 30                  ;;A
-  sample :drum_heavy_kick  ;;B
-  sleep 0.5                ;;C
+  play 30                  #A
+  sample :drum_heavy_kick  #B
+  sleep 0.5                #C
 end
 \end{SaveVerbatim}
 
