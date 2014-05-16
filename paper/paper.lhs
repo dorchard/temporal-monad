@@ -60,8 +60,8 @@
 \newcommand{\sleep}{\textnormal{\texttt{sleep}}\;}
 \newcommand{\sleepOp}{\texttt{sleep}}
 
-\newcommand{\ksleep}{\textnormal{\texttt{Kernel.sleep}}\;}
-\newcommand{\ksleepOp}{\texttt{Kernel.sleep}}
+\newcommand{\ksleep}{\textnormal{\texttt{kernelSleep}}\;}
+\newcommand{\ksleepOp}{\texttt{kernelSleep}}
 
 \newcommand{\schedAheadT}{\textnormal{\texttt{scheduleAheadTime}}\;}
 \newcommand{\schedAheadTOp}{\texttt{scheduleAheadTime}}
@@ -371,17 +371,38 @@ timing of the sounds produced by the program.
 
 \subsection{Temporal expectations}
 
-The temporal semantics of initial version of Sonic Pi (as
-described above) did not meet user expectations.% in
+When users create programs in Sonic Pi, the ease with which they can
+produce the musical effects they intend is dependent on their
+expectations of the behaviour that will result from a given sequence
+of code. As described by Honing (~\cite{Honing1993}, see
+Section~\ref{sec:related-work}), music systems may represent temporal
+structure either explicitly (describing time intervals and relations)
+or implicitly (in an ordered sequence of notes having different
+durations). Musical scores provide an implicit time representation,
+while most music programming systems rely on explicit time
+representation. Unfortunately, in the case of general purpose
+programming languages, the typical implementation of the sleep
+operator supports an explicit representation of rhythm that is
+guaranteed to be accurate only in the ordering of the notes, not in
+the elapsed time between them. In teaching programming, the usual
+focus is on correctness of this explicitly specified behaviour. When
+teaching programming through the medium of music, as in Sonic Pi, the
+musical expectations that are usually associated with implicit
+representation of rhythm mean that non-expert musicians are likely to
+hear that something is wrong, while not being able to express
+precisely what the problem is.
+
+%The temporal semantics of initial version of Sonic Pi (as
+%described above) did not meet user expectations.% in
 %ways specially related to the nature of these expectations.
- From a functional-requirements perspective, the explicit representation of rhythm provided
-computationally accurate semantics. All expressed computation happens
-(\ie{}, all notes are played, and all sleeps are honoured) and the
-execution happens in the defined order. However, when we consider the
-implicit representation from the experience of rhythm, the addition of
-implicit computation time to the explicit timing statements produces
-sporadic timing of the musical events which reduces the quality of the
-musical experience.
+% From a functional-requirements perspective, the explicit representation of rhythm provided
+%computationally accurate semantics. All expressed computation happens
+%(\ie{}, all notes are played, and all sleeps are honoured) and the
+%execution happens in the defined order. However, when we consider the
+%implicit representation from the experience of rhythm, the addition of
+%implicit computation time to the explicit timing statements produces
+%sporadic timing of the musical events which reduces the quality of the
+%musical experience.
 
 Less expert musicians might be able to identify more explicit problems
 (such as extra beats), but find it harder to say precisely what the
@@ -505,12 +526,12 @@ closer together by $0.5s$.}
 \subsection{Examples}
 \label{sec:examples}
 
-\note{Show a few more example programs here that
-demonstrate the programming model.}
-
 Figure~\ref{sleep-examples} shows four similar programs which each
 have different internal behaviours for \sleepOp, illustrating its semantics.
-The first three take 3s to execute and the
+We use the function \ksleepOp{}, which is not a standard part of the Sonic Pi
+language, as a placeholder to represent a computation lasting a particular
+length of time (as specified by the parameter to \ksleepOp{}). 
+The first three example programs take 3s to execute and the
 last takes 4s to execute, with the behaviours:
 %
 \begin{enumerate}[(a)]
@@ -530,13 +551,15 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \begin{figure}[t]
 \subfigure[Two sleeps]{
 \begin{minipage}{0.18\linewidth}
+{\small{
 \[
 \hspace{-1em}
 \begin{array}{l}
-\sleep 1 \\
-\sleep 2 \\ \\ \\ \\
+\texttt{sleep 1} \\
+\texttt{sleep 2} \\ \\ \\ \\[-0.9em]
 \end{array}
 \]
+}}
 \end{minipage}
 \label{sleep-examples:a}
 }
@@ -545,16 +568,18 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 % takes 3
 \subfigure[One sleep]{
 \begin{minipage}{0.23\linewidth}
+{\small{
 \begin{center}
 \[
 \hspace{-0.5em}
 \begin{array}{l}
-\ldots \; \textit{\# lasts 1s} \\
-\sleep 1 \\
-\sleep 2 \\ \\  \\
+\texttt{kernelSleep 1} \\
+\texttt{sleep 1} \\
+\texttt{sleep 2} \\ \\  \\ 
 \end{array}
 \]
 \end{center}
+}}
 \end{minipage}
 \label{sleep-examples:b}
 }
@@ -563,16 +588,18 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 % takes 3s
 \subfigure[Half a sleep]{
 \begin{minipage}{0.23\linewidth}
+{\small{
 \begin{center}
 \[
 \hspace{-0.5em}
 \begin{array}{l}
-\ldots \; \textit{\# lasts 2s} \\
-\sleep 1 \\
-\sleep 2 \\ \\ \\
+\texttt{kernelSleep 2} \\
+\texttt{sleep 1} \\
+\texttt{sleep 2} \\ \\ \\
 \end{array}
 \]
 \end{center}
+}}
 \end{minipage}
 \label{sleep-examples:c}
 % takes 6
@@ -580,20 +607,23 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \rule[-2em]{0.3pt}{5em}
 \subfigure[No sleeps]{
 \begin{minipage}{0.23\linewidth}
+{\small{
 \begin{center}
 \[
 \hspace{-0.5em}
 \begin{array}{l}
-\ldots \; \textit{\# lasts 2s} \\
-\sleep 1 \\
-\ldots \; \textit{\# lasts 2s} \\
-\sleep 2 \\  \\
+\texttt{kernelSleep 2} \\
+\texttt{sleep 1} \\
+\texttt{kernelSleep 2} \\
+\texttt{sleep 2} \\  \\
 \end{array}
 \]
 \end{center}
+}}
 \end{minipage}
 }
-
+where \ksleepOp{} is a placeholder to represent a computation lasting a particular length
+of time
 \caption{Example programs with different \sleepOp{} behaviours}
 \label{sleep-examples}
 \end{figure}
@@ -705,8 +735,6 @@ programs (with statements covered by the single case for $P; \synVar = E$,
 and on the right for expressions.
 \label{def:vtime}
 \end{definition}
-\note{I haven't included calls to functions (that might do some sleeping).
-I could be easily include this though. What do you think Sam?}
 
 \paragraph{Equality on time}
 
@@ -730,12 +758,21 @@ for some value of $\epsilon$ which is the maximum negligible
 time value with respect to the application at hand.
 For example, if $\epsilon = 0.1$ then $3 \approx 3.05 \approx 2.92$. 
 
-In the case of
-\lang{}, we set $\epsilon$ equal to the schedule ahead time (\schedAheadTOp{}, in Section~\ref{sec:new-sleep}), which in our earlier examples was 0.5 seconds. 
+In the case of \lang{}, we mitigate any $\epsilon$-time differences by
+scheduling calls to the synthesise server using the current virtual
+time.  Later in the denotational model (Section~\ref{sec:time-monad}),
+we'll demonstrate sources of temporal variations
+$\epsilon$, which limited to a very small part of the model. 
+Crucically, these $\epsilon$ time differences do not
+accumulate-- the \sleepOp{} operation provides a barrier which
+prevents this. 
 
-\note{Discuss this further, may be
-  able to say later that in some cases $\epsilon$ is the scheduling
-  time for play statements?}
+%In the case of
+%\lang{}, we set $\epsilon$ equal to the schedule ahead time (\schedAheadTOp{}, in Section~\ref{sec:new-sleep}), which in our earlier examples was 0.5 seconds. 
+
+%\note{Discuss this further, may be
+%  able to say later that in some cases $\epsilon$ is the scheduling
+%  time for play statements?}
 
 \paragraph{Axioms of actual time}
 
@@ -788,6 +825,7 @@ and both have actual time 2.
 
 \begin{itemize}
 \item[]
+where $P = \texttt{kernelSleep 2}$, 
 $\vtime{P} = 0$, $t = 1$, and
 $\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$
 \end{itemize}
@@ -797,6 +835,7 @@ $\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$
 
 \begin{itemize}
 \item[]
+where $P = \texttt{kernelSleep 1}$, 
 $\vtime{P} = 0$, $t = 2$, and
 $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 \end{itemize}
@@ -1528,6 +1567,7 @@ a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilo
 (in which case a weak exception is raised).
 
 \section{Related work}
+\label{sec:related-work}
 
 Lee~\cite{Lee2009} makes a powerful argument for the development of a
 semantics of time in computation, or as he describes it, a properly
