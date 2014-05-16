@@ -9,6 +9,7 @@
 %format interpP = "\interp{P}"
 %format lamWild = "{\backslash}{\anonymous}"
 
+
 \usepackage{enumerate}
 \usepackage{subfigure}
 \usepackage{fancyvrb}
@@ -70,7 +71,7 @@
 \newcommand{\vtime}[1]{[#1]_{\mathsf{v}}}
 \newcommand{\etime}[1]{[#1]_{\mathsf{t}}}
 
-\newcommand{\synVar}{\mathit{var}}
+\newcommand{\synVar}{\mathit{v}}
 
 \newcommand{\interp}[1]{\llbracket{#1}\rrbracket}
 
@@ -98,13 +99,13 @@ Sonic Pi is a music live coding language that has been designed for
 educational use, as a first programming language. However, it is
 not straightforward to achieve the necessary simplicity of a first language
 in a music live coding setting, for reasons largely related to the
-manipulation of time. The original version of Sonic Pi used a 'sleep'
+manipulation of time. The original version of Sonic Pi used a `sleep'
 function for managing time. However, whilst this approach was conceptually
 simple, it resulted in badly timed music - especially when multiple musical
 threads were executing concurrently. This paper describes an alternative
 programming approach for timing (implemented in Sonic Pi v2.0) which
 maintains syntactic compatibility with version 1, yet provides accurate
-timing via specific interaction between real time and a "virtual time".
+timing via specific interaction between real time and a ``virtual time''.
 We provide a formal specification of the temporal behaviour of Sonic Pi,
 motivated in relation to other recent approaches to the semantics of time in
 live coding and general computation. We then define a monadic model of the
@@ -115,79 +116,98 @@ specification, using Haskell as a metalanguage.
 \section{Introduction}
 \label{sec:introduction}
 
-Lee~\cite{Lee2009} makes a powerful argument for the development of a
-semantics of time in computation, or as he describes it, a properly
-formalised class of "time system" that can be applied alongside the type
-systems already understood to be an essential software engineering
-tool. As he observes, although the passage of time is a key aspect of
-physical processes, it is almost entirely absent in computing. Indeed, a
-key premise of theoretical computer science is that time is irrelevant
-to correctness, and is at most a measure of quality. Lee's argument is
-founded primarily on the need for embedded computing systems that are
-able to interact with the physical world by including time in the domain
-of discourse. Rather than the distinction between functional and
-non-functional requirements that defines "function" as a mathematical
-mapping from inputs to outputs, in this view the correctness of program
-execution incorporates the concept that an event must occur at the
-correct time. It is important to note, as he attributes to Stankovic,
-that the conventional equation of "real-time computing" as equivalent to
-"fast computing" is a misconception. Although there are indeed computing
-applications where computation must be completed as fast as possible
-before some deadline (and where the most effective research priority may
-be simply to create a faster computer), if time is taken seriously as a
-component of system behaviour (as it is in music) then an event that
-occurs too soon may be just as incorrect as one that occurs too late.
+Timing is a critical component of music. Therefore any language for
+describing music must have a method for describing the precise timing
+of sounds, such as individual notes. Performing a piece of music
+correctly then amounts to a computation, evaluating the musical
+description to emit correct notes at correct times.  This kind of
+timing contrasts with many notions in computing.  For
+example, ``real-time computing'' approaches often focus on computing
+within a certain time limit (a deadline), thus high-performance is
+important.  But in music, being early is just as bad as being late. A
+similar situation in mechanical co-ordination tasks, such as
+coordinating robotic limbs for walking. For these kinds of
+applications, a robust programming model for timing is required.
 
-In music, it is clear that we must be able to speak about the precise
-location of events in time, and hence that any music programming
-language must of necessity provide some kind of time semantics, even if
-these are only informal. In the case of live coding languages, an
-additional consideration is that the time at which the program is edited
-may coincide or overlap with the time at which it is executed. This
-overlap between execution and creation time is of broader value in
-software engineering, as noted for example by<
-McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
-adjust the notional execution time relative to a point in the source
-code editing environment. Tools of this kind can also benefit from a
-formal semantics in which to define the relationship between changes or
-navigation within the code, and changes or navigation within the
-cause-effect sequence of execution time.
+Sonic Pi is a domain specific language for manipulating synthesisers
+through time~\cite{Aaron2013}. It was designed for teaching core
+computing concepts to school students using creative programming,
+specically live-coding music, as a means for engaging students.  The
+precise timing of effects, which do not occur too early or too late,
+is core to the programming approach of Sonic Pi. Primarily, this paper
+introduces the temporal programming model of Sonic Pi. 
 
-Reasoning about the temporal component of events and action is a classic
-problem in artificial intelligence (e.g. Shoham 1988,
-Shanahan~\cite{Shanahan1995}, Fisher et al~\cite{Fisher2005}), in which
-causal mechanisms and metrical description may be more or less tightly
-coupled. Human interaction with systems that employ temporal reasoning
-can be considered either from a software engineering perspective (the
-usability of formal time notations, for example as in Kutar et al 2001),
-or from a cognitive science standpoint, as in Honing's discussion of
-music cognition from a representational
-perspective~\cite{Honing1993}. Honing observes that representation of
-time in music can be both declarative and procedural, drawing on
-propositional and analogical cognitive resources. These representations
-may have conflicting implications for efficiency of control and
-accessibility of knowledge, for example trills or vibrato can be readily
-performed by an expert musician, but use mechanisms that are difficult
-to describe. Honing suggests that computer music systems should be
-distinguished according to whether they support only tacit time
-representation (events are encoded only as occurring "now"), implicit
-time representation (events are ordered in a metrical sequence) or
-explicit time representation (temporal structure can be described and
-manipulated). Bellingham et al~\cite{Bellingham2014} provide a survey of
-32 algorithmic composition systems, in which they apply Honing's
-framework to discuss the problem of notating the hierarchical
-combinations of cyclical and linear time that result in musical
-perception of pattern and tempo.
+As well as the need for programming approaches to time, there is a
+well-recognised need for models of temporal behaviour coupled with
+reasoning systems for time. This has been explored particular in
+logic, with modal logics such as the Real-Time Computation Tree
+Logic~\cite{emerson1991quantitative}. Lee makes a
+powerful argument for the development of a semantics of time in
+computation, or as he describes it, a properly formalised class of
+``time system'' that can be applied alongside the type systems already
+understood to be an essential software engineering tool~\cite{Lee2009}.
+It is in this spirit that we develop two kinds of model for the temporal
+semantics of Sonic Pi: an axiomatic time system and a denotational model.
+
+The core contributions of this paper are three-fold:
+%%
+\begin{itemize}
+\item We present a new programming approach for precisely timing
+  effects (Section~\ref{sec:language}), which is implemented as part
+  of the Sonic Pi language for music live conding. We explain how
+  this programming approach has evolved to replace the previous version
+  of the Sonic Pi language, providing a syntactically identical language
+  but with an improved approach to timing. 
+
+\item We formalise the temporal semantics of this approach, introducing 
+  a \emph{time system} for analysing the temporal behaviour of Sonic Pi
+  programs. 
+
+\item We give a denotational semantics to a core subset of the language
+and prove it sound with respect to the time system, \ie{}, the language
+is \emph{time safe}. 
+\end{itemize}
+
+\subsection{Live coding}
+
+A first programming language should be conceptually straightforward
+and syntactically uncluttered. However, it is not straightforward to
+achieve this simplicity in a music live coding language, for reasons
+largely related to the representation of time. Representing musical
+time in a programming language is often problematic, firstly because
+natural ways of describing and organising musical events are
+multi-threaded (scores, chords, resonance, reverb), and secondly
+because so many standard computational formalisms treat execution time
+as a non-functional requirement. Time can be even more problematic in
+live coding, because the creation of the code, as a performance, is
+interleaved with the sound events resulting from its execution. Yet
+for users of Sonic Pi, the creative experience they have, like all
+experience, arises through time - as media theorist Mieke Bal says,
+``\emph{time is where subjectivity is produced}''~\cite{bal2002travelling}.
+
+As noted by Julian Rorhruber~\cite{blackwell_et_al:DR:2014:4420},
+there have been many publications discussing alternative approaches to
+the representation of time in live coding, many having to choose
+between explicit or implicit representation of time, and between
+description of time with reference to internal or external
+state. These many interesting strategies include McLean's formalism of
+cyclic time in the Tidal language~\cite{mclean2013textural}, and
+Sorensen's temporal recursion in
+Impromptu/Extempore~\cite{sorensen2010programming}. In this paper, we
+present a formalism that is designed to achieve production-quality
+sound (via the SuperCollider synthesis server) while allowing
+inexperienced programmers in an educational setting (typically 11-12
+year-old children) to express the temporal structure in terms that
+have an intuitive correspondence to the experience and production of
+musical sounds.
 
 
-\section{Sonic Pi}
+\section{Problems with timing in Sonic Pi v1.0}
 \label{sec:sp-1}
 
-Sonic Pi is a Domain Specific Language for manipulating synthesisers
-through time~\cite{Aaron2013}. It was designed for teaching core
-computing notations to school students using creative programming,
-specically live-coding music, as a means for engaging students. One of
-the core computing concepts Sonic Pi has been used to teach is the
+\note{Perhaps this section could be merged with 3}
+
+One of the core computing concepts that Sonic Pi has been used to teach is the
 sequential ordering of effects in imperative programs such as playing
 successive notes in an arpeggio, see Figure~\ref{eminor-chord}.
 
@@ -214,7 +234,7 @@ play 59
 \end{minipage}
 \label{eminor-chord}
 }
-\subfigure[Arpegio; notes in succession]{
+\subfigure[Arpeggio; notes in succession]{
 \hspace{1.5em}
 \begin{minipage}{0.4\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0b}
@@ -328,11 +348,10 @@ program is a summation of all these Delta times in addition to the
 requested sleep durations. This results in both drift and jitter of the
 timing of the sounds produced by the program.
 
+\subsection{Temporal expectations}
 
-\section{Temporal expectations}
-
-The temporal semantics present in the initial version of Sonic Pi as
-described in Section~\ref{sec:sp-1} did not meet user expectations in
+The temporal semantics of initial version of Sonic Pi (as
+described above) did not meet user expectations in
 ways specially related to the nature of these expectations. From a
 functional perspective, the explicit representation of rhythm provided
 computationally accurate semantics. All expressed computation happens
@@ -423,21 +442,6 @@ than the sleep time.  Thus, the programming model is not suitable for
 realtime systems requiring hard deadlines but \sleepOp{} instead
 provides a \emph{soft deadline} (using the terminology of Hansson and
 Jonsson~\cite{hansson1994logic}).
-
-\note{Contributions}
-
-\begin{itemize}
-\item Explain the core principles of the language related to timing
-(Section~\ref{}) and provide a monadic model this programming approach
-(Section~\ref{}) (embedded in Haskell).
-
-\item We show that the monadic approach can be composed with
-  additional monads to capture other useful notions of effect in
-  \lang{} programs, such as random numbers (Section~\ref{}).
-\end{itemize}
-
-%
-The \lang{} was previously discussed in~\cite{aaron2013sonic}
 
 \begin{SaveVerbatim}{example1}
 play C
@@ -578,7 +582,7 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \label{sleep-examples}
 \end{figure}
 
-\section{Modelling Sonic Pi's temporal semantics}
+\section{A ``time system'' for Sonic Pi}
 
 From our experiences, we've found that the programming model of Sonic
 Pi, particularly its temporal model, is easy to understand by even
@@ -616,7 +620,7 @@ We refer to sequences statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
 seconds).
 
-\paragraph{A core fragment of Sonic Pic}
+\paragraph{A core fragment of Sonic Pi}
 
 Throughout the rest of this section, we model a core subset of
 the Sonic Pi language with the following grammar, where $P$ are
@@ -695,6 +699,7 @@ this problem in the programming model of \lang{} and the discussion here.
 We define the relation $\approx$ on actual times, where:
 %%
 \begin{equation}
+\forall s, t . \quad
 s \approx t
 \;
 \equiv
@@ -884,7 +889,7 @@ the two levels of model.
 
 \newcommand{\TM}{\mathsf{TM}}
 
-\subsection{Monadic modal}
+\section{A denotational model of Sonic Pi's temporal semantics}
 \label{sec:time-monad}
 
 In the following, we use Haskell as a meta language for a denotational
@@ -1011,16 +1016,14 @@ programs shows the mapping to the operations of the \emph{Temporal}
 monad:
 %%
 \begin{align*}
-\interp{\emph{statement}} & : \emph{Temporal} \, () \\
-\interp{x = P; Q} & = \interp{P} |>>= (\x ->| \interp{Q}) \\
-\interp{P; Q} & = \interp{P} |>>= (\_ ->| \interp{Q}) \\
-\interp{\sleep e} & = \emph{sleep} \, \interp{e}
+\interp{\emph{P}} & : \emph{Temporal} \, () \\
+\interp{P; \sleep e} & = \interp{P} |>>= (lamWild ->| \emph{sleep} \, \interp{e}) \\
+\interp{P; \synVar = E} & = \interp{P} |>>= (\v ->| \interp{E}) \\
 \end{align*}
 %%
 Note that $\interp{-}$ is overloaded in the rule for \sleepOp{} for (pure) expressions.
-The concrete interpretation of other statements in the language, such as \playOp, is
-elided here since it does not relate directly to the temporal semantics.
-
+%The concrete interpretation of other statements in the language, such as \playOp, is
+%elided here since it does not relate directly to the temporal semantics.
 The key primitive \emph{sleep} provides the semantics for \sleepOp{} as:
 %%
 \begin{code}
@@ -1039,7 +1042,7 @@ sleep delayT = do  nowT      <- time
 where \emph{sleep} proceeds first by getting the current time
 \emph{nowT}, calculating the new virtual time \emph{vT'} and updating
 the virtual time state. If the new virtual time is less than the
-elapsed time \emph{diffT} since the start then no actual (kernel)
+elapsed time \emph{diffT} then no actual (kernel)
 sleeping happens. However, if the new virtual time is ahead of the
 elapsed time, then the process waits for the difference such that the
 elapsed time equals the virtual time.
@@ -1057,7 +1060,7 @@ getVirtualTime :: Temporal VTime
 getVirtualTime = T (\(_, _) -> \vT -> return (vT, vT))
 newline
 setVirtualTime :: VTime -> Temporal ()
-setVirtualTime vT = T (\_ -> \_ -> return ((), vT))
+setVirtualTime vT = T (lamWild -> lamWild -> return ((), vT))
 newline
 kernelSleep :: RealFrac a => a -> Temporal ()
 kernelSleep t =  T (\(_, _) -> \vT ->
@@ -1078,31 +1081,51 @@ that the lemmas hold of the model.
 
 \noindent
 \begin{repdefinition}{def:vtime}
+Virtual time is specified for statements of \lang{} programs
+by the following cases:
+%
 \begin{align*}
-\vtime{\sleep t} & = t \\
-\vtime{P; Q} & = \vtime{P} + \vtime{Q} \\
-\vtime{-} & = 0
+\begin{array}{crl}
+\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
+\vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
+\end{array}
 \end{align*}
 \end{repdefinition}
 
+\begin{lemma}
+$\vtime{\mathit{runTime} \, \interp{P}} = \vtime{P}$, \ie{}, 
+the virtual time of the evaluated denotational model matches the virtual time calculated 
+from the axiomatic model. 
+\end{lemma}
+
 \begin{proof}
 For our model, the proof is straightforward. For the case of
-$P; Q$, we rely on the monotonicity of virtual time: virtual
+$P; S$, we rely on the monotonicity of virtual time: virtual
 time is only ever increasing, and can only ever be incremented by sleep.
-\note{Could put more here}
 \end{proof}
 
-\begin{replemma}{def:etime}
-For some program $P$ and time $t$:
+\begin{repdefinition}{def:etime}
+The actual elapsed time $\etime{-}$ can be specified at the level of programs
+by the following equations:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
+\etime{\emptyset} & \, \approx \, 0 \\
+\etime{P; \sleep{} t} & \,\approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} \\
+\etime{P; A^i} & \,\approx\,
+ \etime{P} + \etime{A^i}
 \end{align*}
-\end{replemma}
+\end{repdefinition}
+
+\begin{lemma}
+$\etime{\mathit{runTime} \, \interp{P}} \approx \etime{P}$, \ie{}, 
+the actual time of the evaluated denotational model is approximately equal
+to actual time calculated from the axiomatic model. 
+\end{lemma}
 
 \begin{proof}
-Our model interprets $(P; \sleep t)$ as:
+The key case is for $(P; \sleep{} t)$, which we show here. 
+Our model interprets the evalution of $(P; \sleep t)$ as:
 %%
 \begin{code}
 runTime (do {interpP; sleep t})
@@ -1133,23 +1156,23 @@ If the updating of the virtual time state and the computing of
 the guard takes $e$ then the overall time taken is:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} =
+\etime{P; \sleep{} t} & =
  \begin{cases}
    \etime{P} + e & (\vtime{P} + t) < \etime{P}  \\
    \etime{P} + e + (\vtime{P} + t) - \etime{P}  & \textit{otherwise}
- \end{cases}
+ \end{cases} \\
+ & =
+ \begin{cases}
+   \etime{P} + e & (\vtime{P} + t) < \etime{P}  \\
+   \vtime{P} + t + e & \textit{otherwise}
+ \end{cases} \\
+& = (\etime{P} + e)  \, \mathit{max} \, (\vtime{P} + t + e) \\ 
+& \approx \etime{P} \, \mathit{max} \, (\vtime{P} + t)
 \end{align*}
 %%
-which is equivalent to the statement of the lemma if $e \leq \epsilon$
+where the final stage holds if $e \leq \epsilon$ 
 and if the reduction to the interpretation to get to the above code
-takes less than $\epsilon$:
-\begin{align*}
-\etime{P; \sleep{} t} \approx
- \begin{cases}
-   \etime{P} & (\vtime{P} + t) < \etime{P} \\
-   \vtime{P} + t  &  \textit{otherwise}
- \end{cases}
-\end{align*}
+takes less than $\epsilon$. 
 \end{proof}
 
 \note{I suppose this is ok- I'm a bit wary about saying the simplification
@@ -1158,47 +1181,11 @@ We could time $e$ though in the model and show it is less than the schedule
 time. We could go further and time the analogous parts of the Sonic Pi implementation
 to check that the real $e$ is less than $\epsilon$. This would be good.}
 
-\begin{replemma}{lem:sleep-L}
-For some program $P$ and time $t$:
-%%
-\begin{align*}
-\etime{\sleep{} t; P} \approx t + \etime{P}
-\end{align*}
-\end{replemma}
-
-\begin{proof}
-Our models interprets $(\sleep t; P)$ as:
-%
-\begin{code}
-runTime (do { sleep t; interpP })
-\end{code}
-%
-which desugars and simplifies to the following \emph{IO} computation:
-%
-%\begin{code}
-%do  setVirtualTime delayT
-%    kernelSleep delayT
-%    interpP
-%\end{code}
-\begin{code}
-do  startT <- getCurrentTime
-    kernelSleep delayT
-    let (T p) = interpP ()
-    thenT <- getCurrentTime
-    p (startT, thenT) delayT
-\end{code}
-%
-The code does a |kernelSleep| for $t$ and then continues with $P$ at
-virtual time $t$, \ie{}, the time taken is $t + \interp{P}_t$.  In
-desugaring and simplifying we have certainly elided some intermediate
-steps in the computation (such as the guard test in sleep), which we
-account for as part of the error $\epsilon$.
-\end{proof}
 
 \subsubsection{Equational theory for Sonic Pi programs}
 
 The |Temporal| monad is ``weak'', in the sense that the standard monad
-laws do not always hold.  For example, one of the unit laws is that:g
+laws do not always hold.  For example, one of the unit laws is that:
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
@@ -1221,7 +1208,7 @@ on the current time. For example, let |m| be defined:
 m = do   kernelSleep 1
          start <- start
          end <- time
-         return (diffTime end start) -- duration of computation
+         return (diffTime end start) -- duration
 \end{code}
 %%
 Then we can run an experiment in GHCi to see that different results are possible:
@@ -1254,6 +1241,10 @@ $\interp{e}$ factors through
 
 \subsection{Alternate definitions}
 \label{sec:alternate}
+
+\noindent
+We briefly discuss some alternative structuring of the model here
+and an alternate model for \sleepOp{}.
 
 \subsubsection{Subsets of the semantics}
 
@@ -1320,9 +1311,12 @@ instance Monoid (Temporal ()) where
 with the interpretation $\interp{P; Q} = \interp{P} |`mappend`| Q$ and
 where |mempty| provides a \emph{no-op}.
 
-\subsubsection{Alternate definition of \emph{sleep}}
+\subsubsection{Alternate definition for \emph{sleep}}
 
-
+We give an alternate definition for the model of \sleepOp{} here that
+reorders the calculation of the sleep delay. This alternate definition 
+slightly reduces any oversleeping by minimising noise in the timing. 
+%
 \begin{code}
 sleep' :: VTime -> Temporal ()
 sleep' delayT = do  vT        <- getVirtualTime
@@ -1336,24 +1330,17 @@ sleep' delayT = do  vT        <- getVirtualTime
                         else kernelSleep (vT' - diffT)
 \end{code}
 %
-This alternate definition should reduce any oversleeping by minimising
-noise in the timing. For example, the virtual time is calculated
+Thus, the virtual time is calculated
 and updated before the current time is retrieved in case the additional
 time taken in updating the virtual time means that the elapsed time
-catches up with the virtual time.
+catches up with the virtual time. The previous definition of
+\emph{sleep} instead calculated the current time immediately, thus
+computing the time of the preceding statement more accurately, but then
+not accounting for the time elapsed before sleeping in the |kernelSleep| delay. 
 
-To see the difference, consider Lemma~\ref{def:etime}:
-
-\begin{replemma}{def:etime}
-For some program $P$ and time $t$:
-%%
-\begin{align*}
-\etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}
-\end{align*}
-\end{replemma}
-%
-\noindent
+To see the difference, consider Definition~\ref{def:etime}, with the
+case $\etime{P; \sleep{} t} \approx\,
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}$. 
 If the above alternate definition \emph{sleep'} is used, then
 the interpretation of $(P; \sleep t)$
 desugars and simplifies to the following:
@@ -1373,27 +1360,25 @@ do  startT     <- getCurrentTime
 which exhibits the temporal behaviour:
 %%
 \begin{align*}
-\etime{P; \sleep{} t} =
+\etime{P; \sleep{} t} & =
  \begin{cases}
    \etime{P} + e_1 + e_2 & (\vtime{P} + t) < (\etime{P} + e_1) \\
    \vtime{P} + t + e_2 &  \textit{otherwise}
- \end{cases}
+ \end{cases} \\
+& = ((\vtime{P} + t) \, \mathit{max} \, (\etime{P} + e_1)) + e_2
 \end{align*}
 %
 where $e_1$ is the time taken by updating the virtual time and
 $e_2$ is the time taken by the guard. This gives
-a tighter bound on sleep behaviour that previously where the behaviour was:
+a tighter bound on sleep behaviour that previously where the behaviour is:
 %
 \begin{align*}
-\etime{P; \sleep{} t} =
- \begin{cases}
-   \etime{P} + e_1 + e_2 & (\vtime{P} + t) < \etime{P} \\
-   \vtime{P} + t + e_1 + e_2 &  \textit{otherwise}
- \end{cases}
+\etime{P; \sleep{} t} = ((\vtime{P} + t) \, \mathit{max} \, \etime{P}) + e_1 + e_2 
 \end{align*}
 %
+\ie{}, without resorting to approximate equalities on time with $\approx$
 
-\subsection{Emitting overrun warnings}
+\section{Emitting overrun warnings}
 \label{sec:temporal-warnings}
 
 We extend the |Temporal| monad with an additional parameter for the
@@ -1409,32 +1394,146 @@ time is less than $\epsilon$ ahead of virtual time. That is:
 \item{$(\vtime{P} + \epsilon) \leq \etime{P} > \vtime{P} \Rightarrow \interp{P} \leadsto$ \emph{weak warning}}
 \end{itemize}
 %%
-
+We redefine the interpretation $\interp{-}$ to produce computations described
+by the following type |TemporalE|, thus $\interp{P} : \emph{TemporalE} \, ()$:
+%%
 \begin{code}
 data Warning = Strong VTime | Weak VTime
 
 data TemporalE a =
     TE (VTime -> Temporal (a, [Warning]))
+\end{code}
+%%
+Therefore, |TemporalE| wraps the previous |Temporal| type with a |VTime|
+parameter for $\epsilon$ and pairs the result with a list, representing the output
+stream of warnings. The |lift| function (shown in Figure~\ref{core-functionsE})
+ allows the previous effectul operations on
+|Temporal| to be promoted to the |TemporalE| type (by ignoring the new parameter for
+$\epsilon$ and producing the empty output stream), of type
+|lift :: Temporal a -> TemporalE a|. Figure~\ref{core-functionsE} shows
+a number of other simple |TemporalE| computations for raising exceptions 
+and getting the $\epsilon$ parameter. 
 
+\begin{figure}[t]
+\begin{code}
+weakWarn :: VTime -> TemporalE ()
+weakWarn t = TE (lamWild -> return ((), [Weak t])) >> 
+        (warn $ "warning: overran by " ++ (show t))
+newlinee
+strongWarn :: VTime -> TemporalE ()
+strongWarn t = TE (lamWild -> return ((), [Strong t])) >>
+        (warn $ "WARNING: overran by " ++ (show t))
+newline
+epsilonTime :: TemporalE VTime
+epsilonTime = TE (\eps -> return (eps, []))
+newline
+lift :: Temporal a -> TemporalE a
+lift t = TE (lamWild -> fmap (\a -> (a, [])) t)
+newline
+warn :: String -> TemporalE ()
+warn s = lift (T (lamWild -> \vt -> do  putStrLn s
+                                        return ((), vt)))
+\end{code}
+\caption{Simple \emph{TemporalE} computations}
+\label{core-functionsE}
+\end{figure}
+
+The |TemporalE| encoding has the following instance of |Monad| which 
+is simply a combination of the usual reader monad behaviour (for the
+$\epsilon$ parameter) and the writer monad (for the output stream), but
+lifted to the |Temporal| monad:
+%%
+\begin{code}
 instance Monad TemporalE where
     return a = TE (\_ -> return (a, []))
-    (TE p) >>= q = TE (\eps -> do (a, es) <- p eps
-                                  let (TE q') = q a
-                                  (b, es') <- q' eps
-                                  return (b, es++es'))
+    (TE p) >>= q = TE (\eps -> do  (a, es) <- p eps
+                                   let (TE q') = q a
+                                   (b, es') <- q' eps
+                                   return (b, es++es'))
+
+\end{code}
+%%
+Therefore, the |do| here is a |Temporal| computation, with the previous
+monadic semantics.
+
+Evaluating |TemporalE| computations is much the same as before, with 
+the $\epsilon$ time passed as a parameter:
+%
+\begin{code}
+runTime :: VTime -> TemporalE a -> IO (a, [Warning])
+runTime eps (TE c) = do  startT <- getCurrentTime
+                         let (T c') = c eps
+                         (y, _) <- c' (startT, startT) 0
+                         return y
 \end{code}
 
-\paragraph{Overrun}
-
-\note{TODO: report warnings when overrun occurs- should be easy I think
-by adding stuff to sleep.}
-
-\paragraph{Overrun schedule}
-
-\note{TOOD: Again pretty easy, just need some info in the monad
-to say what counts as a bad overrun}
+Finally, the new definition of |sleep| for |TemporalE| is the point at which
+exceptions may be raised:
+%
+\begin{code}
+sleep :: VTime -> TemporalE ()
+sleep delayT = 
+     do  nowT      <- time
+         vT        <- getVirtualTime
+         let vT'   = vT + delayT
+         setVirtualTime vT'
+         startT    <- start
+         eps       <- epsilonTime
+         let diffT = diffTime nowT startT
+         if (vT' < diffT)  
+               then  if ((vT' + eps) < diffT) 
+                     then strongWarn (diffT - vT')
+                     else weakWarn (diffT - vT')
+               else kernelSleep (vT' - diffT)
+\end{code}
+%
+The definition is similar to \emph{sleep} for |Temporal|, except
+that in the true-branch of the conditional there is additional testing to see if
+|diffT| is greater than the new virtual time $+ \epsilon$ (in which case 
+a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilon$
+(in which case a weak exception is raised). 
 
 \section{Related work}
+
+Lee~\cite{Lee2009} makes a powerful argument for the development of a
+semantics of time in computation, or as he describes it, a properly
+formalised class of "time system" that can be applied alongside the type
+systems already understood to be an essential software engineering
+tool. As he observes, although the passage of time is a key aspect of
+physical processes, it is almost entirely absent in computing. Indeed, a
+key premise of theoretical computer science is that time is irrelevant
+to correctness, and is at most a measure of quality. Lee's argument is
+founded primarily on the need for embedded computing systems that are
+able to interact with the physical world by including time in the domain
+of discourse. Rather than the distinction between functional and
+non-functional requirements that defines "function" as a mathematical
+mapping from inputs to outputs, in this view the correctness of program
+execution incorporates the concept that an event must occur at the
+correct time. It is important to note, as he attributes to Stankovic,
+that the conventional equation of "real-time computing" as equivalent to
+"fast computing" is a misconception. Although there are indeed computing
+applications where computation must be completed as fast as possible
+before some deadline (and where the most effective research priority may
+be simply to create a faster computer), if time is taken seriously as a
+component of system behaviour (as it is in music) then an event that
+occurs too soon may be just as incorrect as one that occurs too late.
+
+In music, it is clear that we must be able to speak about the precise
+location of events in time, and hence that any music programming
+language must of necessity provide some kind of time semantics, even if
+these are only informal. In the case of live coding languages, an
+additional consideration is that the time at which the program is edited
+may coincide or overlap with the time at which it is executed. This
+overlap between execution and creation time is of broader value in
+software engineering, as noted for example by 
+McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
+adjust the notional execution time relative to a point in the source
+code editing environment. Tools of this kind can also benefit from a
+formal semantics in which to define the relationship between changes or
+navigation within the code, and changes or navigation within the
+cause-effect sequence of execution time.
+
+\paragraph{Logics}
 
 There has been various work on reasoning about time in logic. For
 example, modal CTL (Computational Tree Logic) has been extended with
@@ -1451,14 +1550,40 @@ corresponds to $AF^{\leq t} \interp{P}$, \ie{}, after at leat $t$ then
 whatever $P$ does will have happened. Our framework is not motivated by
 logic and we do not have a model checking process for answering
 questions such as, at time $t$ what formula hold (what statements have
-been evaluated).  The properties of Lemmas 1 to 5 however provide some
+been evaluated).  The definitions and lemma of Section~\ref{}, however provide some
 basis for programmers to reason about time in their programs. In
 practice, we find that such reasoning can be done by children in a
 completely informal but highly useful way.
 
+\paragraph{Artifical intelligence}
 
+Reasoning about the temporal component of events and action is a classic
+problem in artificial intelligence (e.g. Shoham 1988,
+Shanahan~\cite{Shanahan1995}, Fisher et al.~\cite{Fisher2005}), in which
+causal mechanisms and metrical description may be more or less tightly
+coupled. Human interaction with systems that employ temporal reasoning
+can be considered either from a software engineering perspective (the
+usability of formal time notations, for example as in Kutar et al. 2001),
+or from a cognitive science standpoint, as in Honing's discussion of
+music cognition from a representational
+perspective~\cite{Honing1993}. Honing observes that representation of
+time in music can be both declarative and procedural, drawing on
+propositional and analogical cognitive resources. These representations
+may have conflicting implications for efficiency of control and
+accessibility of knowledge, for example trills or vibrato can be readily
+performed by an expert musician, but use mechanisms that are difficult
+to describe. Honing suggests that computer music systems should be
+distinguished according to whether they support only tacit time
+representation (events are encoded only as occurring "now"), implicit
+time representation (events are ordered in a metrical sequence) or
+explicit time representation (temporal structure can be described and
+manipulated). Bellingham et al.~\cite{Bellingham2014} provide a survey of
+32 algorithmic composition systems, in which they apply Honing's
+framework to discuss the problem of notating the hierarchical
+combinations of cyclical and linear time that result in musical
+perception of pattern and tempo.
 
-\section{Epilogue}
+\section{Conclusion}
 
 \note{TODO}
 
