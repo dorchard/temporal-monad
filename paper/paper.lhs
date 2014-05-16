@@ -134,8 +134,14 @@ through time~\cite{Aaron2013}. It was designed for teaching core
 computing concepts to school students using creative programming,
 specically live-coding music, as a means for engaging students.  The
 precise timing of effects, which do not occur too early or too late,
-is core to the programming approach of Sonic Pi. Primarily, this paper
-introduces the temporal programming model of Sonic Pi.
+is core to the programming approach of Sonic Pi. 
+
+Sonic Pi is a mostly pure language, with first-class functions. Its
+impurity arises from timing and output effects (for producing sounds).
+Primarily, this paper introduces the temporal programming model of
+Sonic Pi. We give a monadic description of its effects, showing
+that the impure part of the language can be embedded in a pure
+language.
 
 As well as the need for programming approaches to time, there is a
 well-recognised need for models of temporal behaviour coupled with
@@ -226,8 +232,6 @@ cause-effect sequence of execution time.
 
 \section{Problems with timing in Sonic Pi 1.0}
 \label{sec:sp-1}
-
-\note{Perhaps this section could be merged with 3}
 
 One of the core computing concepts that Sonic Pi has been used to teach is the
 sequential ordering of effects in imperative programs such as playing
@@ -357,7 +361,7 @@ the external synth process. This then adds additional varying time
 \end{figure}
 
 The temporal issues described in this section are summarised in
-Figure~\ref{fig:sp-timing1.0}, which describes the timing behavour of
+Figure~\ref{fig:sp-timing1.0}, which describes the timing behaviour of
 Sonic Pi code triggering three successive chords. Each of the $\Delta$
 times in the far left column represents the real computation time of
 each statement. Notice how they are all unique. The precise duration is
@@ -766,7 +770,7 @@ scheduling calls to the synthesise server using the current virtual
 time.  Later in the denotational model (Section~\ref{sec:time-monad}),
 we'll demonstrate sources of temporal variations
 $\epsilon$, which limited to a very small part of the model. 
-Crucically, these $\epsilon$ time differences do not
+Crucially, these $\epsilon$ time differences do not
 accumulate-- the \sleepOp{} operation provides a barrier which
 prevents this. 
 
@@ -820,8 +824,8 @@ In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$.
 \end{definition}
 
 \begin{example}
-The following two small example programs illustrate this definition,
-and both have actual time 2.
+The following two small example programs illustrate this definition, both
+of which have actual time 2 but arising from different calls to \sleepOp{}.
 %%
 \begin{itemize}
 \item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
@@ -983,7 +987,7 @@ of the computation (which are used to compute the time elapsed
 since the start of the program), to a stateful computation on virtual times
 (mapping from an old virtual time to a new virtual time) which may
 access the kernel to get the actual clock time, and produces a result
-along with the new vritual time.  Concretely, |Temporal| is defined:
+along with the new virtual time.  Concretely, |Temporal| is defined:
 %%
 \begin{code}
 data Temporal a =
@@ -1136,12 +1140,14 @@ kernelSleep t =  T (\(_, _) -> \vT ->
 \end{figure}
 
 
-\subsection{Soundness of the temporal monad}
+\subsection{Soundness of the temporal monad: time safety}
 \label{sec:soundness}
 
-We replay the previous lemmas on the temporal behaviour of \lang{} programs,
+We replay the previous axiomatic specifications on the temporal behaviour of \lang{} programs,
 and show that the monadic model is sound with respect to these, \ie{},
-that the lemmas hold of the model.
+that the lemmas hold of the model. We call this a \emph{time safety} property
+of the language, with respect to the \emph{time system} provided by the axiomatic
+specification. 
 
 \noindent
 \begin{repdefinition}{def:vtime}
@@ -1189,7 +1195,7 @@ to actual time calculated from the axiomatic model.
 
 \begin{proof}
 The key case is for $(P; \sleep{} t)$, which we show here.
-Our model interprets the evalution of $(P; \sleep t)$ as:
+Our model interprets the evaluation of $(P; \sleep t)$ as:
 %%
 \begin{code}
 runTime (do {interpP; sleep t})
@@ -1239,17 +1245,17 @@ and if the reduction to the interpretation to get to the above code
 takes less than $\epsilon$.
 \end{proof}
 
-\note{I suppose this is ok- I'm a bit wary about saying the simplification
-takes less than $\epsilon$. It surely does, but I am only hand waving.
-We could time $e$ though in the model and show it is less than the schedule
-time. We could go further and time the analogous parts of the Sonic Pi implementation
-to check that the real $e$ is less than $\epsilon$. This would be good.}
+%\note{I suppose this is ok- I'm a bit wary about saying the simplification
+%takes less than $\epsilon$. It surely does, but I am only hand waving.
+%We could time $e$ though in the model and show it is less than the schedule
+%time. We could go further and time the analogous parts of the Sonic Pi implementation
+%to check that the real $e$ is less than $\epsilon$. This would be good.}
 
 
-\subsubsection{Equational theory for Sonic Pi programs}
+\subsection{Monad laws and equational theory for Sonic Pi programs}
 
 The |Temporal| monad is ``weak'', in the sense that the standard monad
-laws do not always hold.  For example, one of the unit laws is that:
+laws do not always hold.  For example, consider the law:
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
@@ -1290,30 +1296,50 @@ calculate a duration here since using the absolute time produced by
 |time| would be disingenuous, since we are evaluating |m >>= return|
 and |m| at different start times.
 
-\paragraph{Laws with respect to $\epsilon$}
+In the above example, we have computed a time-dependent value (the duration). 
+Due to variations in timing (and in the $\epsilon$ overheads), this disrupts
+the monad laws as seen above with the monad law shown in equation~\ref{law-example}. 
+However, in the programming model of Sonic Pi, there are no
+operations that expose the actual time (or current) time to the user-- that is,
+the above program is not the model of any Sonic Pi program. We can therefore
+``quotient'' the model by operations that do not expose the time, \ie{}, we exclude
+|start| and |time|, which are not part of the Sonic Pi language. 
+From this we regain the monad laws, up to $\approx$ due to
+small variations (as seen above). These are then:
+%
 
-\paragraph{Quotienting by non-time dependent functions}
+%\paragraph{Laws with respect to $\epsilon$}
 
-\note{This section is more of a marker for myself (Dom), I need
-to think about this later, but basically it is about showing
-that the monad laws hold for our semantics (but not in general)}
+%\paragraph{Quotienting by non-time dependent functions}
 
-In L, there is no expression which returns the current time;
- \emph{getTime} belongs only to the model, not to the language.
-That is, for all expressions $e$, then the denotation
-$\interp{e}$ factors through
+%\note{This section is more of a marker for myself (Dom), I need
+%to think about this later, but basically it is about showing
+%that the monad laws hold for our semantics (but not in general)}
 
+%In L, there is no expression which returns the current time;
+% \emph{getTime} belongs only to the model, not to the language.
+%That is, for all expressions $e$, then the denotation
+%$\interp{e}$ factors through
 
 \begin{align*}
 \begin{array}{rll}
         |(return x) >>= f| &
-\equiv & |f x|  \\[0.5em]
+\approx_{} & |f x|  \\[0.5em]
         |m >>= return|     &
-\equiv & |m|    \\[0.5em]
+\approx & |m|    \\[0.5em]
         |m >>= (\x -> (f x) >>= g)| &
-\equiv & |(m >>= f) >>= g|
+\approx & |(m >>= f) >>= g|
 \end{array}
 \end{align*}
+%
+which each provide the following standard equational theory on SonicPi programs respectively:
+%%
+\begin{align*}
+\texttt{$y$ = $x$; $P$} & \equiv P \{x \mapsto y\} \\
+\texttt{$x$ = $P$; $y$ = $x$} & \equiv \texttt{$y$ = $P$} \\
+\texttt{($x$ = $P$; $y$ = $Q$); $z$ = $R$} & \equiv \texttt{$x$ = $P$; ($y$ = $Q$; $z$ = $R$)}
+\end{align*}
+%%
 
 \subsection{Alternate definitions}
 \label{sec:alternate}
@@ -1343,7 +1369,7 @@ class Functor f => Applicative f where
    (<*>) :: f (a -> b) -> f a -> f b
 \end{code}
 %
-The \emph{Applicative} class describes how to compose effectul
+The \emph{Applicative} class describes how to compose effectful
 computations encoded as values of type $f\ a$ (the effectful
 computation of a pure value of type $a$). Thus, \emph{pure} constructs
 a trivially effectful computation from a pure value and |<*>| (akin to
@@ -1483,7 +1509,7 @@ data TemporalE a =
 Therefore, |TemporalE| wraps the previous |Temporal| type with a |VTime|
 parameter for $\epsilon$ and pairs the result with a list, representing the output
 stream of warnings. The |lift| function (shown in Figure~\ref{core-functionsE})
- allows the previous effectul operations on
+ allows the previous effectful operations on
 |Temporal| to be promoted to the |TemporalE| type (by ignoring the new parameter for
 $\epsilon$ and producing the empty output stream), of type
 |lift :: Temporal a -> TemporalE a|. Figure~\ref{core-functionsE} shows
@@ -1608,7 +1634,7 @@ the CTL connective for \emph{along all paths} and $F$ for
 \emph{finally} (or \emph{eventually})). Our approach is less
 prescriptive and explicit, but has some resemblance in the use of
 \sleepOp{}. For example, the program $\sleep t ; P$ roughly
-corresponds to $AF^{\leq t} \interp{P}$, \ie{}, after at leat $t$ then
+corresponds to $AF^{\leq t} \interp{P}$, \ie{}, after at least $t$ then
 whatever $P$ does will have happened. Our framework is not motivated by
 logic and we do not have a model checking process for answering
 questions such as, at time $t$ what formula hold (what statements have
@@ -1617,7 +1643,7 @@ basis for programmers to reason about time in their programs. In
 practice, we find that such reasoning can be done by children in a
 completely informal but highly useful way.
 
-\paragraph{Artifical intelligence}
+\paragraph{Artificial intelligence}
 
 Reasoning about the temporal component of events and action is a classic
 problem in artificial intelligence (e.g. Shoham 1988,
@@ -1670,8 +1696,8 @@ Further work is to expand the notion of \emph{time safety} and
 use in live coding languages and languages for temporal coordination
 (such as in robotics).  We considered the safety property of ``not
 being too early'', which is an invariant of the Sonic Pi language.
-Further work is to explore language invariants for deadlines (similar
-to the logical approaches discussion earlier). 
+Further work is to explore language invariants relating to deadlines (similar
+to the real-times logics discussed earlier). 
 
 \paragraph{Acknowledgements}
 

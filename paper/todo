@@ -1,11 +1,7 @@
 Smooth 2nd -> 3rd para in Section 1
-Section 1.1, add more references on live coding and 
 
 in S2.1, repeat the final time 
 
-Figure 7 change lasts to kernel sleeps  (caption: where 'Kernel.sleep' is
-used here as placeholder to represent a computation lasting a particular length
-of time). 
 
 in section 3 explain figure 5 and discuss schedule ahead time accounting for
 drift between sleeps
@@ -21,18 +17,10 @@ Beef up the abstract (and other parts) with 'time system' and 'time safety'.
 
 explain snoc list in 'core fragment' 
 
-Sonic Pi is a mostly pure language, with first-class functions. Its impurity
-arises from timing and output effects- we give a monadic description of this,
-showing that it can be embedded in a pure language. 
 
 tie where epsilon fits in the model, and identify this in the code. + discussion
 link to schedAheadTop (emphasise lack of drift).
 
-in example 1, say P = kernelSleep 2, and t = 1. 
-
 mention 'time safety' in 5.1
 
-dom: finish 5.1.1 
 
-sam: related work: ChucK
------------------------
