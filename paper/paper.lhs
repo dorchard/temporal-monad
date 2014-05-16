@@ -202,7 +202,7 @@ have an intuitive correspondence to the experience and production of
 musical sounds.
 
 
-\section{Problems with timing in Sonic Pi v1.0}
+\section{Problems with timing in Sonic Pi 1.0}
 \label{sec:sp-1}
 
 \note{Perhaps this section could be merged with 3}
@@ -321,7 +321,7 @@ end
 
 
 Sonic Pi's timing issues are further compounded by the fact that calls
-to $play$ and $sample$ are asynchronous messages, and there is an
+to \texttt{play} and \texttt{sample} are asynchronous messages, and there is an
 additional time cost for these messages to be sent and interpreted by
 the external synth process. This then adds additional varying time
 (jitter) to each sound trigger.
@@ -336,26 +336,26 @@ the external synth process. This then adds additional varying time
 
 The temporal issues described in this section are summarised in
 Figure~\ref{fig:sp-timing1.0}, which describes the timing behavour of
-Sonic Pi code triggering three successive chords. Each of the Delta
+Sonic Pi code triggering three successive chords. Each of the $\Delta$ 
 times in the far left column represents the real computation time of
-each statement. Notice how they are all unique, the precise duration is
+each statement. Notice how they are all unique. The precise duration is
 related to aspects such as the amount of processing required for the
 computation, the current load of the system and the processor speed. The
-duration of deltas is therefore undeterministic and will not be
-consistent across runs of identical programs. As
+duration of deltas is therefore nondeterministic and will not be
+consistent across runs of the same program. As
 Figure~\ref{fig:sp-timing1.0} illustrates, the actual run time of the
-program is a summation of all these Delta times in addition to the
+program is a summation of all these $\Delta$ times in addition to the
 requested sleep durations. This results in both drift and jitter of the
 timing of the sounds produced by the program.
 
 \subsection{Temporal expectations}
 
 The temporal semantics of initial version of Sonic Pi (as
-described above) did not meet user expectations in
-ways specially related to the nature of these expectations. From a
-functional perspective, the explicit representation of rhythm provided
+described above) did not meet user expectations.% in
+%ways specially related to the nature of these expectations.
+From a functional-requirements perspective, the explicit representation of rhythm provided
 computationally accurate semantics. All expressed computation happens
-(i.e. all notes are played, and all sleeps are honoured) and the
+(\ie{}, all notes are played, and all sleeps are honoured) and the
 execution happens in the defined order. However, when we consider the
 implicit representation from the experience of rhythm, the addition of
 implicit computation time to the explicit timing statements produces
@@ -1213,12 +1213,12 @@ m = do   kernelSleep 1
 %%
 Then we can run an experiment in GHCi to see that different results are possible:
 %%
-\begin{code}
+\begin{SVerbatim}
 *Main> runTime $ m >>= return
 1.001113s
 *Main> runTime $ m
 1.00114s
-\end{code}
+\end{SVerbatim}
 (note, these results are also non-deterministic).  The difference in
 results follows from the additional reduction required on |(>>=)| in
 the first case (left-hand side of \eqref{law-example}). Note that we
