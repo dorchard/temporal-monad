@@ -1648,9 +1648,31 @@ perception of pattern and tempo.
 
 \section{Conclusion}
 
-\note{TODO}
+In this paper we have described an enhancement to the Sonic Pi language
+that improves the quality of musical experience for novice programmers
+in a live coding context. This is achieved by modifying the semantics
+of the familiar "sleep" operator in a manner that is consistent with
+musical expectations, while differing from the conventional
+interpretation in many languages. As a result, the enhanced Sonic Pi
+is able to retain identical concrete syntax to earlier versions, while
+implementing behaviour that is simple and predictable from a
+programmer perspective. Other music programming systems often provide
+similar mechanisms in order to achieve predictable timing behaviour,
+and our solution is comparable to those that have been implemented in
+other systems. We therefore introduce a formal semantics that can be
+used to prove the desirable properties of this kind of temporal
+behaviour. This combination of simple syntax, with formally defined
+semantics that correspond to user expectations, promises to be
+beneficial beyond the domain of music programming, to other types of
+physical world interface.
+
+
+
 
 \paragraph{Acknowledgements}
+
+We thank Andrew Rice for helpful discussion about this work.
+This work was kindly supported by the Raspberry Pi foundation.
 
 \bibliography{references}
 
