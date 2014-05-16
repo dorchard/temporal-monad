@@ -172,7 +172,7 @@ The core contributions of this paper are three-fold:
 
 We begin with a discussion of first programming languages
 and live coding, since both these aspects are key motivators
-of the language design. 
+of the language design.
 
 \subsection{The live coding context}
 
@@ -192,21 +192,22 @@ have, like all experience, arises through time - as media theorist
 Mieke Bal says, ``\emph{time is where subjectivity is
   produced}''~\cite{bal2002travelling}.
 
-As noted by Julian Rorhruber~\cite{blackwell_et_al:DR:2014:4420},
-there have been many publications discussing alternative approaches to
-the representation of time in live coding, many having to choose
-between explicit or implicit representation of time, and between
-description of time with reference to internal or external
-state. These many interesting strategies include McLean's formalism of
-cyclic time in the Tidal language~\cite{mclean2013textural}, and
-Sorensen's temporal recursion in
-Impromptu/Extempore~\cite{sorensen2010programming}. In this paper, we
-present a formalism that is designed to achieve production-quality
-sound (via the SuperCollider synthesis server) while allowing
-inexperienced programmers in an educational setting (typically 11-12
-year-old children) to express the temporal structure in terms that
+As noted by Julian Rorhruber~\cite{blackwell_et_al:DR:2014:4420}, there
+have been many publications discussing alternative approaches to the
+representation of time in live coding, many having to choose between
+explicit or implicit representation of time, and between description of
+time with reference to internal or external state. These many
+interesting strategies include McLean's formalism of cyclic time in the
+Tidal language~\cite{mclean2013textural}, and Sorensen's temporal
+recursion in Impromptu/Extempore~\cite{sorensen2010programming}. In this
+paper, we present a formalism that is designed to achieve
+production-quality sound (via the SuperCollider synthesis server) while
+allowing inexperienced programmers in an educational setting (typically
+11-12 year-old children) to express the temporal structure in terms that
 have an intuitive correspondence to the experience and production of
-musical sounds.
+musical sounds. The semantics of our formalism can be seen to be similar
+to the interaction of time and the massively overloaded \texttt{=>}
+operator in the live coding language ChucK~\cite{Wang2003}.
 
 In music, it is clear that we must be able to speak about the precise
 location of events in time, and hence that any music programming
@@ -284,9 +285,9 @@ each onset.
 
 \begin{SaveVerbatim}{example-drums}
 loop do
-  play 30                  ;;A
-  sample :drum_heavy_kick  ;;B
-  sleep 0.5                ;;C
+  play 30                  #A
+  sample :drum_heavy_kick  #B
+  sleep 0.5                #C
 end
 \end{SaveVerbatim}
 
@@ -450,7 +451,9 @@ timing.
 Thus, ``$\sleep{} t$'' communicates that, after it has been evaluated,
 at least $t$ seconds has elapsed since the last \sleepOp{}. This
 provides a minimum time. In between calls to \sleepOp{}, any other
-statements can (with some limits) be considered task parallel.
+statements can (with some limits) be considered task parallel. As
+mentioned earlier, ChucK has a similar mechanism as part of its
+massively overloaded operator.
 
 These semantics are achieved by repressing virtual time as a thread-local
 variable which is only advanced as part of the new implementation of
@@ -756,7 +759,7 @@ s \approx t
 %
 for some value of $\epsilon$ which is the maximum negligible
 time value with respect to the application at hand.
-For example, if $\epsilon = 0.1$ then $3 \approx 3.05 \approx 2.92$. 
+For example, if $\epsilon = 0.1$ then $3 \approx 3.05 \approx 2.92$.
 
 In the case of \lang{}, we mitigate any $\epsilon$-time differences by
 scheduling calls to the synthesise server using the current virtual
