@@ -135,7 +135,7 @@ context of live programming and education.
 Sonic Pi is a domain specific language for manipulating synthesisers
 through time~\cite{Aaron2013}. It was designed for teaching core
 computing concepts to school students using creative programming,
-specically live-coding music, as a means for engaging students.  The
+specifically live-coding music, as a means for engaging students.  The
 precise timing of effects, which do not occur too early or too late,
 is core to the programming approach of Sonic Pi. 
 
@@ -188,13 +188,13 @@ timing.
 \end{itemize}
 
 \noindent
-We begin with a discussion of the research context surroduning first
+We begin with a discussion of the research context of first
 programming languages and live coding (particularly for music), as
 both these aspects motivate the language design.  Those readers who are 
 keen to get to the language design may skip this discussion and move
 to Section~\ref{sec:sp-1}.
 
-\subsection{The first language and live conding contexts}
+\subsection{The first language and live coding contexts}
 \label{sec:context}
 
 A first programming language should be conceptually straightforward
@@ -291,7 +291,7 @@ her to be a Sonic Pi version 1.0 program).
 However, given the clockspeeds of modern processors, the instructions
 of Figure~\ref{eminor-chord} are likely to be executed so quickly in
 succession that they will be perceived as a chord \ie{}, all the note
-being played simultaneously, rather than as succesive notes in an
+being played simultaneously, rather than as successive notes in an
 \emph{arpeggio} form. It is therefore necessary to separate the
 triggering of these notes in time. This can be achieved by
 ``sleeping'' the current thread, see Figure~\ref{eminor-chord-spaced}.
@@ -565,7 +565,7 @@ precise the behaviour of the new sleep operation.
 
 In order to deal with relative execution times within a sleep barrier, \eg{},
 the \texttt{play :C ; play :E ; play :G} operations in Figure~\ref{three-chord-example},
-and also to accomodate the cost of scheduling output effects (to the synthesiser
+and also to accommodate the cost of scheduling output effects (to the synthesiser
 serve), a constant \schedAheadTOp{} value is added to the current virtual time for all
 asynchronously scheduled effects. Provided that the addition of the
 jitter time and the execution time between calls to \sleepOp{} never
@@ -760,7 +760,7 @@ We'll add the previously seen \ksleepOp{} operation to the core subset here, whi
 blocks the current computation for the time specified by its
 parameter, \ie{}, it has the semantics of POSIX \emph{sleep}. 
 This operation is not available in the actual language,
-but it is usedul for examples and contrasting with \sleepOp{}.
+but it is useful for examples and contrasting with \sleepOp{}.
 
 This core subset is a zero-order language, in the sense that we do including
 the definition or calling of user-defined functions.  Nor do we incorporate threading
@@ -1352,7 +1352,7 @@ Thus our model is \emph{time safe}, in the sense that it satisfies the invariant
 described by the time system of Section~\ref{sec:axiomatic}. Following from these
 definitions we then get Lemma~\ref{lemma-rel-etime-vtime} ``for free'', 
 that for all $P$, $\etime{P} \geq \vtime{P}$, \ie{}, a program never ``uner-runs''
-its virtual time speicifcation. The lemma holds for free, since its proof relies
+its virtual time specification. The lemma holds for free, since its proof relies
 only on the satisfaction of the specifications on $\etime{-}$ and $\vtime{-}$,
 which we have shown for our model above.  
 
@@ -1436,7 +1436,7 @@ small variations (as seen above). These are then:
 \end{array}
 \end{align*}
 %
-which each provide the following standard equational theory on SonicPi programs respectively:
+which each provide the following standard equational theory on Sonic Pi programs respectively:
 %%
 \begin{align*}
 \texttt{$y$ = $x$; $P$} & \; \equiv \; P \{x \mapsto y\} \\
@@ -1636,7 +1636,7 @@ a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilo
 
 Section~\ref{sec:context} considered some related live coding languages
 and approaches. We highlight a few others here that arise in logic
-and artifical intelligence. 
+and artificial intelligence. 
 
 
 %Lee~\cite{Lee2009} makes a powerful argument for the development of a
@@ -1718,8 +1718,8 @@ perception of pattern and tempo.
 
 In this paper we have described an enhancement to the Sonic Pi language
 that improves the quality of musical experience for novice programmers
-in a live coding context. This is achieved by modifynig the semantics
-of the familiar "sleep" operator in a manner that is consistent with
+in a live coding context. This is achieved by modifying the semantics
+of the familiar ``sleep'' operator in a manner that is consistent with
 musical expectations, while differing from the conventional
 interpretation in many languages. As a result, the enhanced Sonic Pi
 is able to retain identical concrete syntax to earlier versions, while
