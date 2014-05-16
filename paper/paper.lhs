@@ -126,8 +126,8 @@ timing contrasts with many notions in computing.  For example,
 ``real-time computing'' approaches often focus on computing within a
 certain time limit (a deadline), thus high-performance is important.
 But in music, being early is just as bad as being late. A similar
-situation in mechanical coordination tasks, such as coordinating
-robotic limbs for walking. For these kinds of applications, a robust
+situation arises in mechanical coordination tasks, such as coordinating
+robotic limbs for walking. For these kinds of application, a robust
 programming model for timing is required.  We argue that our Sonic Pi
 language provides a suitable, robust temporal model for music in the
 context of live programming and education.
@@ -157,7 +157,7 @@ computation, or as he describes it, a properly formalised class of
 is already understood to be an essential software engineering
 tool)~\cite{Lee2009}.  It is in this spirit that we develop two kinds
 of model for the temporal semantics of Sonic Pi: a time system
-and a denotational model
+and a denotational model. 
 %: an axiomatic specification 
 % that provides a ``time system'' (a system with which to statically
 %analysis timing) and a denotational model.
@@ -173,25 +173,25 @@ The core contributions of this paper are three-fold:
   language but with an improved approach to timing (Section~\ref{sec:new-sleep}).
 
 \item We formalise the temporal semantics of this approach,
-  introducing a specification of the temporal behaviour of Sonic Pi
+  introducing a specification of the temporal behaviour of a core subset of Sonic Pi
   programs: a \emph{time system}, which provides a static
-analysis of timing in programs (Section~\ref{sec:axiomatic}).
+analysis of timing (Section~\ref{sec:axiomatic}).
 The style is axiomatic, and can be considered an abstract model of
-timing. 
+temporal behaviour. 
 
-\item We give a denotational semantics to a core subset of the
-  language, using monads, (Section~\ref{sec:time-monad}) and prove it
+\item We give a monadic denotational semantics to the core subset 
+  language (Section~\ref{sec:time-monad}) and prove it
   sound with respect to the time system, \ie{}, the language is
   \emph{time safe}. We later extend this model to include temporal
-  warnings (Section~\ref{sec:temporal-warnings}). The style of this
-  model is denotational, complementing the more abstract time system. 
+  warnings (Section~\ref{sec:temporal-warnings}). The denotational 
+approach complements the abstract time system model. 
 \end{itemize}
 
 \noindent
 We begin with a discussion of the research context of first
-programming languages and live coding (particularly for music), as
-both these aspects motivate the language design.  Those readers who are 
-keen to get to the language design may skip this discussion and move
+programming languages and live coding (particularly for music) as  
+ these aspects motivate the language design.  Readers who are 
+keen to get to the language design may skip over this discussion 
 to Section~\ref{sec:sp-1}.
 
 \subsection{The first language and live coding contexts}
@@ -249,9 +249,11 @@ cause-effect sequence of execution time.
 \label{sec:sp-1}
 
 \begin{SaveVerbatim}{example0}
+
 play 52
 play 55
 play 59
+
 \end{SaveVerbatim}
 
 \begin{SaveVerbatim}{example0b}
@@ -263,7 +265,8 @@ play 59
 \end{SaveVerbatim}
 
 \begin{figure}[t]
-\subfigure[Chord; notes together]{
+\vspace{-1em}
+\subfigure[Successive notes]{
 \hspace{2.5em}
 \begin{minipage}{0.34\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0}
@@ -271,7 +274,7 @@ play 59
 \end{minipage}
 \label{eminor-chord}
 }
-\subfigure[Arpeggio; notes in succession]{
+\subfigure[Notes separated by sleeps]{
 \hspace{1.5em}
 \begin{minipage}{0.4\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example0b}
@@ -310,7 +313,7 @@ end
 \begin{minipage}{0.46\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-drums}
 \end{minipage}
-\caption{A continuously repeating bass and drum hit.)}
+\caption{A continuously repeating bass and drum hit.}
 \label{example-drum-loop}
 \end{figure}
 
@@ -363,7 +366,7 @@ end
 \begin{minipage}{0.46\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-t-drums}
 \end{minipage}
-\caption{Two concurrent threads playing in synchronisation)}
+\caption{Two concurrent threads playing in synchronisation.}
 \label{example-threaded-drum-loop}
 \end{figure}
 
@@ -612,7 +615,39 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 \end{enumerate}
 
 
+
+\section{A ``time system'' for Sonic Pi}
+\label{sec:axiomatic}
+
+From our experiences, we've found that the programming model of Sonic
+Pi, particularly its temporal model, is easy to understand by even
+complete beginners, including children. By a few simple examples it
+is easy to demonstrate the temporal semantics, using sounds as output,
+without having to appeal to any meta-theory; Sonic Pi attains the goal
+of being a good first language.
+
+In this section, we approach the programming model of Sonic Pi from a
+more theoretical angle, in order to develop a specification of our
+programming model that can be reused for other applications and
+languages outside of the Sonic Pi context. From our model we prove a
+number of core properties of Sonic Pi as well. It is in no way
+necessary for programmers of Sonic Pi to understand this theory, but
+the contribution here is useful for future language design and
+implementation research.
+
+Firstly, we define an abstract specification of virtual time and
+actual elapsed time in a simple core subset of Sonic Pi
+(Section~\ref{sec:spec}). This gives an abstract, axiomatic
+model of the semantics which we call a \emph{time system}. 
+This model is made more concrete by providing a denotational-style, monadic semantics
+in the next section 
+(Section~\ref{sec:time-monad}), introducing the \emph{temporal
+  monad}. We prove the monadic model sound with
+respect to the initial axiomatic specification, up to ``small'' permutations
+in time delay (Section~\ref{sec:soundness}).
+
 \begin{figure}[t]
+\vspace{-1.4em}
 \subfigure[Two sleeps]{
 \begin{minipage}{0.18\linewidth}
 {\small{
@@ -692,35 +727,6 @@ of time
 \label{sleep-examples}
 \end{figure}
 
-\section{A ``time system'' for Sonic Pi}
-\label{sec:axiomatic}
-
-From our experiences, we've found that the programming model of Sonic
-Pi, particularly its temporal model, is easy to understand by even
-complete beginners, including children. By a few simple examples it
-is easy to demonstrate the temporal semantics, using sounds as output,
-without having to appeal to any meta-theory; Sonic Pi attains the goal
-of being a good first language.
-
-In this section, we approach the programming model of Sonic Pi from a
-more theoretical angle, in order to develop a specification of our
-programming model that can be reused for other applications and
-languages outside of the Sonic Pi context. From our model we prove a
-number of core properties of Sonic Pi as well. It is in no way
-necessary for programmers of Sonic Pi to understand this theory, but
-the contribution here is useful for future language design and
-implementation research.
-
-Firstly, we define an abstract specification of virtual time and
-actual elapsed time in a simple core subset of Sonic Pi
-(Section~\ref{sec:spec}). This gives an abstract, axiomatic
-model of the semantics which we call a \emph{time system}. 
-This model is made more concrete by providing a denotational-style, monadic semantics
-in the next section 
-(Section~\ref{sec:time-monad}), introducing the \emph{temporal
-  monad}. We prove the monadic model sound with
-respect to the initial axiomatic specification, up to ``small'' permutations
-in time delay (Section~\ref{sec:soundness}).
 
 \paragraph{Terminology and notation}
 We refer to sequences statements as \emph{programs}. Throughout, $P$,
@@ -1235,7 +1241,7 @@ section.
 
 
 
-\subsection{Soundness of the temporal monad: time safety}
+\subsection{Soundness of the temporal monad: \emph{time safety}}
 \label{sec:soundness}
 
 We replay the previous axiomatic specifications on the temporal behaviour of \lang{} programs,
@@ -1528,8 +1534,8 @@ is more than $\epsilon$ ahead of virtual time, or \emph{weak} when the real
 time is less than $\epsilon$ ahead of virtual time. That is:
 %%
 \begin{itemize}
-\item{$\etime{P} > (\vtime{P} + \epsilon) \Rightarrow \hspace{1.5em} \interp{P} \leadsto$ \emph{strong warning} }
-\item{$\vtime{P} \leq \etime{P} < (\vtime{P} + \epsilon) \Rightarrow \hspace{0.4em} \interp{P} 
+\item{$\etime{P} > (\vtime{P} + \epsilon) \hspace{3.6em} \Rightarrow \interp{P} \leadsto$ \emph{strong warning} }
+\item{$\vtime{P} \leq \etime{P} < (\vtime{P} + \epsilon) \hspace{0.5em} \Rightarrow  \interp{P} 
 \leadsto$ \emph{weak warning}}
 \end{itemize}
 %%
@@ -1550,8 +1556,8 @@ stream of warnings. The |lift| function (shown in Figure~\ref{core-functionsE})
 |Temporal| to be promoted to the |TemporalE| type (by ignoring the new parameter for
 $\epsilon$ and producing the empty output stream), of type
 |lift :: Temporal a -> TemporalE a|. Figure~\ref{core-functionsE} shows
-a number of other simple |TemporalE| computations for raising exceptions
-and getting the $\epsilon$ parameter.
+a number of other simple |TemporalE| computations for raising warnings 
+and accessing the $\epsilon$ parameter.
 
 \begin{figure}[t]
 \begin{code}
@@ -1579,7 +1585,7 @@ warn s = lift (T (lamWild -> \vt -> do  putStrLn s
 
 The |TemporalE| encoding has the following instance of |Monad| which
 is simply a combination of the usual reader monad behaviour (for the
-$\epsilon$ parameter) and the writer monad (for the output stream), but
+$\epsilon$ parameter) and the writer monad (for the output stream), 
 lifted to the |Temporal| monad:
 %%
 \begin{code}
@@ -1592,7 +1598,7 @@ instance Monad TemporalE where
 
 \end{code}
 %%
-Therefore, the |do| here is a |Temporal| computation, with the previous
+The |do| here is a |Temporal| computation, with the previous
 monadic semantics.
 
 Evaluating |TemporalE| computations is much the same as before, with
@@ -1605,9 +1611,9 @@ runTime eps (TE c) = do  startT <- getCurrentTime
                          (y, _) <- c' (startT, startT) 0
                          return y
 \end{code}
-
-Finally, the new definition of |sleep| for |TemporalE| is the point at which
-exceptions may be raised:
+%
+Finally, the new definition of |sleep| for |TemporalE| is the point
+at which warnings may be emitted:
 %
 \begin{code}
 sleep :: VTime -> TemporalE ()
@@ -1631,6 +1637,9 @@ that in the true-branch of the conditional there is additional testing to see if
 |diffT| is greater than the new virtual time $+ \epsilon$ (in which case
 a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilon$
 (in which case a weak exception is raised).
+
+The implementation of Sonic Pi has a similar semantis and warning system, for
+which this provides a general description. 
 
 \section{Related work}
 \label{sec:related-work}
