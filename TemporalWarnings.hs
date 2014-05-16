@@ -1,6 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction, FlexibleInstances #-}
 
-module TemporalExceptions where
+module TemporalWarnings where
 
 import Data.Time
 import Control.Applicative

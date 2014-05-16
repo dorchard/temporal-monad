@@ -1528,8 +1528,9 @@ is more than $\epsilon$ ahead of virtual time, or \emph{weak} when the real
 time is less than $\epsilon$ ahead of virtual time. That is:
 %%
 \begin{itemize}
-\item{$\etime{P} > (\vtime{P} + \epsilon) \Rightarrow \interp{P} \leadsto$ \emph{strong warning} }
-\item{$(\vtime{P} + \epsilon) \leq \etime{P} > \vtime{P} \Rightarrow \interp{P} \leadsto$ \emph{weak warning}}
+\item{$\etime{P} > (\vtime{P} + \epsilon) \Rightarrow \hspace{1.5em} \interp{P} \leadsto$ \emph{strong warning} }
+\item{$\vtime{P} \leq \etime{P} < (\vtime{P} + \epsilon) \Rightarrow \hspace{0.4em} \interp{P} 
+\leadsto$ \emph{weak warning}}
 \end{itemize}
 %%
 We redefine the interpretation $\interp{-}$ to produce computations described
