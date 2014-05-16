@@ -762,6 +762,13 @@ parameter, \ie{}, it has the semantics of POSIX \emph{sleep}.
 This operation is not available in the actual language,
 but it is usedul for examples and contrasting with \sleepOp{}.
 
+This core subset is a zero-order language, in the sense that we do including
+the definition or calling of user-defined functions.  Nor do we incorporate threading
+constructs that are provided by Sonic Pi. Extending the model here to
+include these is however relatively straightforward, but we stick with a simple
+language for the sake of succinctly introducing and reasoning about the
+core temporal behaviour. 
+
 \subsection{Virtual time and real time}
 \label{sec:spec}
 
@@ -975,13 +982,20 @@ By induction on the structure of programs.
       $\etime{P'} + \etime{A^1} \geq \vtime{P'}$.
 
       $\therefore$ (a), (b) and (d) then $\etime{P'; \synVar = A^i} \geq \vtime{P'; \synVar = A^i}$.
+\vspace{-2em}
   \end{itemize}
 \end{itemize}
 \end{proof}
-%
+\noindent
+Note that this proof only makes use of basic properties on
+relations and the specifications of $\etime{-}$ and $\vtime{-}$ given here.
+This will be useful later: we can prove soundness of our denotational model with
+respect to the two definitions and get the above lemma for free following from this
+proof. \\
+
 \noindent
 The abstraction specification of the temporal behaviour here gives us a model
-with which we can reason about time in Sonic Pi programs.
+to reason about time in Sonic Pi programs.
 %%
 \begin{example}
 Consider subprograms $A$, $B$, $C$ where
@@ -1028,12 +1042,13 @@ is useful for experimentation and integrating into other approaches.
 The source code is available at
 \url{https://github.com/dorchard/temporal-monad}.
 
-We introduce the mode here and prove it sound with respect to the time
-system approach of the previous section. We also consider alternate,
-simplified models using applicative functors or monoids in Section~\ref{sec:alternate},
-along with alternate models for \sleepOp{}. Lastly, we extend the model
-to incorporate ``temporal warnings'' to describe temporal
-errors that can occur at runtime (Section~\ref{sec:temporal-warnings}).
+We prove our model sound with respect to the time system approach of
+the previous section (Section~\ref{sec:soundness}) and briefly
+consider alternate simplified models using applicative functors or
+monoids (Section~\ref{sec:alternate}).  In
+Section~\ref{sec:temporal-warnings}, we extend the model with
+ ``temporal warnings'' describing overrun errors that
+can occur at runtime.
 
 \paragraph{The \emph{Temporal} monad}
 
@@ -1053,7 +1068,7 @@ of the form:
 %%
 that is, mapping a pair of two times: the start time and current time
 of the computation (which are used to compute the time elapsed
-since the start of the program), to a stateful computation on virtual times
+since the program start), to a stateful computation on virtual times
 (mapping from an old virtual time to a new virtual time) which may
 access the kernel to get the actual clock time, and produces a result
 along with the new virtual time.  Concretely, |Temporal| is defined:
@@ -1097,15 +1112,14 @@ thus |return :: a -> IO a|.
   \emph{nowT}, and virtual time \emph{vT}, is the result of evaluating
   first the left-hand side at time \emph{nowT} and then right-hand side
   at the new current time \emph{thenT}.
-
   The expression |getCurrentTime :: IO Time| retrieves the time from
   the operation system.
 \end{itemize}
 
 \noindent
-To model the evaluation of a program, the |runTime| operation executes
-a temporal computation inside of the \emph{IO} monad by providing the
-start time of the computation, from the operating system and the virtual time 0:
+To model program evaluation, the |runTime| operation executes
+a temporal computation inside of the \emph{IO} monad, providing the
+start time from the operating system and virtual time 0:
 %%
 \begin{code}
 runTime :: Temporal a -> IO a
@@ -1334,6 +1348,13 @@ be masked by a small \texttt{scheduleAheadTime} (see Section~\ref{sec:new-sleep}
 %time. We could go further and time the analogous parts of the Sonic Pi implementation
 %to check that the real $e$ is less than $\epsilon$. This would be good.}
 
+Thus our model is \emph{time safe}, in the sense that it satisfies the invariants
+described by the time system of Section~\ref{sec:axiomatic}. Following from these
+definitions we then get Lemma~\ref{lemma-rel-etime-vtime} ``for free'', 
+that for all $P$, $\etime{P} \geq \vtime{P}$, \ie{}, a program never ``uner-runs''
+its virtual time speicifcation. The lemma holds for free, since its proof relies
+only on the satisfaction of the specifications on $\etime{-}$ and $\vtime{-}$,
+which we have shown for our model above.  
 
 \subsection{Monad laws and equational theory for Sonic Pi programs}
 
@@ -1424,16 +1445,15 @@ which each provide the following standard equational theory on SonicPi programs 
 \end{align*}
 %%
 
-\subsection{Alternate definitions}
+\subsection{Subsets of the semantics}
+%$\subsection{Alternate definitions}
 \label{sec:alternate}
 
-\noindent
-We briefly discuss some alternative structuring of the model here
-and an alternate model for \sleepOp{}.
 
-\subsubsection{Subsets of the semantics}
+We briefly discuss alternative structuring of the model here. 
+%and an alternate model for \sleepOp{}.
 
-For the examples of Section~\ref{sec:introduction}, the full structure
+For most of our example Sonic Pi programs here, the full structure
 of monad is not needed to give their semantics as there is no using of
 binding between statements (and thus no dataflow). In these case just
 an \emph{applicative functor}~\cite{mcbride2008functional} or even a
@@ -1496,78 +1516,11 @@ instance Monoid (Temporal ()) where
 with the interpretation $\interp{P; Q} = \interp{P} |`mappend`| Q$ and
 where |mempty| provides a \emph{no-op}.
 
-\subsubsection{Alternate definition for \emph{sleep}}
-
-We give an alternate definition for the model of \sleepOp{} here that
-reorders the calculation of the sleep delay. This alternate definition
-slightly reduces any oversleeping by minimising noise in the timing.
-%
-\begin{code}
-sleep' :: VTime -> Temporal ()
-sleep' delayT = do  vT        <- getVirtualTime
-                    let vT'   = vT + delayT
-                    setVirtualTime vT'
-                    startT    <- start
-                    nowT      <- time
-                    let diffT = diffTime nowT startT
-                    if (vT' < diffT)
-                        then return ()
-                        else kernelSleep (vT' - diffT)
-\end{code}
-%
-Thus, the virtual time is calculated
-and updated before the current time is retrieved in case the additional
-time taken in updating the virtual time means that the elapsed time
-catches up with the virtual time. The previous definition of
-\emph{sleep} instead calculated the current time immediately, thus
-computing the time of the preceding statement more accurately, but then
-not accounting for the time elapsed before sleeping in the |kernelSleep| delay.
-
-To see the difference, consider Definition~\ref{def:etime}, with the
-case $\etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}$.
-If the above alternate definition \emph{sleep'} is used, then
-the interpretation of $(P; \sleep t)$
-desugars and simplifies to the following:
-%
-\begin{code}
-do  startT     <- getCurrentTime
-    (x, vT')   <- interpP (startT, startT) 0
-    let vT''   = vT' + t
-    setVirtualTime vT''
-    nowT       <- getCurrentTime
-    let diffT  = diffTime nowT startT
-    if (vT'' < diffT)
-      then return ()
-      else kernelSleep (vT'' - diffT)
-\end{code}
-%%
-which exhibits the temporal behaviour:
-%%
-\begin{align*}
-\etime{P; \sleep{} t} & =
- \begin{cases}
-   \etime{P} + e_1 + e_2 & (\vtime{P} + t) < (\etime{P} + e_1) \\
-   \vtime{P} + t + e_2 &  \textit{otherwise}
- \end{cases} \\
-& = ((\vtime{P} + t) \, \mathit{max} \, (\etime{P} + e_1)) + e_2
-\end{align*}
-%
-where $e_1$ is the time taken by updating the virtual time and
-$e_2$ is the time taken by the guard. This gives
-a tighter bound on sleep behaviour that previously where the behaviour is:
-%
-\begin{align*}
-\etime{P; \sleep{} t} = ((\vtime{P} + t) \, \mathit{max} \, \etime{P}) + e_1 + e_2
-\end{align*}
-%
-\ie{}, without resorting to approximate equalities on time with $\approx$
-
 \section{Emitting overrun warnings}
 \label{sec:temporal-warnings}
 
 We extend the |Temporal| monad with an additional parameter for the
-$\epsilon$ time (maximum allowable overrun) and an output stream for
+$\epsilon$ time, which we interpret as the maximum allowable overrun, and an output stream for
 sending ``warnings'' when overruns occur.
 
 Overrun warnings are either \emph{strong}, when the real time
@@ -1765,7 +1718,7 @@ perception of pattern and tempo.
 
 In this paper we have described an enhancement to the Sonic Pi language
 that improves the quality of musical experience for novice programmers
-in a live coding context. This is achieved by modifying the semantics
+in a live coding context. This is achieved by modifynig the semantics
 of the familiar "sleep" operator in a manner that is consistent with
 musical expectations, while differing from the conventional
 interpretation in many languages. As a result, the enhanced Sonic Pi
