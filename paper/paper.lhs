@@ -63,7 +63,7 @@
 \newcommand{\ksleep}{\textnormal{\texttt{Kernel.sleep}}\;}
 \newcommand{\ksleepOp}{\texttt{Kernel.sleep}}
 
-\newcommand{\schedAheadT}{\textnormal{\texttt{schedule_ahead_time}}\;}
+\newcommand{\schedAheadT}{\textnormal{\texttt{scheduleAheadTime}}\;}
 \newcommand{\schedAheadTOp}{\texttt{scheduleAheadTime}}
 
 \newcommand{\lang}{Sonic Pi}
@@ -135,7 +135,7 @@ computing concepts to school students using creative programming,
 specically live-coding music, as a means for engaging students.  The
 precise timing of effects, which do not occur too early or too late,
 is core to the programming approach of Sonic Pi. Primarily, this paper
-introduces the temporal programming model of Sonic Pi. 
+introduces the temporal programming model of Sonic Pi.
 
 As well as the need for programming approaches to time, there is a
 well-recognised need for models of temporal behaviour coupled with
@@ -215,7 +215,7 @@ these are only informal. In the case of live coding languages, an
 additional consideration is that the time at which the program is edited
 may coincide or overlap with the time at which it is executed. This
 overlap between execution and creation time is of broader value in
-software engineering, as noted for example by 
+software engineering, as noted for example by
 McDirmid~\cite{MSR-TR-2014-42}, whose Glitch system allows the user to
 adjust the notional execution time relative to a point in the source
 code editing environment. Tools of this kind can also benefit from a
@@ -357,7 +357,7 @@ the external synth process. This then adds additional varying time
 
 The temporal issues described in this section are summarised in
 Figure~\ref{fig:sp-timing1.0}, which describes the timing behavour of
-Sonic Pi code triggering three successive chords. Each of the $\Delta$ 
+Sonic Pi code triggering three successive chords. Each of the $\Delta$
 times in the far left column represents the real computation time of
 each statement. Notice how they are all unique. The precise duration is
 related to aspects such as the amount of processing required for the
@@ -466,17 +466,11 @@ provides a \emph{soft deadline} (using the terminology of Hansson and
 Jonsson~\cite{hansson1994logic}).
 
 \begin{SaveVerbatim}{example1}
-play C
-play E
-play G
+play :C ; play :E ; play :G
 sleep 1
-play F
-play A
-play C
+play :F ; play :A ; play :C
 sleep 0.5
-play G
-play B
-play D
+play :G ; play :B ; play :D
 \end{SaveVerbatim}
 
 \begin{figure}[t]
@@ -881,8 +875,8 @@ By induction on the structure of programs.
 \end{proof}
 %
 \noindent
-The abstraction specification of the temporal behaviour here gives us a model 
-with which we can reason about time in Sonic Pi programs. 
+The abstraction specification of the temporal behaviour here gives us a model
+with which we can reason about time in Sonic Pi programs.
 %%
 \begin{example}
 Consider subprograms $A$, $B$, $C$ where
@@ -937,7 +931,7 @@ interpretation is $\interp{\emph{P}} : \emph{Temporal} \,
 of the form:
 %%
 \begin{align*}
-& (\textit{start time}, \textit{current time}) \\ 
+& (\textit{start time}, \textit{current time}) \\
 & \quad \rightarrow (\textit{old vtime} \rightarrow
 \textit{kernel-access} \, (\textit{result}, \textit{new vtime}))
 \end{align*}
@@ -954,7 +948,7 @@ data Temporal a =
     T ((Time, Time) -> (VTime -> IO (a, VTime)))
 \end{code}
 %
-where |IO| is part of the Haskell implementation and encapsulates access to 
+where |IO| is part of the Haskell implementation and encapsulates access to
 the actual clock time from operation system.
 
 |Temporal| has a monad structure, defined by the following instance of the |Monad| class:
@@ -980,7 +974,7 @@ and |(>>=)| and give some intuition for their behaviour for
 effectful computation by ignoring the time parameters and
 providing the usual pure state behaviour of returning the parameter state |vT| unchanged
 along with the result. The nested use of |return|, on the right, comes from the |IO| monad,
-thus |return :: a -> IO a|. 
+thus |return :: a -> IO a|.
 
 \item |(>>=) :: Temporal a -> (a -> Temporal b) -> Temporal b|
   composes two computations together.  The result of composing two
@@ -1121,9 +1115,9 @@ by the following cases:
 \end{repdefinition}
 
 \begin{lemma}
-$\vtime{\mathit{runTime} \, \interp{P}} = \vtime{P}$, \ie{}, 
-the virtual time of the evaluated denotational model matches the virtual time calculated 
-from the axiomatic model. 
+$\vtime{\mathit{runTime} \, \interp{P}} = \vtime{P}$, \ie{},
+the virtual time of the evaluated denotational model matches the virtual time calculated
+from the axiomatic model.
 \end{lemma}
 
 \begin{proof}
@@ -1146,13 +1140,13 @@ by the following equations:
 \end{repdefinition}
 
 \begin{lemma}
-$\etime{\mathit{runTime} \, \interp{P}} \approx \etime{P}$, \ie{}, 
+$\etime{\mathit{runTime} \, \interp{P}} \approx \etime{P}$, \ie{},
 the actual time of the evaluated denotational model is approximately equal
-to actual time calculated from the axiomatic model. 
+to actual time calculated from the axiomatic model.
 \end{lemma}
 
 \begin{proof}
-The key case is for $(P; \sleep{} t)$, which we show here. 
+The key case is for $(P; \sleep{} t)$, which we show here.
 Our model interprets the evalution of $(P; \sleep t)$ as:
 %%
 \begin{code}
@@ -1194,13 +1188,13 @@ the guard takes $e$ then the overall time taken is:
    \etime{P} + e & (\vtime{P} + t) < \etime{P}  \\
    \vtime{P} + t + e & \textit{otherwise}
  \end{cases} \\
-& = (\etime{P} + e)  \, \mathit{max} \, (\vtime{P} + t + e) \\ 
+& = (\etime{P} + e)  \, \mathit{max} \, (\vtime{P} + t + e) \\
 & \approx \etime{P} \, \mathit{max} \, (\vtime{P} + t)
 \end{align*}
 %%
-where the final stage holds if $e \leq \epsilon$ 
+where the final stage holds if $e \leq \epsilon$
 and if the reduction to the interpretation to get to the above code
-takes less than $\epsilon$. 
+takes less than $\epsilon$.
 \end{proof}
 
 \note{I suppose this is ok- I'm a bit wary about saying the simplification
@@ -1272,10 +1266,10 @@ $\interp{e}$ factors through
 \begin{array}{rll}
         |(return x) >>= f| &
 \equiv & |f x|  \\[0.5em]
-        |m >>= return|     & 
+        |m >>= return|     &
 \equiv & |m|    \\[0.5em]
-        |m >>= (\x -> (f x) >>= g)| &  
-\equiv & |(m >>= f) >>= g| 
+        |m >>= (\x -> (f x) >>= g)| &
+\equiv & |(m >>= f) >>= g|
 \end{array}
 \end{align*}
 
@@ -1354,8 +1348,8 @@ where |mempty| provides a \emph{no-op}.
 \subsubsection{Alternate definition for \emph{sleep}}
 
 We give an alternate definition for the model of \sleepOp{} here that
-reorders the calculation of the sleep delay. This alternate definition 
-slightly reduces any oversleeping by minimising noise in the timing. 
+reorders the calculation of the sleep delay. This alternate definition
+slightly reduces any oversleeping by minimising noise in the timing.
 %
 \begin{code}
 sleep' :: VTime -> Temporal ()
@@ -1376,11 +1370,11 @@ time taken in updating the virtual time means that the elapsed time
 catches up with the virtual time. The previous definition of
 \emph{sleep} instead calculated the current time immediately, thus
 computing the time of the preceding statement more accurately, but then
-not accounting for the time elapsed before sleeping in the |kernelSleep| delay. 
+not accounting for the time elapsed before sleeping in the |kernelSleep| delay.
 
 To see the difference, consider Definition~\ref{def:etime}, with the
 case $\etime{P; \sleep{} t} \approx\,
- (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}$. 
+ (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P}$.
 If the above alternate definition \emph{sleep'} is used, then
 the interpretation of $(P; \sleep t)$
 desugars and simplifies to the following:
@@ -1413,7 +1407,7 @@ $e_2$ is the time taken by the guard. This gives
 a tighter bound on sleep behaviour that previously where the behaviour is:
 %
 \begin{align*}
-\etime{P; \sleep{} t} = ((\vtime{P} + t) \, \mathit{max} \, \etime{P}) + e_1 + e_2 
+\etime{P; \sleep{} t} = ((\vtime{P} + t) \, \mathit{max} \, \etime{P}) + e_1 + e_2
 \end{align*}
 %
 \ie{}, without resorting to approximate equalities on time with $\approx$
@@ -1451,13 +1445,13 @@ stream of warnings. The |lift| function (shown in Figure~\ref{core-functionsE})
 |Temporal| to be promoted to the |TemporalE| type (by ignoring the new parameter for
 $\epsilon$ and producing the empty output stream), of type
 |lift :: Temporal a -> TemporalE a|. Figure~\ref{core-functionsE} shows
-a number of other simple |TemporalE| computations for raising exceptions 
-and getting the $\epsilon$ parameter. 
+a number of other simple |TemporalE| computations for raising exceptions
+and getting the $\epsilon$ parameter.
 
 \begin{figure}[t]
 \begin{code}
 weakWarn :: VTime -> TemporalE ()
-weakWarn t = TE (lamWild -> return ((), [Weak t])) >> 
+weakWarn t = TE (lamWild -> return ((), [Weak t])) >>
         (warn $ "warning: overran by " ++ (show t))
 newlinee
 strongWarn :: VTime -> TemporalE ()
@@ -1478,7 +1472,7 @@ warn s = lift (T (lamWild -> \vt -> do  putStrLn s
 \label{core-functionsE}
 \end{figure}
 
-The |TemporalE| encoding has the following instance of |Monad| which 
+The |TemporalE| encoding has the following instance of |Monad| which
 is simply a combination of the usual reader monad behaviour (for the
 $\epsilon$ parameter) and the writer monad (for the output stream), but
 lifted to the |Temporal| monad:
@@ -1496,7 +1490,7 @@ instance Monad TemporalE where
 Therefore, the |do| here is a |Temporal| computation, with the previous
 monadic semantics.
 
-Evaluating |TemporalE| computations is much the same as before, with 
+Evaluating |TemporalE| computations is much the same as before, with
 the $\epsilon$ time passed as a parameter:
 %
 \begin{code}
@@ -1512,7 +1506,7 @@ exceptions may be raised:
 %
 \begin{code}
 sleep :: VTime -> TemporalE ()
-sleep delayT = 
+sleep delayT =
      do  nowT      <- time
          vT        <- getVirtualTime
          let vT'   = vT + delayT
@@ -1520,8 +1514,8 @@ sleep delayT =
          startT    <- start
          eps       <- epsilonTime
          let diffT = diffTime nowT startT
-         if (vT' < diffT)  
-               then  if ((vT' + eps) < diffT) 
+         if (vT' < diffT)
+               then  if ((vT' + eps) < diffT)
                      then strongWarn (diffT - vT')
                      else weakWarn (diffT - vT')
                else kernelSleep (vT' - diffT)
@@ -1529,9 +1523,9 @@ sleep delayT =
 %
 The definition is similar to \emph{sleep} for |Temporal|, except
 that in the true-branch of the conditional there is additional testing to see if
-|diffT| is greater than the new virtual time $+ \epsilon$ (in which case 
+|diffT| is greater than the new virtual time $+ \epsilon$ (in which case
 a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilon$
-(in which case a weak exception is raised). 
+(in which case a weak exception is raised).
 
 \section{Related work}
 
