@@ -63,7 +63,7 @@
 \newcommand{\ksleep}{\textnormal{\texttt{kernelSleep}}\;}
 \newcommand{\ksleepOp}{\texttt{kernelSleep}}
 
-\newcommand{\schedAheadT}{\textnormal{\texttt{schedule_ahead_time}}\;}
+\newcommand{\schedAheadT}{\textnormal{\texttt{scheduleAheadTime}}\;}
 \newcommand{\schedAheadTOp}{\texttt{scheduleAheadTime}}
 
 \newcommand{\lang}{Sonic Pi}
