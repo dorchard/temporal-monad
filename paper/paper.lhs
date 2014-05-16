@@ -694,7 +694,10 @@ time.
 By the above definition, programs $P$ are a ``snoc''-list (\ie{},
 elements are ``consed'' onto the end, not front as is standard for
 inductively-defined lists) where $\emptyset$ is the empty list. This
-structure aids later proofs.  Statements $S$ may be expressions on
+structure aids later proofs since it allows inductive reasoning on
+a statement of a program and its preceding program.
+
+Statements $S$ may be expressions on
 their own, or may have (pure) bindings to variables. Throughout we
 consider the first case of $S$ a degenerate case of the second where
 the variable is irrelevant \eg{}, $? = E$.
