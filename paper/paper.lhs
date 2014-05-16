@@ -60,8 +60,8 @@
 \newcommand{\sleep}{\textnormal{\texttt{sleep}}\;}
 \newcommand{\sleepOp}{\texttt{sleep}}
 
-\newcommand{\ksleep}{\textnormal{\texttt{kernelSleep}}\;}
-\newcommand{\ksleepOp}{\texttt{kernelSleep}}
+\newcommand{\ksleep}{\textnormal{\texttt{Kernel.sleep}}\;}
+\newcommand{\ksleepOp}{\texttt{Kernel.sleep}}
 
 \newcommand{\schedAheadT}{\textnormal{\texttt{schedule_ahead_time}}\;}
 \newcommand{\schedAheadTOp}{\texttt{scheduleAheadTime}}
@@ -80,7 +80,7 @@
 
 \authorinfo{Samuel Aaron}
            {Computer Laboratory, University of Cambridge, UK}
-           {sam.saaron|@|cl.cam.ac.uk}
+           {sam.aaron|@|cl.cam.ac.uk}
 \authorinfo{Dominic Orchard}
            {Computer Laboratory, University of Cambridge, UK}
            {dominic.orchard|@|cl.cam.ac.uk}
@@ -104,7 +104,7 @@ function for managing time. However, whilst this approach was conceptually
 simple, it resulted in badly timed music - especially when multiple musical
 threads were executing concurrently. This paper describes an alternative
 programming approach for timing (implemented in Sonic Pi v2.0) which
-maintains syntactic compatibility with version 1, yet provides accurate
+maintains syntactic compatibility with version 1.0, yet provides accurate
 timing via specific interaction between real time and a ``virtual time''.
 We provide a formal specification of the temporal behaviour of Sonic Pi,
 motivated in relation to other recent approaches to the semantics of time in
@@ -170,6 +170,10 @@ The core contributions of this paper are three-fold:
   (Section~\ref{sec:temporal-warnings}).
 \end{itemize}
 
+We begin with a discussion of first programming languages
+and live coding, since both these aspects are key motivators
+of the language design. 
+
 \subsection{The live coding context}
 
 A first programming language should be conceptually straightforward
@@ -180,12 +184,13 @@ time in a programming language is often problematic, firstly because
 natural ways of describing and organising musical events are
 multi-threaded (scores, chords, resonance, reverb), and secondly
 because so many standard computational formalisms treat execution time
-as a non-functional requirement. Time can be even more problematic in
-live coding, because the creation of the code, as a performance, is
-interleaved with the sound events resulting from its execution. Yet
-for users of Sonic Pi, the creative experience they have, like all
-experience, arises through time - as media theorist Mieke Bal says,
-``\emph{time is where subjectivity is produced}''~\cite{bal2002travelling}.
+as a non-functional requirement~\cite{Lee2009}. Time can be even more
+problematic in live coding, because the creation of the code, as a
+performance, is interleaved with the sound events resulting from its
+execution. Yet for users of Sonic Pi, the creative experience they
+have, like all experience, arises through time - as media theorist
+Mieke Bal says, ``\emph{time is where subjectivity is
+  produced}''~\cite{bal2002travelling}.
 
 As noted by Julian Rorhruber~\cite{blackwell_et_al:DR:2014:4420},
 there have been many publications discussing alternative approaches to
@@ -722,13 +727,17 @@ s \approx t
 \;
 \equiv
 \;
-(t - \epsilon) \leq s \leq (t + \epsilon)
+{\mid}{(s - t)}{\mid} \leq \epsilon
+%\;
+%(t - \epsilon) \leq s \leq (t + \epsilon)
 \end{equation}
 %
 for some value of $\epsilon$ which is the maximum negligible
-time value with respect to the application at hand. In the case of
-\lang{}, this is equal to the scheduling delay for the SuperCollider
-engine, which is roughly \note{X}.
+time value with respect to the application at hand.
+For example, if $\epsilon = 0.1$ then $3 \approx 3.05 \approx 2.92$. 
+
+In the case of
+\lang{}, we set $\epsilon$ equal to the schedule ahead time (\schedAheadTop{}, in Section~\ref{sec:new-sleep}), which in our earlier examples was 0.5 seconds. 
 
 \note{Discuss this further, may be
   able to say later that in some cases $\epsilon$ is the scheduling
