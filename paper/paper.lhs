@@ -1595,7 +1595,6 @@ be simply to create a faster computer), if time is taken seriously as a
 component of system behaviour (as it is in music) then an event that
 occurs too soon may be just as incorrect as one that occurs too late.
 
-
 \paragraph{Logics}
 
 There has been various work on reasoning about time in logic. For
@@ -1666,8 +1665,13 @@ semantics that correspond to user expectations, promises to be
 beneficial beyond the domain of music programming, to other types of
 physical world interface.
 
-
-
+Further work is to expand the notion of \emph{time safety} and
+\emph{time systems}, which we have introduced here, and explore their
+use in live coding languages and languages for temporal coordination
+(such as in robotics).  We considered the safety property of ``not
+being too early'', which is an invariant of the Sonic Pi language.
+Further work is to explore language invariants for deadlines (similar
+to the logical approaches discussion earlier). 
 
 \paragraph{Acknowledgements}
 
