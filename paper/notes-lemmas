@@ -52,8 +52,6 @@ do startT <- getCurrentTime
                     else kernelSleep (vT' - diffT) 
    p
 
---------
-
 -------
 
 do startT <- getCurrentTime
@@ -65,6 +63,20 @@ do startT <- getCurrentTime
    p
 
 --------
+
+do startT <- getCurrentTime
+   setVirtualTime delayT
+   if (delayT < 0) then return () 
+                   else kernelSleep delayT 
+   p
+
+
+--------
+
+do startT <- getCurrentTime
+   setVirtualTime delayT
+   kernelSleep delayT 
+   p
 
 
 --------
@@ -115,3 +127,14 @@ do  startT <- getCurrentTime
     let (T q')  = q ()
     thenT       <- getCurrentTime
     q' (startT, thenT) t)
+
+-----------------------------------
+lemma 3:
+
+
+startT <- getCurrentTime
+(x, vt')    <- p (startT, startT) 0
+let (T q')  = q x
+thenT       <- getCurrentTime
+q' (startT, thenT) vt')
+
