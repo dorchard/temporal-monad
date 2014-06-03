@@ -7,7 +7,7 @@
 %format <*> = "<\!\!\!*\!\!\!>"
 %format newline = "\\[-1.5em]"
 %format interpP = "\interp{P}"
-%format lamWild = "{\backslash}{\anonymous}"
+%format lamWild = "\lambda{\anonymous}"
 
 
 \usepackage{enumerate}
@@ -1134,12 +1134,12 @@ thus |return :: a -> IO a|.
 \noindent
 To model program evaluation, the |runTime| operation executes
 a temporal computation inside of the \emph{IO} monad, providing the
-start time from the operating system and virtual time 0:
+start time from the operating system and virtual time $0$:
 %%
 \begin{code}
 runTime :: Temporal a -> IO a
-runTime (T c) = do  startT <- getCurrentTime
-                    (x, _) <- c (startT, startT) 0
+runTime (T c) = do  startT  <- getCurrentTime
+                    (x, _)  <- c (startT, startT) 0
                     return x
 \end{code}
 %%
