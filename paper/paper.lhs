@@ -1094,7 +1094,7 @@ data Temporal a =
 \end{code}
 %
 where |IO| is part of the Haskell implementation and encapsulates access to
-the actual clock time from operation system.
+the actual clock time from operating system.
 
 |Temporal| has a monad structure, defined by the following instance of the |Monad| class:
 %
@@ -1128,7 +1128,7 @@ thus |return :: a -> IO a|.
   first the left-hand side at time \emph{nowT} and then right-hand side
   at the new current time \emph{thenT}.
   The expression |getCurrentTime :: IO Time| retrieves the time from
-  the operation system.
+  the operating system.
 \end{itemize}
 
 \noindent
@@ -1145,7 +1145,7 @@ runTime (T c) = do  startT  <- getCurrentTime
 %%
 \begin{example}
 To illustrate the evaluation of temporal computations and the
-ordering and interleaving of calls to the operation system for the
+ordering and interleaving of calls to the operating system for the
 current time, consider the program:
 %%
 \begin{code}
@@ -1366,7 +1366,7 @@ be masked by a small \texttt{scheduleAheadTime} (see Section~\ref{sec:new-sleep}
 Thus our model is \emph{time safe}, in the sense that it satisfies the invariants
 described by the time system of Section~\ref{sec:axiomatic}. Following from these
 definitions we then get Lemma~\ref{lemma-rel-etime-vtime} ``for free'', 
-that for all $P$, $\etime{P} \geq \vtime{P}$, \ie{}, a program never ``uner-runs''
+that for all $P$, $\etime{P} \geq \vtime{P}$, \ie{}, a program never ``under-runs''
 its virtual time specification. The lemma holds for free, since its proof relies
 only on the satisfaction of the specifications on $\etime{-}$ and $\vtime{-}$,
 which we have shown for our model above.  
@@ -1469,7 +1469,7 @@ We briefly discuss alternative structuring of the model here.
 %and an alternate model for \sleepOp{}.
 
 For most of our example Sonic Pi programs here, the full structure
-of monad is not needed to give their semantics as there is no using of
+of monad is not needed to give their semantics as there is no use of
 binding between statements (and thus no dataflow). In these case just
 an \emph{applicative functor}~\cite{mcbride2008functional} or even a
 monoid would suffice. These can be derived from the monad structure
