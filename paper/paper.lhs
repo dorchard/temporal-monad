@@ -416,7 +416,7 @@ timing of the sounds produced by the program.
 
 When users create programs in Sonic Pi, the ease with which they can
 produce the musical effects they intend is dependent on their
-expectations of codes behaviour. As described by Honing (~\cite{Honing1993}, see
+expectations of codes behaviour. As described by Honing~\cite{Honing1993} (see
 Section~\ref{sec:related-work}), music systems may represent temporal
 structure either explicitly (describing time intervals and relations)
 or implicitly (in an ordered sequence of notes having different
@@ -491,14 +491,14 @@ since the \emph{start} of the program (not since the end of playing the
 notes). Once one second has elapsed, the next three statements are
 executed which plays an F major chord. The next \sleepOp{} means that
 the final chord is not played until 1.5 seconds has elapsed since the
-start of the program. Figure~\ref{three-chord-timing} illustrates the
+start of the program. Figure~\ref{fig:reich} illustrates the
 timing.
 Thus, $\sleep{} t$ communicates that, after it has been evaluated,
 at least $t$ seconds has elapsed since the last \sleepOp{}. This
 provides a minimum time. In between calls to \sleepOp{}, any other
 statements can (with some limits) be considered task parallel. As
 mentioned earlier, ChucK has a similar mechanism as part of its
-massively overloaded operator~\cite{Wang2003}.
+(multiply) overloaded operator~\cite{Wang2003}.
 
 \begin{SaveVerbatim}{example1}
 play :C ; play :E ; play :G
@@ -588,7 +588,7 @@ exceeds this value, the temporal expectations of the system are met.
 \end{figure}
 
 
-It is possible that a computation proceeding a \sleepOp{} can overrun; that is, run longer
+It is possible that a computation preceding a \sleepOp{} can overrun; that is, run longer
 than the sleep time.  Thus, the programming model is not suitable for
 realtime systems requiring hard deadlines but \sleepOp{} instead
 provides a \emph{soft deadline} (in the terminology of Hansson and
@@ -735,7 +735,7 @@ of time
 
 
 \paragraph{Terminology and notation}
-We refer to sequences statements as \emph{programs}. Throughout, $P$,
+We refer to sequences of statements as \emph{programs}. Throughout, $P$,
 $Q$ range over programs, and $s, t$ range over times (usually in
 seconds).
 
@@ -848,7 +848,7 @@ scheduling calls to the synthesise server using the current virtual
 time (see the diagram of Figure~\ref{fig:reich}). 
 Later in the denotational model (Section~\ref{sec:time-monad}),
 we'll demonstrate sources of temporal variations
-$\epsilon$, which limited to a very small part of the model. 
+$\epsilon$, which are limited to a very small part of the model. 
 Crucially, these $\epsilon$ time differences do not
 accumulate-- the \sleepOp{} operation provides a barrier which
 prevents this. 
@@ -1751,10 +1751,11 @@ used to prove the desirable properties of this kind of temporal
 behaviour. This combination of simple syntax, with formally defined
 semantics that correspond to user expectations, promises to be
 beneficial beyond the domain of music programming, to other types of
-physical world interface. We used the phrases \emph{time system}
+physical world interface. 
+
+We used the phrases \emph{time system}
 and \emph{time safety} to draw analogy with traditional notions of
 \emph{type system} and \emph{type safety}. 
-
 Further work is to expand the power of time systems and the
 notion of time safety, beyond what we have introduced here, exploring
 their use in live coding languages and languages for temporal coordination
