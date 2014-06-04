@@ -97,28 +97,28 @@ instance Monoid (Temporal ()) where
 
 {- Paper examples -}
 
-fig2a = (sleep 1) <> (sleep 2)
-fig2b = (kernelSleep 1) <> (sleep 1) <> (sleep 2)
-fig2c = (kernelSleep 2) <> (sleep 1) <> (sleep 2)
-fig2d = (kernelSleep 2) <> (sleep 1) <> (kernelSleep 2) <> (sleep 2) 
+fig7a = (sleep 1) <> (sleep 2)
+fig7b = (kernelSleep 1) <> (sleep 1) <> (sleep 2)
+fig7c = (kernelSleep 2) <> (sleep 1) <> (sleep 2)
+fig7d = (kernelSleep 2) <> (sleep 1) <> (kernelSleep 2) <> (sleep 2) 
 
-fig2aA = (sleep 1) *> (sleep 2)
-fig2bA = (kernelSleep 1) *> (sleep 1) *> (sleep 2)
-fig2cA = (kernelSleep 2) *> (sleep 1) *> (sleep 2)
-fig2dA = (kernelSleep 2) *> (sleep 1) *> (kernelSleep 2) *> (sleep 2) 
+fig7aA = (sleep 1) *> (sleep 2)
+fig7bA = (kernelSleep 1) *> (sleep 1) *> (sleep 2)
+fig7cA = (kernelSleep 2) *> (sleep 1) *> (sleep 2)
+fig7dA = (kernelSleep 2) *> (sleep 1) *> (kernelSleep 2) *> (sleep 2) 
 
-fig2aM = do sleep 1
+fig7aM = do sleep 1
             sleep 2
 
-fig2bM = do kernelSleep 1
+fig7bM = do kernelSleep 1
             sleep 1
             sleep 2
 
-fig2cM = do kernelSleep 2
+fig7cM = do kernelSleep 2
             sleep 1
             sleep 2
 
-fig2dM = do kernelSleep 2
+fig7dM = do kernelSleep 2
             sleep 1
             kernelSleep 2
             sleep 2
