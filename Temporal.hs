@@ -32,6 +32,12 @@ runTime (T c) = do startT <- getCurrentTime
                    (y, _) <- c (startT, startT) 0
                    return y
 
+runTime' :: Temporal () -> IO ()
+runTime' (T c) = do startT <- getCurrentTime
+                    c (startT, startT) 0
+                    return ()
+                   
+
 -- Effectful computations in Temporal monad
 
 -- Accessors
