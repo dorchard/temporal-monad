@@ -45,6 +45,8 @@ fig7aS' = Seq (Seq (Seq (Seq Empty (Bind "x" (Const $ IntVal 42))) (NoBind $ Sle
             (Print (Var "x"))
 
 
+(((0;s1);s2);s3
+
 
 {-
 interpProg (Seq (Seq Empty s1) s2) k = 
