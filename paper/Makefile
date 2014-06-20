@@ -1,4 +1,4 @@
-default: main
+default: new
 
 clean:
 	rm -f *._tex
@@ -15,6 +15,10 @@ main:
 	bibtex paper
 	pdflatex paper.tex
 	pdflatex paper.tex
+
+new: 
+	lhs2TeX -o new.tex new.lhs
+	pdflatex new.tex
 
 quick:
 	lhs2TeX -o paper.tex paper.lhs
