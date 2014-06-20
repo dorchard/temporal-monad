@@ -55,7 +55,6 @@
 
 
 \newcommand{\play}{\mathsf{play}\;}
-\newcommand{\playOp}{\textsf{play}}
 
 \newcommand{\sleep}{\textnormal{\texttt{sleep}}\;}
 \newcommand{\sleepOp}{\texttt{sleep}}
@@ -509,28 +508,7 @@ play :G ; play :B ; play :D
 \end{SaveVerbatim}
 
 \begin{figure}[b]
-%\subfigure[Three chord program in \lang{} 2.0]{
-%\begin{minipage}{0.46\linewidth}
-%\[
-%\hspace{-6em}
-%\begin{array}{l}
-%\play C \\
-%\play E \\
-%\play G \\
-%\sleep 1 \\
-%\play F \\
-%\play A \\
-%\play C \\
-%\sleep 0.5 \\
-%\play G \\
-%\play B \\
-%\play D \\
-%\end{array}
-%\]
-\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example1} \\
-%\end{minipage}
-
-%}
+\BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example1} 
 \caption{Playing three chords (C major, F major, G major)
 in \lang{} 2.0, with the second two played
 closer together by $0.5s$.}
@@ -759,7 +737,7 @@ time.
 By the above definition, programs $P$ are a ``snoc''-list (\ie{},
 elements are ``consed'' onto the end, not front as is standard for
 inductively-defined lists) where $\emptyset$ is the empty list. 
-Equivalently, sequential composition of statements is right associative. 
+Equivalently, sequential composition of statements is syntactically left associated. 
 This structure aids later proofs since it allows inductive reasoning on
 a statement of a program and its preceding program, which is key to
 accurately modelling \texttt{sleep}. 
@@ -1067,7 +1045,7 @@ Section~\ref{sec:temporal-warnings}, we extend the model with
  ``temporal warnings'' describing overrun errors that
 can occur at runtime.
 
-\paragraph{The \emph{Temporal} monad}
+\subsection{The \emph{Temporal} monad}
 
 We define an interpretation $\interp{-}$ that maps programs and
 statements to a parametric data structure, named \emph{Temporal},
@@ -1201,25 +1179,85 @@ kernelSleep t =  T (\(_, _) -> \vT ->
 \end{figure}
 
 
-\paragraph{Interpreting \lang{} statements}
+\subsection{Interpreting \lang{} statements}
 
-The following interpretation function $\interp{-}$ on \lang{}
-programs shows the mapping to the operations of the \emph{Temporal}
-monad:
+\newcommand{\envE}{\mathit{env}}
+
+We define an interpretation $\interp{-}$ overloaded on programs,
+statements, and expressions where the type of the interpretation
+depends on the syntactic category. Each interpretation produces a
+computation in the |Temporal| monad, where a closed
+program is interpreted as a value of type |Temporal ()|. For open syntax (\ie{}, 
+with free variables), we
+model a variable environment mapping variables to values by
+the |Env| type, which is threaded through the interpretation. 
+For expressions, we model the value domain via the |Value| data type,  
+for which we elide the details here. 
+
+The interpretation reassociates the left-associated program syntax (where the last
+statement is at the head of the snoc-list representation) to a right-associated
+semantics using a continuation-passing approach, \eg{}, for a three statement program
+%
+\newcommand{\fcomp}{\,\hat{\circ}\,}
+%
+\[\interp{((\emptyset;S_1);S_2);S_3} = \interp{S_1} \fcomp (\interp{S_2} \fcomp (\interp{S_3} \fcomp \interp{\emptyset}))\]
+%
+where $\fcomp$ represents the (forwards, left-to-right) sequential, monadic composition of denotations
+in the |Temporal| monad. 
+
+The interpretation of statement sequences is defined:
+%
+\begin{align*}
+\interp{P} & |:: (Env -> Temporal ()) -> Temporal ()| \\
+\interp{\emptyset} & \, k = k \, \mathit{emptyEnv} \\
+\interp{P; S}      & \, k = \interp{P} \, (\lambda \envE{} . \; (\interp{S} \, \envE{}) |>>=| k)
+\end{align*}
+%
+The parameter $k$ is a continuation (taking an environment |Env|) 
+for the tail of the right-associated semantics.
+At the top-level, we therefore interpret a closed program to a value
+of type |Temoral ()| by passing 
+in the trivial continuation that ignores the environment:
 %%
 \begin{align*}
-\interp{\emph{P}} & : \emph{Temporal} \, () \\
-\interp{P; \sleep e} & = \interp{P} |>>= (lamWild ->| \emph{sleep} \, \interp{e}) \\
-\interp{P; \synVar = E} & = \interp{P} |>>= (\v ->| \interp{E})
+\interp{P}_{\mathsf{top}} = |runTime| \; (\interp{P} \; (\lambda \anonymous \; . \; |return ()|))
 \end{align*}
 %%
-(where $\interp{-}$ is overloaded in the rule for \sleepOp{} for (pure) expressions).
-%The concrete interpretation of other statements in the language, such as \playOp, is
-%elided here since it does not relate directly to the temporal semantics.
-The primitive \emph{sleep} provides the semantics for \sleepOp{} as:
+The interpretation of statements transforms an environment, inside of a |Temporal| computation, defined:
+%%
+\begin{align*}
+& \interp{S} :: |Env -> Temporal Env| \\
+& \interp{\anonymous = E} \envE{} = (\interp{E} \envE{}) |>>= (lamWild -> return env)| \\
+& \interp{v = E} \envE{} = (\interp{E} \envE{}) |>>= (\x -> return env|[v \mapsto x])
+\end{align*}
+%%
+For both kinds of statement, with and without variable binding, the expression $E$
+is evaluated where $\interp{E} |:: Env -> Temporal Value|$. The result
+of evaluting $E$ is then monadically composed (via |>>=| of the |Temporal| monad)
+with a computation returning an environment. 
+For statements without a binding, the environment |env| is returned unmodified; 
+for statements with a binding, the environment |env| is extended with a mapping from $v$ to
+the value $x$ of the evaluated expression, written here as $|env|[v \mapsto x]$. 
+
+For expressions, we show just the interpretation of \texttt{sleep} 
+and variable expressions:
+\begin{align*}
+& \interp{E} |:: Env -> Temporal Value| \\
+& \interp{\texttt{sleep} \, e} \envE{} = (\interp{E} \, |env|) |>>= sleep| \\
+& \hspace{2.7em} \interp{v} \envE{} = |return (env v)|
+\end{align*}
+Thus, \texttt{sleep} is interpreted in terms of the \emph{sleep} 
+function (see below)
+and variable expressions are interpreted as a projection from the environment. 
+The concrete interpretation of other expressions in the language, such as \texttt{play}, is
+ignored here since they does not relate directly to the temporal semantics.
+
+\paragraph{Interpretation of \emph{sleep}}
+
+The \emph{sleep} operation, used above, provides the semantics for \sleepOp{} as:
 %%
 \begin{code}
-sleep :: VTime -> Temporal ()
+sleep :: Value -> Temporal Value
 sleep delayT = do  nowT      <- time
                    vT        <- getVirtualTime
                    let vT'   = vT + delayT
@@ -1229,9 +1267,11 @@ sleep delayT = do  nowT      <- time
                    if (vT' < diffT)
                      then return ()
                      else kernelSleep (vT' - diffT)
+                   return NoValue
 \end{code}
 %
-where \emph{sleep} proceeds first by getting the current time
+where $|NoValue| \in Value$. 
+Thus, \emph{sleep} proceeds first by getting the current time
 \emph{nowT}, calculating the new virtual time \emph{vT'} and updating
 the virtual time state. If the new virtual time is less than the
 elapsed time \emph{diffT} then no actual (kernel)

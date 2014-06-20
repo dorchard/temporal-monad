@@ -20,14 +20,20 @@ interpExpr (Var v)  env = return (env v)
 interpProg :: Prog -> (Env -> Temporal ()) -> Temporal ()
 interpProg Empty     k = k emptyEnv
 interpProg (Seq p s) k = interpProg p (\env -> (interpStmt s env) >>= k)
---interpProg (Seq p s) k = interpProg p ((interpStmt s) >=> k)
 
-f >=> g = \x -> (f x) >>= g
+{-
+   Alternatively, can be written in terms of Kleisli composition
+
+   interpProg (Seq p s) k = interpProg p ((interpStmt s) >=> k) 
+                                where f >=> g = \x -> (f x) >>= g
+-}
 
 interpStmt :: Stmt -> Env -> Temporal Env
 interpStmt (NoBind e)   env = (interpExpr e env) >>= (\_ -> return env)
 interpStmt (Bind var e) env = (interpExpr e env) >>= (\x -> return (env `ext` (var, x)))
 interpStmt (Print e)    env = (interpExpr e env) >>= (\x -> liftIO $ putStrLn $ show x) >>= (\_ -> return env)
+
+{- Top level -}
 
 interp p = interpProg p (\_ -> return ())
 
@@ -44,18 +50,16 @@ fig7dS = Seq (Seq (Seq (Seq Empty (NoBind $ KSleep 2)) (NoBind $ Sleep 1)) (NoBi
 fig7aS' = Seq (Seq (Seq (Seq Empty (Bind "x" (Const $ IntVal 42))) (NoBind $ Sleep 1)) (NoBind $ Sleep 2)) 
             (Print (Var "x"))
 
-
-(((0;s1);s2);s3
-
-
 {-
-interpProg (Seq (Seq Empty s1) s2) k = 
+interpProg (Seq (Seq (Seq Empty s1) s2) s3) k = 
 
-interpProg (Seq Empty s1) ((interpStmt s2) >=> k)
+interpProg (Seq (Seq Empty s1) s2) ((interpStmt s3) >=> k)
 
-interpProg Empty ((interpStmt s1) >=> ((interpStmt s2) >=> k))
+interpProg (Seq Empty s1) ((interpStmt s2) >=> ((interpStmt s3) >=> k))
 
-((interpStmt s1) >=> ((interpStmt s2) >=> k)) emptyEnv
+interpProg Empty ((interpStmt s1) >=> ((interpStmt s2) >=> ((interpStmt s3) >=> k)))
+
+((interpStmt s1) >=> ((interpStmt s2) >=> ((interpStmt s3) >=> k))) emptyEnv
 
 ((\env -> interpStmt s1 env) >>= ((\env -> interpStmt s2 env) >>= k)
 
