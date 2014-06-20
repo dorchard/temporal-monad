@@ -758,15 +758,17 @@ time.
 
 By the above definition, programs $P$ are a ``snoc''-list (\ie{},
 elements are ``consed'' onto the end, not front as is standard for
-inductively-defined lists) where $\emptyset$ is the empty list. This
-structure aids later proofs since it allows inductive reasoning on
+inductively-defined lists) where $\emptyset$ is the empty list. 
+Equivalently, sequential composition of statements is right associative. 
+This structure aids later proofs since it allows inductive reasoning on
 a statement of a program and its preceding program, which is key to
 accurately modelling \texttt{sleep}. 
 
 Statements $S$ may be expressions on
 their own, or may have (pure) bindings to variables. Throughout we
 consider the first case of $S$ as a degenerate case of the second where
-the variable is irrelevant \ie{}, $? = E$ where $?$ is a wildcard variable. 
+the variable is irrelevant \ie{}, $\anonymous = E$ where $\anonymous$ denotes a 
+wildcard variable. 
 
 We'll add the previously seen \ksleepOp{} operation to the core subset here, which
 blocks the current computation for the time specified by its

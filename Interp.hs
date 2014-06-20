@@ -4,7 +4,6 @@ import Temporal
 data Prog = Seq Prog Stmt | Empty                                 deriving Show 
 data Stmt = NoBind Expr | Bind String Expr | Print Expr           deriving Show
 data Expr = Sleep VTime | KSleep VTime | Const Value | Var String deriving Show
-
 data Value = NoValue | IntVal Int                                 deriving Show
 
 type Env = String -> Value
@@ -20,8 +19,8 @@ interpExpr (Var v)  env = return (env v)
 
 interpProg :: Prog -> (Env -> Temporal ()) -> Temporal ()
 interpProg Empty     k = k emptyEnv
-interpProg (Seq p s) k = interpProg p ((interpStmt s) >=> k)
---interpProg (Seq p s) k = interpProg p (\env -> (interpStmt s env) >>= (\env' -> k env'))
+interpProg (Seq p s) k = interpProg p (\env -> (interpStmt s env) >>= k)
+--interpProg (Seq p s) k = interpProg p ((interpStmt s) >=> k)
 
 f >=> g = \x -> (f x) >>= g
 
@@ -45,31 +44,48 @@ fig7dS = Seq (Seq (Seq (Seq Empty (NoBind $ KSleep 2)) (NoBind $ Sleep 1)) (NoBi
 fig7aS' = Seq (Seq (Seq (Seq Empty (Bind "x" (Const $ IntVal 42))) (NoBind $ Sleep 1)) (NoBind $ Sleep 2)) 
             (Print (Var "x"))
 
+
+(((0;s1);s2);s3
+
+
 {-
+interpProg (Seq (Seq Empty s1) s2) k = 
 
-    interpProg (Seq p (NoBind $ Sleep t)) (\_ -> return ())
+interpProg (Seq Empty s1) ((interpStmt s2) >=> k)
 
- => interpProg p (interpStmt (NoBind $ Sleep t) (\_ -> return ()))
+interpProg Empty ((interpStmt s1) >=> ((interpStmt s2) >=> k))
 
- => interpProg p (\env -> (interExpr (Sleep t) env) >>= (\_ -> (\_ -> return ()) env))
+((interpStmt s1) >=> ((interpStmt s2) >=> k)) emptyEnv
 
- => interpProg p (\env -> (interExpr (Sleep t) env) >>= (\_ -> return ()))
+((\env -> interpStmt s1 env) >>= ((\env -> interpStmt s2 env) >>= k)
 
- => interpProg p (\env -> ((sleep t) >> (return NoValue)) >>= (\_ -> return ()))
+do env <- interpStmt s1 env
+   env <- interpStmt s2 env 
+   k
 
- => interpProg p (\env -> ((sleep t) >> (return NoValue)))
+(p;(q;r))
+(p;q);r
+ ; 
+/ \
+p  ;
+  / \
+ q   r
+-}
 
 
-runTime (interpProg p (\env -> ((sleep t) >> (return NoValue))))
-
+{-  interpProg (Seq p (NoBind $ Sleep t)) (\_ -> return ())
+ => interpProg p (\env -> (interpStmt (NoBind $ Sleep t) env) >>= (\_ -> return ())
+m=> interpProg p (\env -> (interpStmt (NoBind $ Sleep t) env))
+ => interpProg p (\env -> (interpExpr (Sleep t) env) >>= (_ -> return env))
+m=> interpProg p (\env -> (interpExpr (Sleep t) env))
+m=> interpProg p (\env -> ((sleep t) >> (return NoValue)))
+---
+    runTime (interpProg p (\env -> ((sleep t) >> (return NoValue))))
  => 
-
 do startT <- getCurrentTime
    (y, _) <- (runT (interpProg p (\env -> ((sleep t) >> (return NoValue))))) (startT, startT) 0
    return y
-
  => 
-
 do startT <- getCurrentTime
    (y, _) <- (runT (interpProg p (\_ -> 
                  do nowT      <- time
@@ -83,7 +99,7 @@ do startT <- getCurrentTime
                     return NoValue))) (startT, startT) 0
    return y
 
- => (can probably do this reasoning- startT is constant)
+ => (can probably do this reasoning- startT is constant)[yep]
 
 do startT <- getCurrentTime
    (y, _) <- (runT (interpProg p (\_ -> 
@@ -98,36 +114,51 @@ do startT <- getCurrentTime
    return y
 
  => 
-
-if p = Empty then 
-
- interpProg Empty (\_ -> k')  = k'
-
-if p = Seq p' s
-
- interpProg (Seq p' s) (\_ -> k') = k'
-
-
 By induction... since trees are finite
 
 (interpStmt sn >=> (interpStmt sn-1 >=>  .. (interpStmt s1 >=> k))) emptyEnv
-
-If monad is associative then (i.e., really a monad) 
-
-((((interpStmt sn >=> interpStmt sn-1) >=>  .. ) >=> interpStmt s1 >=>)  k) emptyEnv
-
-
- => 
+therefore
 
 do startT <- getCurrentTime
-   (y, _) <- (runT (interpProg p (\_ -> return NoValue))) (startT, startT) 0
-   nowT      <- time
-   vT        <- getVirtualTime
-   let vT'   = vT + t
-   setVirtualTime vT'
-   let diffT = diffTime nowT startT
-   if (vT' < diffT) then return () 
-                    else kernelSleep (vT' - diffT)
+   (y, _) <- (runT (do env_1 <- interpStmt s1 env_1
+                       env_2 <- interpStmt s2 env_2
+                       ...
+                       env_n <- interpStmt sn env_n
+                       nowT      <- time
+                       vT        <- getVirtualTime
+                       let vT'   = vT + t
+                       setVirtualTime vT'
+                       let diffT = diffTime nowT startT
+                       if (vT' < diffT) then return () 
+                                        else kernelSleep (vT' - diffT)
+                       return NoValue))) (startT, startT) 0
    return y
 
+=>
+
+do startT <- getCurrentTime
+   (runT (do env_1 <- interpStmt s1 env_1
+             env_2 <- interpStmt s2 env_2
+              ...
+             env_n <- interpStmt sn env_n
+             nowT      <- time
+             vT        <- getVirtualTime
+             let vT'   = vT + t
+             setVirtualTime vT'
+             let diffT = diffTime nowT startT
+             if (vT' < diffT) then return () 
+                              else kernelSleep (vT' - diffT)
+             return NoValue))) (startT, startT) 0
+
+do startT <- getCurrentTime
+   (_, vT) <- (runT (do env_1 <- interpStmt s1 env_1
+                        env_2 <- interpStmt s2 env_2
+                        ... 
+                        env_n <- interpStmt sn env_n) (startT, startT) 0
+    nowT  <- getCurrentTime
+    vT    <- getVirtualTime
+    let vT'   = vT + t
+    let diffT = diffTime nowT startT
+    if (vT' < diffT) then return () 
+                     else kernelSleep' (vT' - diffT)
 -}
