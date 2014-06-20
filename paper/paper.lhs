@@ -8,6 +8,10 @@
 %format newline = "\\[-1.5em]"
 %format interpP = "\interp{P}"
 %format lamWild = "\lambda{\anonymous}"
+%format interpSleepT = "\interp{\texttt{sleep} \, t}"
+%format interppst = "\interp{P; \texttt{sleep} \, t}"
+%format simp = "\equiv"
+%format hsp = "\hspace{-2em}"
 
 
 \usepackage{enumerate}
@@ -1210,7 +1214,7 @@ The interpretation of statement sequences is defined:
 \begin{align*}
 \interp{P} & |:: (Env -> Temporal ()) -> Temporal ()| \\
 \interp{\emptyset} & \, k = k \, \mathit{emptyEnv} \\
-\interp{P; S}      & \, k = \interp{P} \, (\lambda \envE{} . \; (\interp{S} \, \envE{}) |>>=| k)
+\interp{P; S}      & \, k = \interp{P} \, (|\env ->| (\interp{S} \, \envE{}) |>>=| k)
 \end{align*}
 %
 The parameter $k$ is a continuation (taking an environment |Env|) 
@@ -1220,15 +1224,15 @@ of type |Temoral ()| by passing
 in the trivial continuation that ignores the environment:
 %%
 \begin{align*}
-\interp{P}_{\mathsf{top}} = |runTime| \; (\interp{P} \; (\lambda \anonymous \; . \; |return ()|))
+\interp{P}_{\mathsf{top}} = |runTime| \; (\interp{P} \; |(lamWild -> return ())|)
 \end{align*}
 %%
 The interpretation of statements transforms an environment, inside of a |Temporal| computation, defined:
 %%
 \begin{align*}
 & \interp{S} :: |Env -> Temporal Env| \\
-& \interp{\anonymous = E} \envE{} = (\interp{E} \envE{}) |>>= (lamWild -> return env)| \\
-& \interp{v = E} \envE{} = (\interp{E} \envE{}) |>>= (\x -> return env|[v \mapsto x])
+& \interp{\anonymous = E} \, \envE{} = (\interp{E} \envE{}) |>>= (lamWild -> return env)| \\
+& \interp{v = E} \, \envE{} = (\interp{E} \envE{}) |>>= (\x -> return env|[v \mapsto x])
 \end{align*}
 %%
 For both kinds of statement, with and without variable binding, the expression $E$
@@ -1243,11 +1247,11 @@ For expressions, we show just the interpretation of \texttt{sleep}
 and variable expressions:
 \begin{align*}
 & \interp{E} |:: Env -> Temporal Value| \\
-& \interp{\texttt{sleep} \, e} \envE{} = (\interp{E} \, |env|) |>>= sleep| \\
-& \hspace{2.7em} \interp{v} \envE{} = |return (env v)|
+& \interp{\texttt{sleep} \, t} \, \envE{} = |sleep t| \\
+& \hspace{2.7em} \interp{v} \, \envE{} = |return (env v)|
 \end{align*}
 Thus, \texttt{sleep} is interpreted in terms of the \emph{sleep} 
-function (see below)
+function (see below), where $t$ is a constant, 
 and variable expressions are interpreted as a projection from the environment. 
 The concrete interpretation of other expressions in the language, such as \texttt{play}, is
 ignored here since they does not relate directly to the temporal semantics.
@@ -1257,7 +1261,7 @@ ignored here since they does not relate directly to the temporal semantics.
 The \emph{sleep} operation, used above, provides the semantics for \sleepOp{} as:
 %%
 \begin{code}
-sleep :: Value -> Temporal Value
+sleep :: VTime -> Temporal Value
 sleep delayT = do  nowT      <- time
                    vT        <- getVirtualTime
                    let vT'   = vT + delayT
@@ -1349,10 +1353,38 @@ to actual time calculated from the axiomatic model.
 The key case is for $(P; \sleep{} t)$, which we show here.
 Our model interprets the evaluation of $(P; \sleep t)$ as:
 %%
+%\begin{code}
+%runTime (do {interpP; sleep t})
+%\end{code}
 \begin{code}
-runTime (do {interpP; sleep t})
+         runTime (interppst (lamWild -> return ()))
+\end{code}
+which desugars and simplifies simply as follows
+\begin{code}
+hsp       runTime (interpP (\env -> interpSleepT env) >>= (lamWild -> return ()))
+hsp simp  runTime (interpP interpSleepT)
 \end{code}
 %%
+Since $P$ is a snoc-list of statements, \ie{} $P = ((\ldots);S_{n-1});S_n$, we can unroll and simplify the semantics
+further to get:
+%%
+% Include this intermediate step?
+%
+%\begin{code}
+%do startT <- getCurrentTime
+%   (runT (do  env_1 <- interpStmt s1 env_1
+%              env_2 <- interpStmt s2 env_2
+%              ...
+%              env_n <- interpStmt sn env_n
+%              nowT      <- time
+%              vT        <- getVirtualTime
+%              let vT'   = vT + t
+%              setVirtualTime vT'
+%              let diffT = diffTime nowT startT
+%              if (vT' < diffT) then return () 
+%              else kernelSleep (vT' - diffT)
+%              return NoValue))) (startT, startT) 0
+%\end{code}
 which desugars and simplifies to the following \emph{IO} computation:
 %
 \begin{code}
