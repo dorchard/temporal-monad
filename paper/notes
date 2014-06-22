@@ -1,3 +1,6 @@
+Added sentence in p.2 col.1 (search for %ADDED)
+Consistency "Sonic Pi 1.0" or "Sonic Pi v1.0" (or 2.0)
+
 Reduction for 3 computations
 
 |runTime $ (T f) >>= (\_ -> (T g) >>= (\_ -> (T h)))|

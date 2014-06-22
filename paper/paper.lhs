@@ -99,7 +99,7 @@
 
 \begin{abstract}
 Sonic Pi is a music live coding language that has been designed for
-educational use, as a first programming language. However, it is
+educational use as a first programming language. However, it is
 not straightforward to achieve the necessary simplicity of a first language
 in a music live coding setting, for reasons largely related to the
 manipulation of time. The original version of Sonic Pi used a `sleep'
@@ -129,7 +129,7 @@ timing contrasts with many notions in computing.  For example,
 ``real-time computing'' approaches often focus on computing within a
 certain time limit (a deadline), thus high-performance is important.
 But in music, being early is just as bad as being late. A similar
-situation arises in mechanical coordination tasks, such as coordinating
+situation arises in mechanical coordination tasks, such as programming 
 robotic limbs for walking. For these kinds of application, a robust
 programming model for timing is required.  We argue that our Sonic Pi
 language provides a suitable, robust temporal model for music in the
@@ -138,16 +138,14 @@ context of live programming and education.
 Sonic Pi is a domain specific language for manipulating synthesisers
 through time~\cite{Aaron2013}. It was designed for teaching core
 computing concepts to school students using creative programming,
-specifically live-coding music, as a means for engaging students.  The
-precise timing of effects, which do not occur too early or too late,
-is core to the programming approach of Sonic Pi. 
-
+specifically live-coding music, as a means for engaging students. 
 Sonic Pi is a mostly pure language, with first-class functions. Its
 impurity arises from timing and output effects (for producing sounds).
-Primarily, this paper introduces the temporal programming model of
-Sonic Pi. We give a monadic description of its effects, showing
-that the impure part of the language can be embedded in a pure
-language.
+The precise timing of effects, which do not occur too early or too
+late, is core to the programming approach of Sonic Pi.  Primarily,
+this paper introduces the temporal programming model of Sonic Pi. We
+give a monadic description of its effects, showing that the impure
+parts of the language can be embedded in a pure language.
 
 As well as the need for programming approaches to time, there is a
 well-recognised need for models of temporal behaviour coupled with
@@ -156,10 +154,10 @@ logic, with modal logics such as the Real-Time Computation Tree
 Logic~\cite{emerson1991quantitative}. In the literature, Lee makes a
 powerful argument for the development of a semantics of time in
 computation, or as he describes it, a properly formalised class of
-``time system'' that can be applied alongside the type systems (which
-is already understood to be an essential software engineering
-tool)~\cite{Lee2009}.  It is in this spirit that we develop two kinds
-of model for the temporal semantics of Sonic Pi: a time system
+``time system'' that can be applied alongside type systems (which
+are already understood to be essential software engineering
+tools)~\cite{Lee2009}.  It is in this spirit that we develop two kinds
+of model for the temporal semantics of Sonic Pi: a \emph{time system}
 and a denotational model. 
 %: an axiomatic specification 
 % that provides a ``time system'' (a system with which to statically
@@ -182,7 +180,7 @@ analysis of timing (Section~\ref{sec:axiomatic}).
 The style is axiomatic, and can be considered an abstract model of
 temporal behaviour. 
 
-\item We give a monadic denotational semantics to the core subset 
+\item We give a monadic denotational semantics to a core subset 
   language (Section~\ref{sec:time-monad}) and prove it
   sound with respect to the time system, \ie{}, the language is
   \emph{time safe}. We later extend this model to include temporal
@@ -233,8 +231,11 @@ production-quality sound (via the SuperCollider synthesis server) while
 allowing inexperienced programmers in an educational setting (typically
 11-12 year-old children) to express the temporal structure in terms that
 have an intuitive correspondence to the experience and production of
-musical sounds. The semantics of our formalism can be seen to be similar
-to the interaction of time and the massively overloaded \texttt{=>}
+musical sounds.
+% ADDED - in order to make sense of the above reference to Rorhruber
+% Our representation of time is explicit, in terms of intervals.
+The semantics of our formalism is similar 
+to the interaction of time and the overloaded \texttt{=>}
 operator in the live coding language ChucK~\cite{Wang2003}.
 
 In music, it is clear that we must be able to speak about the precise
@@ -296,7 +297,7 @@ play 59
 One of the core computing concepts that Sonic Pi has been used to teach is the
 sequential ordering of effects in imperative programs, such as playing
 successive notes see Figure~\ref{eminor-chord} (which is considered
-her to be a Sonic Pi version 1.0 program). 
+here to be a Sonic Pi version 1.0 program). 
 
 However, given the clockspeeds of modern processors, the instructions
 of Figure~\ref{eminor-chord} are likely to be executed so quickly in
@@ -304,7 +305,7 @@ succession that they will be perceived as a chord \ie{}, all the note
 being played simultaneously, rather than as successive notes in an
 \emph{arpeggio} form. It is therefore necessary to separate the
 triggering of these notes in time. This can be achieved by
-``sleeping'' the current thread, see Figure~\ref{eminor-chord-spaced}.
+``sleeping'' the current thread for a number of seconds, see Figure~\ref{eminor-chord-spaced}.
 This notion of sleep is similar to that of the standard POSIX sleep
 operation that suspends execution for the specified time~\cite{posix}. 
 
@@ -396,12 +397,12 @@ the external synth process. This then adds additional varying time
 
 The temporal issues described in this section are summarised in
 Figure~\ref{fig:sp-timing1.0}, which describes the timing behaviour of
-Sonic Pi v 1.0 code triggering three successive chords. Each of the $\Delta$
+Sonic Pi v1.0 code triggering three successive chords. Each of the $\Delta$
 times in the far left column represents the real computation time of
 each statement. Notice how they are all unique. The precise duration is
 related to aspects such as the amount of processing required for the
 computation, the current load of the system and the processor speed. The
-duration of deltas is therefore nondeterministic and will not be
+duration of $\Delta$s is therefore nondeterministic and will not be
 consistent across runs of the same program. As
 Figure~\ref{fig:sp-timing1.0} illustrates, the actual run time of the
 program is a summation of all these $\Delta$ times in addition to the
@@ -419,7 +420,7 @@ timing of the sounds produced by the program.
 
 When users create programs in Sonic Pi, the ease with which they can
 produce the musical effects they intend is dependent on their
-expectations of codes behaviour. As described by Honing~\cite{Honing1993} (see
+expectations of the code's behaviour. As described by Honing~\cite{Honing1993} (see
 Section~\ref{sec:related-work}), music systems may represent temporal
 structure either explicitly (describing time intervals and relations)
 or implicitly (in an ordered sequence of notes having different
@@ -457,7 +458,7 @@ expectations. %This is something that they expect to happen, but unless
 %want it to happen.
 %In this second case,
 Even if the user can perceive
-the timing mistakes, they language provides no means to fix them. One of
+the timing mistakes, the language provides no means to fix them. One of
 the goals of Sonic Pi is to to create a system that is useful to
 experienced musicians (with clear musical goals) and acceptable to
 inexperienced musicians that may not be able to clearly articulate what
@@ -475,7 +476,7 @@ also these implicit expectations.
 \section{Reinventing sleep}
 \label{sec:new-sleep}
 
-Sonic Pi 2.0 introduces a new implementation and semantics of the sleep command which
+Sonic Pi v2.0 introduces a new implementation and semantics of the sleep command which
 maintains syntactic and conceptual compatibility with the previous
 implementation yet modifies the temporal semantics to match the implicit
 rhythmical expectations previously described. The semantics is no longer
@@ -492,7 +493,7 @@ parallel.  A \sleepOp{} statement then provides a ``temporal barrier''
 which blocks the computation from continuing until 1 second has elapsed
 since the \emph{start} of the program (not since the end of playing the
 notes). Once one second has elapsed, the next three statements are
-executed which plays an F major chord. The next \sleepOp{} means that
+executed, which play an F major chord. The next \sleepOp{} means that
 the final chord is not played until 1.5 seconds has elapsed since the
 start of the program. Figure~\ref{fig:reich} illustrates the
 timing.
@@ -501,7 +502,7 @@ at least $t$ seconds has elapsed since the last \sleepOp{}. This
 provides a minimum time. In between calls to \sleepOp{}, any other
 statements can (with some limits) be considered task parallel. As
 mentioned earlier, ChucK has a similar mechanism as part of its
-(multiply) overloaded operator~\cite{Wang2003}.
+(multiply) overloaded \texttt{=>} operator~\cite{Wang2003}.
 
 \begin{SaveVerbatim}{example1}
 play :C ; play :E ; play :G
@@ -511,7 +512,7 @@ sleep 0.5
 play :G ; play :B ; play :D
 \end{SaveVerbatim}
 
-\begin{figure}[b]
+\begin{figure}[t]
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example1} 
 \caption{Playing three chords (C major, F major, G major)
 in \lang{} 2.0, with the second two played
@@ -537,13 +538,13 @@ contrasts with the timing diagram in Figure~\ref{fig:sp-timing1.0}.
 The overall elapsed time for the program is now:
 %%
 \begin{align*}
-\hspace{-5.8em} (\emph{v 2.0}) & \hspace{6em} 1.5 + \Delta_g + \Delta_h + \Delta_i
+\hspace{-5.8em} (\emph{v2.0}) & \hspace{6em} 1.5 + \Delta_g + \Delta_h + \Delta_i
 \end{align*}
 %%
 which contrasts with the Sonic Pi 1.0 timing for the same program:
 %%
 \begin{equation*}
-(\emph{v 1.0})\quad 1.5 + \Delta_a + \Delta_b + \Delta_c + \Delta_d + \Delta_e + \Delta_f +  
+(\emph{v1.0})\quad 1.5 + \Delta_a + \Delta_b + \Delta_c + \Delta_d + \Delta_e + \Delta_f +  
  \Delta_g + \Delta_h + \Delta_i
 \end{equation*}
 %%
@@ -1755,6 +1756,23 @@ and artificial intelligence.
 %component of system behaviour (as it is in music) then an event that
 %occurs too soon may be just as incorrect as one that occurs too late.
 
+
+\paragraph{Dataflow}
+
+Clocked dataflow languages (\eg{}, LUSTRE~\cite{pilaud1987lustre}) provide stream-based
+abstractions over time with a notion of discrete clock which may or may not 
+correspond to real times. 
+
+Related to the dataflow tradition, the \emph{functional reactive
+  programming} (FRP) paradigm abstracts over time-varying, reactive
+values or discretely-timed sequences of
+events~\cite{nilsson2002functional} in a declarative setting. FRP
+has been used both in the context of robotic control and music (\eg{},~\cite{}).
+
+ One
+semantics for continuous time in FRP programs takes a sampling
+approach ~\cite{wan2000functional}
+
 \paragraph{Logics}
 
 There has been various work on reasoning about time in logic. For
@@ -1840,8 +1858,12 @@ to the real-times logics discussed earlier).
 
 \paragraph{Acknowledgements}
 
-We thank Andrew Rice for helpful discussion about this work.
-This work was kindly supported by the Raspberry Pi foundation.
+Thanks are due to the anonymous reviewers for their extremely helpful
+comments which have improved (in particular) the semantic part of this
+paper. Further thanks to Henrik Nilsson for his assistance and
+comments, Andrew Rice for helpful discussion about the temporal
+analysis, and Andy Hopper for his support.  This work was kindly supported by the Raspberry Pi
+foundation.
 
 \bibliography{references}
 
