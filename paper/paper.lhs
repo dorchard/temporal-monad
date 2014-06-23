@@ -1480,7 +1480,7 @@ laws do not always hold.  For example, consider the law:
 %%
 \begin{equation}
 %|(return x) >>= (\y -> f y)| \equiv |f x|
-|m >>= return| \equiv |m|
+(|m >>= return|) \equiv |m|
 \label{law-example}
 \end{equation}
 %%
@@ -1519,7 +1519,7 @@ and |m| at different start times.
 
 In the above example, we have computed a time-dependent value (the duration). 
 Due to variations in timing (and in the $\epsilon$ overheads), this disrupts
-the monad laws as seen above with the monad law shown in equation~\ref{law-example}. 
+the monad laws as seen above with the monad law shown in equation~\eqref{law-example}. 
 However, in the programming model of Sonic Pi, there are no
 operations that expose the actual time (or current) time to the user-- that is,
 the above program is not the model of any Sonic Pi program. We can therefore
@@ -1556,9 +1556,9 @@ small variations (as seen above). These are then:
 which each provide the following standard equational theory on Sonic Pi programs respectively:
 %%
 \begin{align*}
-\texttt{$y$ = $x$; $P$} & \; \equiv \; P \{x \mapsto y\} \\
-\texttt{$x$ = $P$; $y$ = $x$} & \; \equiv \; \texttt{$y$ = $P$} \\
-\texttt{($x$ = $P$; $y$ = $Q$); $z$ = $R$} & \; \equiv \; \texttt{$x$ = $P$; ($y$ = $Q$; $z$ = $R$)}
+\texttt{$y$ = $x$;\! $P$} & \;\, \equiv \;\, P \{y \mapsto x\} \\
+\texttt{$x$ = $P$;\! $y$ = $x$} & \;\, \equiv \;\, \texttt{$y$ = $P$} \\
+\texttt{($x$ = $P$;\! $y$ = $Q$);\! $z$ = $R$} & \;\, \equiv \;\, \texttt{$x$ = $P$;\! ($y$ = $Q$;\! $z$ = $R$)}
 \end{align*}
 %%
 
@@ -1571,7 +1571,7 @@ We briefly discuss alternative structuring of the model here.
 %and an alternate model for \sleepOp{}.
 
 For most of our example Sonic Pi programs here, the full structure
-of monad is not needed to give their semantics as there is no use of
+of a monad is not needed to give their semantics as there is no use of
 binding between statements (and thus no dataflow). In these case just
 an \emph{applicative functor}~\cite{mcbride2008functional} or even a
 monoid would suffice. These can be derived from the monad structure
@@ -1594,7 +1594,8 @@ computations encoded as values of type $f\ a$ (the effectful
 computation of a pure value of type $a$). Thus, \emph{pure} constructs
 a trivially effectful computation from a pure value and |<*>| (akin to
 application) takes an effectful computation of a function and an
-effectful computation of an argument and evaluates the two effects.
+effectful computation of an argument and evaluates the two effects
+in order to apply the function to the argument. 
 
 Our \emph{Temporal} denotations have the applicative functor
 structure with the following derivation in terms of the monad:
