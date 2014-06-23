@@ -1,4 +1,4 @@
-default: main
+default: quick
 
 clean:
 	rm -f *._tex

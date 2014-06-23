@@ -7,12 +7,19 @@
 %format <*> = "<\!\!\!*\!\!\!>"
 %format newline = "\\[-1.5em]"
 %format interpP = "\interp{P}"
+%format interpPp = "\interpp"
 %format lamWild = "\lambda{\anonymous}"
 %format interpSleepT = "\interp{\texttt{sleep} \, t}"
 %format interppst = "\interp{P; \texttt{sleep} \, t}"
 %format simp = "\equiv"
 %format hsp = "\hspace{-2em}"
-
+%format env_1 = "\mathit{env}_1"
+%format env_2 = "\mathit{env}_2"
+%format env_n = "\mathit{env}_n"
+%format env_1 = "\mathit{env}_1"
+%format S_1 = "\mathit{S}_1"
+%format S_2 = "\mathit{S}_2"
+%format S_n = "\mathit{S}_n"
 
 \usepackage{enumerate}
 \usepackage{subfigure}
@@ -34,6 +41,8 @@
 
 \newcommand{\note}[1]{{\color{blue}{#1}}}
 
+\newcommand{\interpp}{\interp{P}'}
+
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
 
@@ -41,6 +50,7 @@
 \CustomVerbatimEnvironment{SVerbatim}{Verbatim}{fontsize=\footnotesize,xleftmargin=0.5cm,xrightmargin=0.5cm,framesep=3mm,commandchars=\\\{\}}
 
 \makeatletter
+\theoremstyle{definition}
 \newtheorem*{rep@@lemma}{\rep@@title}
 \newcommand{\newreplemma}[2]{%
 \newenvironment{rep#1}[1]{%
@@ -78,8 +88,8 @@
 
 \newcommand{\interp}[1]{\llbracket{#1}\rrbracket}
 
-\newcommand{\ie}{\emph{i.e.}}
-\newcommand{\eg}{\emph{e.g.}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\eg}{\textit{e.g.}}
 
 \authorinfo{Samuel Aaron}
            {Computer Laboratory, University of Cambridge, UK}
@@ -778,9 +788,9 @@ $\vtime{P}$. Both these abstract functions return time values,
 thus, $\vtime{-},\etime{-} \in \mathbb{R}_{\geq 0}$, \ie{}, both
 return positive, real-number values.
 
-In this section we give specifications on the functions
-$[-]_v$ and $[-]_t$ providing an axiomatic model of the temporal behaviour
-of Sonic Pi programs. % We'll treat these operations as overloaded for
+In this section, we give specifications to 
+$[-]_v$ and $[-]_t$ providing an axiomatic model of Sonic Pi's temporal behaviour. 
+%of Sonic Pi programs. % We'll treat these operations as overloaded for
 %programs $P$, statements $S$ and expressions $E$.
 
 Virtual time $\vtime{-}$ can be easily defined over all programs,
@@ -793,7 +803,7 @@ by the following cases:
 %
 \begin{align*}
 \begin{array}{crll}
-\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t & \; \vtime{v} = 0 \\
+\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \,\qquad \vtime{\sleep t} & \hspace{-0.8em} = t & \; \vtime{v} = 0 \\
 \vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
 \end{array}
 \end{align*}
@@ -863,14 +873,14 @@ on the context, it may wait for anywhere between $0$ and $t$ seconds.
 %soundness result: that these lemmas are true for our model.
 
 \begin{definition}
-The actual elapsed time $\etime{-}$ can be specified at the level of programs
+The actual elapsed time $\etime{-}$ can be (partially) specified at the level of programs
 by the following equations:
 %%
 \begin{align*}
 \etime{\emptyset} & \, \approx \, 0 \\
 \etime{P; \sleep{} t} & \,\approx\,
  (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} \\
-\etime{P; A^i} & \,\approx\,
+\etime{P; v = A^i} & \,\approx\,
  \etime{P} + \etime{A^i}
 \end{align*}
 %
@@ -889,10 +899,11 @@ In the case of $A^i = \ksleepOp{}$, then $\etime{\ksleep t} = t$.
 
 \begin{example}
 The following two small example programs illustrate this definition, both
-of which have actual time 2 but arising from different calls to \sleepOp{}.
+of which have actual time 2 but arising from different calls to \sleepOp{} 
+and \texttt{kernelSleep}.
 %%
 \begin{itemize}
-\item[--] $\etime{\texttt{kernelSleep 2; sleep 1}} \approx 2$
+\item[--] $\etime{\texttt{kernelSleep 2}; \texttt{sleep 1}} \approx 2$
 
 \begin{itemize}
 \item[]
@@ -902,7 +913,7 @@ $\etime{P} = 2$, thus $(\vtime{P} + t) < \etime{P}$
 \end{itemize}
 \vspace{0.5em}
 
-\item[--] $\etime{\texttt{kernelSleep 1; sleep 2}} \approx 2$
+\item[--] $\etime{\texttt{kernelSleep 1}; \texttt{sleep 2}} \approx 2$
 
 \begin{itemize}
 \item[]
@@ -912,7 +923,7 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 \end{itemize}
 \end{itemize}
 \end{example}
-
+%
 %%
 %\begin{lemma}
 %For some program $P$ and time $t$:
@@ -924,12 +935,12 @@ $\etime{P} = 1$, thus $(\vtime{P} + t) > \etime{P}$
 %\end{lemma}
 %
 %The implication of this lemma is that a preceding sleep does not affect
-
+%
+\noindent
 Definition~\ref{def:etime} illuminates the semantics of \sleepOp,
-showing the interaction between actual time $\etime{-}$
+showing the interaction between actual $\etime{-}$
 and virtual time $\vtime{-}$ in the case for \sleepOp{}.
-
-The definition of $\etime{-}$ (in the \sleepOp{} case)
+In this case, the definition of $\etime{-}$ 
 is not a straightforward recursive decomposition on
 programs, statements, and expressions as in the
 definition of $\vtime{-}$. Instead,
@@ -966,22 +977,22 @@ By induction on the structure of programs.
 
       (b) by Definition~\ref{def:etime}, $\etime{P'; \sleep t} = (\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}$.
 
-      (c) by (b) $(\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'} \geq \vtime{P'} + t$
+      (c) by (b) $((\vtime{P'} + t) \;\, \textit{max} \;\, \etime{P'}) \geq \vtime{P'} + t$
 
       $\therefore$ by (a) and (c) then $\etime{P'; \sleep t} \geq \vtime{P' \sleep t}$
 
      \item otherwise $E = A^i$
 
-     (a) by Definition~\ref{def:vtime}), $\vtime{P'; \synVar = A^i} = \vtime{P'}$
+     (a) by Definition~\ref{def:vtime}, $\vtime{P'; \synVar = A^i} = \vtime{P'}$
 
-     (b) by Definition~\ref{def:etime}), $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$
+     (b) by Definition~\ref{def:etime}, $\etime{P'; \synVar = A^i} = \etime{P'} + \etime{A^i}$
 
      (c) by inductive hypothesis $\etime{P'} \geq \vtime{P'}$.
 
      (d) since $\etime{-} \in \mathbb{R}_{\geq 0}$, by monotonicity and (c)
       $\etime{P'} + \etime{A^1} \geq \vtime{P'}$.
 
-      $\therefore$ (a), (b) and (d) then $\etime{P'; \synVar = A^i} \geq \vtime{P'; \synVar = A^i}$.
+      $\therefore$ by (a), (b), (d) then $\etime{P'; \synVar = A^i} \geq \vtime{P'; \synVar = A^i}$.
 \vspace{-2em}
   \end{itemize}
 \end{itemize}
@@ -1036,7 +1047,7 @@ the two levels of model.
 %for ease of understanding. 
 
 In the following, we use Haskell as a meta language for a denotational
-model (semantics) since it provides a convenient syntax for working
+model since it provides a convenient syntax for working
 with monads. This approach also provides an executable semantics that
 is useful for experimentation and integrating into other approaches.
 The source code is available at
@@ -1052,12 +1063,10 @@ can occur at runtime.
 
 \subsection{The \emph{Temporal} monad}
 
-We define an interpretation $\interp{-}$ that maps programs and
-statements to a parametric data structure, named \emph{Temporal},
-which encapsulates the effects of the Sonic Pi programs.  For closed
-programs (those without free variables) the type of this
-interpretation is $\interp{\emph{P}} : \emph{Temporal} \,
-()$. Temporal computations, encapsulated by |Temporal| are functions
+We define an interpretation $\interp{-}$ for programs, 
+statements, and expressions into values of a parametric data structure, named \emph{Temporal},
+which encapsulates the effects of the Sonic Pi programs.  
+Computations encapsulated by |Temporal| are functions
 of the form:
 %%
 \begin{align*}
@@ -1096,15 +1105,15 @@ instance Monad Temporal where
 \end{code}
 %
 To ease understanding, we recall the types of \emph{return}
-and |(>>=)| and give some intuition for their behaviour for
+and |(>>=)| and give some intuition of their behaviour for
 \emph{Temporal}:
 %
 \begin{itemize}
 \item |return :: a -> Temporal a| lifts a pure value into a trivially
 effectful computation by ignoring the time parameters and
 providing the usual pure state behaviour of returning the parameter state |vT| unchanged
-along with the result. The nested use of |return|, on the right, comes from the |IO| monad,
-thus |return :: a -> IO a|.
+along with the result. The nested use of |return|, on the right, comes from the |IO| monad
+ (\ie{}, |return :: a -> IO a|). 
 
 \item |(>>=) :: Temporal a -> (a -> Temporal b) -> Temporal b|
   composes two computations together.  The result of composing two
@@ -1117,6 +1126,11 @@ thus |return :: a -> IO a|.
 \end{itemize}
 
 \noindent
+Thus, the current time is retrieved with each use of |>>=|, 
+rather than using |getCurrentTime| directly in any operation that requires  
+the time. This choice was made in order to collect the temporal 
+features of the model together in the monad. 
+
 To model program evaluation, the |runTime| operation executes
 a temporal computation inside of the \emph{IO} monad, providing the
 start time from the operating system and virtual time $0$:
@@ -1188,11 +1202,12 @@ kernelSleep t =  T (\(_, _) -> \vT ->
 
 \newcommand{\envE}{\mathit{env}}
 
-We define an interpretation $\interp{-}$ overloaded on programs,
-statements, and expressions where the type of the interpretation
+The interpretation $\interp{-}$ is overloaded on programs,
+statements, and expressions, thus the type of the interpretation
 depends on the syntactic category. Each interpretation produces a
-computation in the |Temporal| monad, where a closed
-program is interpreted as a value of type |Temporal ()|. For open syntax (\ie{}, 
+computation in the |Temporal| monad. %, where a closed
+%program is interpreted as a value of type |Temporal ()|. 
+For open syntax (\ie{}, 
 with free variables), we
 model a variable environment mapping variables to values by
 the |Env| type, which is threaded through the interpretation. 
@@ -1201,13 +1216,13 @@ for which we elide the details here.
 
 The interpretation reassociates the left-associated program syntax (where the last
 statement is at the head of the snoc-list representation) to a right-associated
-semantics using a continuation-passing approach, \eg{}, for a three statement program
+semantics using a continuation-passing approach, \eg{}, for a three statement program: 
 %
 \newcommand{\fcomp}{\,\hat{\circ}\,}
 %
 \[\interp{((\emptyset;S_1);S_2);S_3} = \interp{S_1} \fcomp (\interp{S_2} \fcomp (\interp{S_3} \fcomp \interp{\emptyset}))\]
 %
-where $\fcomp$ represents the (forwards, left-to-right) sequential, monadic composition of denotations
+where $\fcomp$ represents (forwards, left-to-right) sequential, monadic composition of denotations
 in the |Temporal| monad. 
 
 The interpretation of statement sequences is defined:
@@ -1219,42 +1234,46 @@ The interpretation of statement sequences is defined:
 \end{align*}
 %
 The parameter $k$ is a continuation (taking an environment |Env|) 
-for the tail of the right-associated semantics.
-At the top-level, we therefore interpret a closed program to a value
-of type |Temoral ()| by passing 
+for the tail of the right-associated semantics. In the inductive case,
+ the continuation passed to $\interp{P}$ is the pre-composition of the interpretation of
+the statement $S$ to the parameter continuation $k$. 
+
+At the top-level, we interpret a closed program to a value
+of type |Temporal ()| by passing 
 in the trivial continuation that ignores the environment:
 %%
 \begin{align*}
 \interp{P}_{\mathsf{top}} = |runTime| \; (\interp{P} \; |(lamWild -> return ())|)
 \end{align*}
 %%
-The interpretation of statements transforms an environment, inside of a |Temporal| computation, defined:
+The interpretation of statements maps an environment to a possibly updated environment, 
+inside of a |Temporal| computation, defined:
 %%
 \begin{align*}
-& \interp{S} :: |Env -> Temporal Env| \\
-& \interp{\anonymous = E} \, \envE{} = (\interp{E} \envE{}) |>>= (lamWild -> return env)| \\
-& \interp{v = E} \, \envE{} = (\interp{E} \envE{}) |>>= (\x -> return env|[v \mapsto x])
+\interp{S} & :: |Env -> Temporal Env| \\
+\interp{\anonymous = E} & \, \envE{} = (\interp{E} \envE{}) |>>= (lamWild -> return env)| \\
+\interp{v = E} & \, \envE{} = (\interp{E} \envE{}) |>>= (\x -> return env|[v \mapsto x])
 \end{align*}
 %%
 For both kinds of statement, with and without variable binding, the expression $E$
 is evaluated where $\interp{E} |:: Env -> Temporal Value|$. The result
-of evaluting $E$ is then monadically composed (via |>>=| of the |Temporal| monad)
+of evaluating $E$ is then monadically composed (via |>>=| of the |Temporal| monad)
 with a computation returning an environment. 
 For statements without a binding, the environment |env| is returned unmodified; 
 for statements with a binding, the environment |env| is extended with a mapping from $v$ to
 the value $x$ of the evaluated expression, written here as $|env|[v \mapsto x]$. 
 
 For expressions, we show just the interpretation of \texttt{sleep} 
-and variable expressions:
+and variables expressions:
 \begin{align*}
-& \interp{E} |:: Env -> Temporal Value| \\
-& \interp{\texttt{sleep} \, t} \, \envE{} = |sleep t| \\
-& \hspace{2.7em} \interp{v} \, \envE{} = |return (env v)|
+\interp{E} & |:: Env -> Temporal Value| \\
+\interp{\texttt{sleep} \, t} & \, \envE{} = |sleep t| \\
+\interp{v} & \, \envE{} = |return (env v)|
 \end{align*}
 Thus, \texttt{sleep} is interpreted in terms of the \emph{sleep} 
 function (see below), where $t$ is a constant, 
 and variable expressions are interpreted as a projection from the environment. 
-The concrete interpretation of other expressions in the language, such as \texttt{play}, is
+The concrete interpretation of other actions in the language, such as \texttt{play}, is
 ignored here since they does not relate directly to the temporal semantics.
 
 \paragraph{Interpretation of \emph{sleep}}
@@ -1286,7 +1305,7 @@ elapsed time equals the virtual time.
 
 Note that in this definition we have introduced an overhead, an
 $\epsilon$ time, arising from the time elapsed between the first
-statment |nowT <- time| and the final |kernelSleep| operation.  The
+statement |nowT <- time| and the |kernelSleep| operation.  The
 initial |time| operation retrieves the current time and is used to
 calculate the duration of the preceding program. Any sleeping that
 happens however occurs after we have calculated the amount of time to
@@ -1312,8 +1331,8 @@ Virtual time is specified for statements of \lang{} programs
 by the following cases:
 %
 \begin{align*}
-\begin{array}{crl}
-\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
+\begin{array}{crll}
+\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \,\qquad \vtime{\sleep t} & \hspace{-0.8em} = t & \; \vtime{v} = 0 \\
 \vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
 \end{array}
 \end{align*}
@@ -1332,15 +1351,15 @@ time is only ever increasing, and is only ever incremented by \emph{sleep}.
 \end{proof}
 
 \begin{repdefinition}{def:etime}
-The actual elapsed time $\etime{-}$ can be specified at the level of programs
+The actual elapsed time $\etime{-}$ can be (partially) specified at the level of programs
 by the following equations:
 %%
 \begin{align*}
 \etime{\emptyset} & \, \approx \, 0 \\
 \etime{P; \sleep{} t} & \,\approx\,
  (\vtime{P} + t) \;\, \textit{max} \;\, \etime{P} \\
-\etime{P; A^i} & \,\approx\,
- \etime{P} + \etime{A^i}
+\etime{P; v = A^i} & \,\approx\,
+ \etime{P} + \etime{A^i} \\
 \end{align*}
 \end{repdefinition}
 
@@ -1360,37 +1379,43 @@ Our model interprets the evaluation of $(P; \sleep t)$ as:
 \begin{code}
          runTime (interppst (lamWild -> return ()))
 \end{code}
-which desugars and simplifies simply as follows
+which desugars and simplifies as follows:
 \begin{code}
-hsp       runTime (interpP (\env -> interpSleepT env) >>= (lamWild -> return ()))
+hsp       runTime (interpP (\e -> (interpSleepT e) >>= lamWild -> return ()))
 hsp simp  runTime (interpP interpSleepT)
 \end{code}
 %%
-Since $P$ is a snoc-list of statements, \ie{} $P = ((\ldots);S_{n-1});S_n$, we can unroll and simplify the semantics
-further to get:
+The semantics reassociates statements, thus the 
+interpretation for $P = ((\emptyset; S_1); ...);S_n$ is of the 
+ form $(\interp{S_1} \fcomp ... (\interp{S_n} \fcomp \interp{\texttt{sleep} \, t}))$
+(where $f \fcomp g$ is monadic forwards composition, \ie{}, $f \fcomp g$ = |\x -> (f x) >>= g|).
+Therefore, we can unroll and simplify the semantics
+further to get the following \emph{IO} computation (where $\interpp$ denotes
+the unrolled interpretation of $P$):
 %%
 % Include this intermediate step?
 %
 %\begin{code}
-%do startT <- getCurrentTime
-%   (runT (do  env_1 <- interpStmt s1 env_1
-%              env_2 <- interpStmt s2 env_2
+%do  startT <- getCurrentTime
+%    runT (do  env_1     <- interpStmt S_1 env_1
+%              env_2     <- interpStmt S_2 env_2
 %              ...
-%              env_n <- interpStmt sn env_n
+%              env_n     <- interpStmt S_n env_n
 %              nowT      <- time
 %              vT        <- getVirtualTime
 %              let vT'   = vT + t
 %              setVirtualTime vT'
 %              let diffT = diffTime nowT startT
-%              if (vT' < diffT) then return () 
-%              else kernelSleep (vT' - diffT)
-%              return NoValue))) (startT, startT) 0
+%              if (vT' < diffT) 
+%                  then return () 
+%                  else kernelSleep (vT' - diffT)) 
+%               (startT, startT) 0
 %\end{code}
-which desugars and simplifies to the following \emph{IO} computation:
+%which desugars and simplifies to the following \emph{IO} computation:
 %
 \begin{code}
 do  startT     <- getCurrentTime
-    (x, vT')   <- interpP (startT, startT) 0
+    (x, vT')   <- interpPp (startT, startT) 0
     nowT       <- getCurrentTime
     let vT''   = vT' + t
     setVirtualTime vT''
@@ -1421,11 +1446,13 @@ the guard takes $e$ then the overall time taken is:
    \etime{P} + e & (\vtime{P} + t) < \etime{P}  \\
    \vtime{P} + t + e & \textit{otherwise}
  \end{cases} \\
-& = (\etime{P} + e)  \, \mathit{max} \, (\vtime{P} + t + e) \\
+& = (\etime{P} + e)  \, \mathit{max} \, (\vtime{P} + t + e) 
+ \\
 & \approx \etime{P} \, \mathit{max} \, (\vtime{P} + t)
 \end{align*}
 %%
-where the final stage in this simplification holds if $e
+where the third step follows by montonicity of $+ e$ on each side of the guard,
+The final stage in this simplification holds if $e
 \leq \epsilon$ and if the reduction to the interpretation to get to
 the above code takes less than $\epsilon$. This
 $\epsilon$ is not however a drift, but a single overhead that can be
@@ -1444,7 +1471,7 @@ definitions we then get Lemma~\ref{lemma-rel-etime-vtime} ``for free'',
 that for all $P$, $\etime{P} \geq \vtime{P}$, \ie{}, a program never ``under-runs''
 its virtual time specification. The lemma holds for free, since its proof relies
 only on the satisfaction of the specifications on $\etime{-}$ and $\vtime{-}$,
-which we have shown for our model above.  
+which we have shown above for our model.
 
 \subsection{Monad laws and equational theory for Sonic Pi programs}
 
