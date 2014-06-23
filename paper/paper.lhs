@@ -605,7 +605,7 @@ the first \sleepOp{} is ignored, then performs a computation lasting
 
 
 
-\section{A ``time system'' for Sonic Pi}
+\section{A \emph{time system} for Sonic Pi}
 \label{sec:axiomatic}
 
 From our experiences, we've found that the programming model of Sonic
@@ -632,7 +632,7 @@ This model is made more concrete by providing a denotational-style, monadic sema
 in the next section 
 (Section~\ref{sec:time-monad}), introducing the \emph{temporal
   monad}. We prove the monadic model sound with
-respect to the initial axiomatic specification, up to ``small'' permutations
+respect to the initial axiomatic specification, up to small permutations
 in time delay (Section~\ref{sec:soundness}).
 
 \begin{figure}[t]
@@ -742,7 +742,7 @@ time.
 By the above definition, programs $P$ are a ``snoc''-list (\ie{},
 elements are ``consed'' onto the end, not front as is standard for
 inductively-defined lists) where $\emptyset$ is the empty list. 
-Equivalently, sequential composition of statements is syntactically left associated. 
+Equivalently, sequential composition of statements is syntactically left-associated. 
 This structure aids later proofs since it allows inductive reasoning on
 a statement of a program and its preceding program, which is key to
 accurately modelling \texttt{sleep}. 
@@ -792,8 +792,8 @@ Virtual time is specified for statements of \lang{} programs
 by the following cases:
 %
 \begin{align*}
-\begin{array}{crl}
-\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t \\
+\begin{array}{crll}
+\vtime{P; \synVar = E} = \vtime{P} + \vtime{E} & \qquad \vtime{\sleep t} & \hspace{-0.8em} = t & \; \vtime{v} = 0 \\
 \vtime{\emptyset } = 0 &  \qquad \vtime{A^i} & \hspace{-0.8em}  = 0
 \end{array}
 \end{align*}
@@ -1757,21 +1757,6 @@ and artificial intelligence.
 %occurs too soon may be just as incorrect as one that occurs too late.
 
 
-\paragraph{Dataflow}
-
-Clocked dataflow languages (\eg{}, LUSTRE~\cite{pilaud1987lustre}) provide stream-based
-abstractions over time with a notion of discrete clock which may or may not 
-correspond to real times. 
-
-Related to the dataflow tradition, the \emph{functional reactive
-  programming} (FRP) paradigm abstracts over time-varying, reactive
-values or discretely-timed sequences of
-events~\cite{nilsson2002functional} in a declarative setting. FRP
-has been used both in the context of robotic control and music (\eg{},~\cite{}).
-
- One
-semantics for continuous time in FRP programs takes a sampling
-approach ~\cite{wan2000functional}
 
 \paragraph{Logics}
 
@@ -1825,9 +1810,39 @@ framework to discuss the problem of notating the hierarchical
 combinations of cyclical and linear time that result in musical
 perception of pattern and tempo. 
 
+\paragraph{Dataflow}
+
+Various dataflow languages incorporate real or virtual times into their
+semantics and core language constructs. For example, clocked dataflow
+languages (\eg{}, LUSTRE~\cite{pilaud1987lustre}) provide stream-based
+abstractions over time with a notion of discrete clock which may or
+may not correspond to real time. 
+
+Related to the dataflow tradition, the \emph{functional reactive
+  programming} (FRP) paradigm abstracts over time-varying, reactive
+values and discretely-timed sequences of
+events in a declarative language~\cite{nilsson2002functional}.  
+Related to our work, FRP has been used for designing modular
+synthesisers~\cite{giorgidze2008switched}, for which Sonic Pi 2.0 has related
+functionality.  The FRP notion of \emph{events} (a discrete stream) is
+used to encode sequences of notes. Our approach is less
+declarative, but requires a smaller set of constructions in order
+to support our first-language and educational goals.
+
+Whilst the general approach is very different, the overarching 
+theme of a semantics for time is common to both this work and FRP. There are
+related notions to \emph{time safety} in the semantics of Wan and Hudak,
+where an idealised denotational semantics for FRP is compared to operational
+(implementation-oriented) semantics~\cite{wan2000functional}. In their work, 
+an implementation is said to be ``faithful'' when its actual implementation
+differs only by an $\epsilon$-time to the denotational model. This is similar to
+the conditions of our time safety property between 
+our axiomatic time system (Section~\ref{sec:axiomatic}) and the monadic
+ model (Section~\ref{sec:time-monad}).
+
 \section{Conclusion}
 
-In this paper we have described an enhancement to the Sonic Pi language
+This paper described an enhancement to the Sonic Pi language
 that improves the quality of musical experience for novice programmers
 in a live coding context. This is achieved by modifying the semantics
 of the familiar ``sleep'' operator in a manner that is consistent with
@@ -1859,7 +1874,7 @@ to the real-times logics discussed earlier).
 \paragraph{Acknowledgements}
 
 Thanks are due to the anonymous reviewers for their extremely helpful
-comments which have improved (in particular) the semantic part of this
+comments which in particular have improved the semantic part of this 
 paper. Further thanks to Henrik Nilsson for his assistance and
 comments, Andrew Rice for helpful discussion about the temporal
 analysis, and Andy Hopper for his support.  This work was kindly supported by the Raspberry Pi
