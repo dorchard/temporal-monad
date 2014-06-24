@@ -1451,7 +1451,7 @@ the guard takes $e$ then the overall time taken is:
 & \approx \etime{P} \, \mathit{max} \, (\vtime{P} + t)
 \end{align*}
 %%
-where the third step follows by montonicity of $+ e$ on each side of the guard,
+where the third step follows by monotonicity of $+ e$ on each side of the guard,
 The final stage in this simplification holds if $e
 \leq \epsilon$ and if the reduction to the interpretation to get to
 the above code takes less than $\epsilon$. This
