@@ -1681,15 +1681,15 @@ strongWarn :: VTime -> TemporalE ()
 strongWarn t = TE (lamWild -> return ((), [Strong t])) >>
         (warn $ "WARNING: overran by " ++ (show t))
 newline
+warn :: String -> TemporalE ()
+warn s = lift (T (lamWild -> \vt -> do  putStrLn s
+                                        return ((), vt)))
+newline
 epsilonTime :: TemporalE VTime
 epsilonTime = TE (\eps -> return (eps, []))
 newline
 lift :: Temporal a -> TemporalE a
 lift t = TE (lamWild -> fmap (\a -> (a, [])) t)
-newline
-warn :: String -> TemporalE ()
-warn s = lift (T (lamWild -> \vt -> do  putStrLn s
-                                        return ((), vt)))
 \end{code}
 \caption{Simple \emph{TemporalE} computations}
 \label{core-functionsE}
@@ -1746,7 +1746,7 @@ sleep delayT =
 %
 The definition is similar to \emph{sleep} for |Temporal|, except
 that in the true-branch of the conditional there is additional testing to see if
-|diffT| is greater than the new virtual time $+ \epsilon$ (in which case
+|diffT| is greater than the new virtual time $+ \, \epsilon$ (in which case
 a strong exception is raised), or if |diffT| is between $vT'$ and $vT' + \epsilon$
 (in which case a weak exception is raised).
 
@@ -1757,8 +1757,8 @@ which this provides a general description.
 \label{sec:related-work}
 
 Section~\ref{sec:context} considered some related live coding languages
-and approaches. We highlight a few others here that arise in logic
-and artificial intelligence. 
+and approaches. Here we highlight related approaches to temporal programming and reasoning
+ in logic, artificial intelligence, and dataflow programming.
 
 
 %Lee~\cite{Lee2009} makes a powerful argument for the development of a
@@ -1795,8 +1795,8 @@ Real-Time Computational Tree Logic) and for soft deadlines with
 probabilities on time bounds~\cite{hansson1994logic}. In these logics,
 temporal modalities are indexed with time bounds, \eg{}, $AF^{\leq 50}
 p$ means $p$ is true after at least $50$ ``time units'' (where $A$ is
-the CTL connective for \emph{along all paths} and $F$ for
-\emph{finally} (or \emph{eventually})). Our approach is less
+the operator for \emph{along all paths} and $F$ for
+\emph{finally}/\emph{eventually}). Our approach is less
 prescriptive and explicit, but has some resemblance in the use of
 \sleepOp{}. For example, the program $\sleep t ; P$ roughly
 corresponds to $AF^{\leq t} \interp{P}$, \ie{}, after at least $t$
@@ -1807,7 +1807,7 @@ statements have been evaluated).  The time system approach of
 Section~\ref{sec:axiomatic} does however provide a basis for
 programmers to reason about time in their programs. In practice, we
 find that such reasoning can be done by children in a completely
-informal but highly useful way; that language has reached a sweet-spot
+informal but highly useful way; the language has reached a sweet-spot
 between expressivity and ease of understanding. 
 
 \paragraph{Artificial intelligence}
@@ -1890,7 +1890,7 @@ physical world interface.
 
 We used the phrases \emph{time system}
 and \emph{time safety} to draw analogy with traditional notions of
-\emph{type system} and \emph{type safety}. 
+\emph{type} system and \emph{type} safety. 
 Further work is to expand the power of time systems and the
 notion of time safety, beyond what we have introduced here, exploring
 their use in live coding languages and languages for temporal coordination
