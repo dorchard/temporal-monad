@@ -317,15 +317,18 @@ imperative programs, such as playing successive notes see
 Figure~\ref{eminor-chord} (which is considered here to be a Sonic Pi
 v1.0 program).
 
-However, given the clockspeeds of modern processors, the instructions
-of Figure~\ref{eminor-chord} are likely to be executed so quickly in
+Sonic Pi v1.0 takes advantage of the fast clockspeeds of modern
+processors in assuming that the sequence of instructions of
+Figure~\ref{eminor-chord} are likely to be executed so quickly in
 succession that they will be perceived as a chord \ie{}, all the note
 being played simultaneously, rather than as successive notes in an
-\emph{arpeggio} form. It is therefore necessary to separate the
-triggering of these notes in time. This can be achieved by
-``sleeping'' the current thread for a number of seconds, see Figure~\ref{eminor-chord-spaced}.
-This notion of sleep is similar to that of the standard POSIX sleep
-operation that suspends execution for the specified time~\cite{posix}.
+\emph{arpeggio} form. In order to further separate the instructions in
+time such that their separation may be perceived it is necessary to
+insert explicit timed delays.  This can be achieved by ``sleeping'' the
+current thread for a number of seconds, see
+Figure~\ref{eminor-chord-spaced}.  This notion of sleep is similar to
+that of the standard POSIX sleep operation that suspends execution for
+the specified time~\cite{posix}.
 
 \begin{SaveVerbatim}{example-drums}
 loop do
@@ -589,12 +592,23 @@ exceeds this value, the temporal expectations of the system are met.
 \end{figure}
 
 
-It is possible that a computation preceding a \sleepOp{} can overrun; that is, run longer
-than the sleep time.  Thus, the programming model is not suitable for
-realtime systems requiring hard deadlines but \sleepOp{} instead
-provides a \emph{soft deadline} (in the terminology of Hansson and
-Jonsson~\cite{hansson1994logic}).
-
+It is possible that a computation preceding a \sleepOp{} can overrun;
+that is, run longer than the sleep time.  Thus, the programming model is
+not suitable for realtime systems requiring hard deadlines but
+\sleepOp{} instead provides a \emph{soft deadline} (in the terminology
+of Hansson and Jonsson~\cite{hansson1994logic}). However, if a given
+thread falls behind, the user receives explicit timing warnings
+(described in further detail in
+Section~\ref{sec:temporal-warnings}). Finally if the thread falls
+further behind by a user-specifiable amount of time then Sonic Pi will
+stop that specific thread by throwing a time exception. This therefore
+not only provides essential information to users about the temporal
+behaviour of the program but also serves as a safety mechanism against a
+common class of errors such as placing an isolated call to \texttt{play}
+within a loop with no calls \texttt{sleep}. In such cases, the thread
+will no longer perminantly sit in a tight loop consuming all resources,
+but will self-terminate allowing any other threads to continue executing
+normally.
 
 
 \subsection{Examples}
