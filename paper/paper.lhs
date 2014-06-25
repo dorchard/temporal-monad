@@ -306,7 +306,7 @@ play 59
 Sonic Pi was designed to teach a large number of computing concepts
 covered in the new UK computing curriculum introduced in September,
 2014. Examples of these concepts are conditionals, iteration, variables,
-functions, algorithms and datastructures. We also extend beyond these to
+functions, algorithms and data structures. We also extend beyond these to
 provide educators with an opportunity to introduce concepts which we
 believe will play an increasingly important role in future programming
 contexts such as multi-threading and hot-swapping of code.
@@ -606,7 +606,7 @@ not only provides essential information to users about the temporal
 behaviour of the program but also serves as a safety mechanism against a
 common class of errors such as placing an isolated call to \texttt{play}
 within a loop with no calls \texttt{sleep}. In such cases, the thread
-will no longer perminantly sit in a tight loop consuming all resources,
+will no longer permanently sit in a tight loop consuming all resources,
 but will self-terminate allowing any other threads to continue executing
 normally.
 
