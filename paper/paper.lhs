@@ -118,7 +118,7 @@ for a specified time period. However, whilst this approach was conceptually
 simple, it resulted in badly timed music, especially when multiple musical
 threads were executing concurrently. This paper describes an alternative
 programming approach for timing (implemented in Sonic Pi v2.0) which
-maintains syntactic compatibility with version 1.0, yet provides accurate
+maintains syntactic compatibility with v1.0, yet provides accurate
 timing via interaction between real time and a ``virtual time''.
 We provide a formal specification of the temporal behaviour of Sonic Pi,
 motivated in relation to other recent approaches to the semantics of time in
@@ -263,7 +263,7 @@ formal semantics in which to define the relationship between changes or
 navigation within the code, and changes or navigation within the
 cause-effect sequence of execution time.
 
-\section{Problems with timing in Sonic Pi 1.0}
+\section{Problems with timing in Sonic Pi v1.0}
 \label{sec:sp-1}
 
 \begin{SaveVerbatim}{example0}
@@ -300,7 +300,7 @@ play 59
 \end{minipage}
 \label{eminor-chord-spaced}
 }
-\caption{Playing MIDI notes of the E minor chord in Sonic Pi 1.0}
+\caption{Playing MIDI notes of an E minor chord in Sonic Pi v1.0}
 \end{figure}
 
 
@@ -401,7 +401,7 @@ the external synth process. This then adds additional varying time
 \begin{figure}[htbp!]
         \centering
                 \includegraphics[width=1\columnwidth]{assets/timing-version1-diagram.pdf}
-        \caption{The timing behaviour in Sonic Pi 1.0}
+        \caption{The timing behaviour in Sonic Pi v1.0}
         \label{fig:sp-timing1.0}
 \end{figure}
 
@@ -492,10 +492,10 @@ implementation yet modifies the temporal semantics to match the implicit
 rhythmical expectations previously described. The semantics is no longer
 similar to that of the POSIX sleep command.
 The underlying programming
-model of Sonic Pi 2.0 provides a way to separate the ordering of effects
+model of Sonic Pi v2.0 provides a way to separate the ordering of effects
 from the timing of effects. Figure~\ref{three-chord-example} shows the
 program that was used in Figure~\ref{fig:sp-timing1.0}, but we now treat
-it as Sonic Pi 2.0 program. This example program (playing three chords in sequence)
+it as Sonic Pi v2.0 program. This example program (playing three chords in sequence)
  combines simple notions of parallel, timed, and ordered effects.
 
 The first three statements play the notes of a C major chord in
@@ -525,7 +525,7 @@ play :G ; play :B ; play :D
 \begin{figure}[t]
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example1} 
 \caption{Playing three chords (C major, F major, G major)
-in \lang{} 2.0, with the second two played
+in \lang{} v2.0, with the second two played
 closer together by $0.5s$.}
 \label{three-chord-example}
 \end{figure}
@@ -543,7 +543,7 @@ statement is 0.1 seconds, the implementation only sleeps the current
 thread for 0.9s. This ensures that no drifting occurs. 
 
 Figure~\ref{fig:reich} demonstrates the timing of the
-Figure~\ref{three-chord-example} program in Sonic Pi 2.0, which
+Figure~\ref{three-chord-example} program in Sonic Pi v2.0, which
 contrasts with the timing diagram in Figure~\ref{fig:sp-timing1.0}. 
 The overall elapsed time for the program is now:
 %%
@@ -551,16 +551,16 @@ The overall elapsed time for the program is now:
 \hspace{-5.8em} (\emph{v2.0}) & \hspace{6em} 1.5 + \Delta_g + \Delta_h + \Delta_i
 \end{align*}
 %%
-which contrasts with the Sonic Pi 1.0 timing for the same program:
+which contrasts with the Sonic Pi v1.0 timing for the same program:
 %%
 \begin{equation*}
 (\emph{v1.0})\quad 1.5 + \Delta_a + \Delta_b + \Delta_c + \Delta_d + \Delta_e + \Delta_f +  
  \Delta_g + \Delta_h + \Delta_i
 \end{equation*}
 %%
-This shows that we have eliminated drift in Sonic Pi 2.0 since the
+This shows that we have eliminated drift in Sonic Pi v2.0 since the
 only overhead is now just the overhead of the \texttt{play} statements
-following the last \texttt{sleep}. For Sonic Pi 1.0, each block of
+following the last \texttt{sleep}. For Sonic Pi v1.0, each block of
 \texttt{play} statements adds overhead, leading to timing drift over
 the course of a program. In Section~\ref{sec:axiomatic} we will make
 precise the behaviour of the new sleep operation. 
@@ -576,7 +576,7 @@ exceeds this value, the temporal expectations of the system are met.
 \begin{figure}[t]
         \centering
                 \includegraphics[width=1\columnwidth]{assets/timing-diagram.pdf}
-        \caption{Timing behaviour of Sonic Pi 2.0 including virtual and scheduled time with a \schedAheadTOp{} of 0.5.}
+        \caption{Timing behaviour of Sonic Pi v2.0 including virtual and scheduled time with a \schedAheadTOp{} of 0.5.}
         \label{fig:reich}
 \end{figure}
 
@@ -735,7 +735,7 @@ seconds).
 \paragraph{A core fragment of Sonic Pi}
 
 Throughout the rest of this paper, we model a core subset of
-the Sonic Pi 2.0 language with the following grammar, where $P$ are
+the Sonic Pi v2.0 language with the following grammar, where $P$ are
 programs, $S$ statements, and $E$ expressions:
 %%
 \begin{align*}
@@ -1851,7 +1851,7 @@ Related to the dataflow tradition, the \emph{functional reactive
 values and discretely-timed sequences of
 events in a declarative language~\cite{nilsson2002functional}.  
 Related to our work, FRP has been used for designing modular
-synthesisers~\cite{giorgidze2008switched}, for which Sonic Pi 2.0 has related
+synthesisers~\cite{giorgidze2008switched}, for which Sonic Pi v2.0 has related
 functionality.  The FRP notion of \emph{events} (a discrete stream) is
 used to encode sequences of notes. Our approach is less
 declarative, but requires a smaller set of constructions in order
