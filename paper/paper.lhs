@@ -599,9 +599,9 @@ not suitable for realtime systems requiring hard deadlines but
 of Hansson and Jonsson~\cite{hansson1994logic}). However, if a given
 thread falls behind, the user receives explicit timing warnings
 (described in further detail in
-Section~\ref{sec:temporal-warnings}). Finally if the thread falls
+Section~\ref{sec:temporal-warnings}). Finally, if the thread falls
 further behind by a user-specifiable amount of time then Sonic Pi will
-stop that specific thread by throwing a time exception. This therefore
+stop that thread by throwing a time exception. This therefore
 not only provides essential information to users about the temporal
 behaviour of the program but also serves as a safety mechanism against a
 common class of errors such as placing an isolated call to \texttt{play}
