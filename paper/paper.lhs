@@ -1,4 +1,4 @@
-\documentclass[preprint]{sigplanconf}
+\documentclass{sigplanconf}
 
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
@@ -101,6 +101,17 @@
            {Computer Laboratory, University of Cambridge, UK}
            {alan.blackwell|@|cl.cam.ac.uk}
 
+
+\conferenceinfo{FARM '14}{}
+\copyrightyear{2014} 
+
+\exclusivelicense
+ \conferenceinfo{FARM~'14}{September 6, 2014, Gothenburg, Sweden} 
+ \copyrightyear{2014} 
+ \copyrightdata{XXX-X-XXXX-XXXX-X/XX/XX} %NEED THIS NUMBER FROM Sherdian
+ \doi{XXXXXXX.XXXXXXX}% NEED THIS FROM Sheridan
+
+
 \title{Temporal semantics for a live coding language}
 % A programming model for temporal coordination (in music)}
 
@@ -114,7 +125,7 @@ not straightforward to achieve the necessary simplicity of a first language
 in a music live coding setting, for reasons largely related to the
 manipulation of time. The original version of Sonic Pi used a `sleep'
 function for managing time, blocking computation
-for a specified time period. However, whilst this approach was conceptually
+for a specified time period. However, while this approach was conceptually
 simple, it resulted in badly timed music, especially when multiple musical
 threads were executing concurrently. This paper describes an alternative
 programming approach for timing (implemented in Sonic Pi v2.0) which
@@ -126,6 +137,9 @@ live coding and general computation. We then define a monadic model of the
 Sonic Pi temporal semantics which is sound with respect to this
 specification, using Haskell as a metalanguage.
 \end{abstract}
+
+% Sam: Can you fill in the other ones from last time?
+\category{F.3.2}{Logics and Meanings of Programs}{Semantics of Programming Languages}
 
 \section{Introduction}
 \label{sec:introduction}
@@ -348,15 +362,15 @@ end
 \end{figure}
 
 
-Whilst these temporal semantics worked well in a computing education
-context for demonstrating effect execution order, they didn't translate
-well to music contexts due to a mismatch with user expectations; they did
-not allow correct timing of musical notes. This mismatch was particularly
-emphasised when Sonic Pi gained the ability to play drum samples. Consider the example
+These temporal semantics worked well in a computing education
+context for demonstrating effect execution order, but they do not translate 
+well to music contexts due to a mismatch with user expectations; they do 
+not allow correct timing of musical notes. This mismatch was 
+emphasised when Sonic Pi gained the ability to play drum samples. 
+Consider the example
 in Figure~\ref{example-drum-loop}. Here we are attempting to regularly play
-MIDI note 30 at the same time as the drum sample \texttt{:drum\_heavy\_kick}
+MIDI note 30 at the same time as the sample \texttt{:drum\_heavy\_kick}
 with half a second between each onset.
-
 Unfortunately the execution will not produce the desired
 behaviour and the rhythm will drift in time due to the addition of the
 execution time itself to the sleep time. For example, after line A in
@@ -382,7 +396,6 @@ in_thread
     sleep 0.5
   end
 end
-
 in_thread
   loop do
     sample :drum_heavy_kick
@@ -392,7 +405,7 @@ end
 \end{SaveVerbatim}
 
 \begin{figure}[t]
-\vspace{-1.4em}
+\vspace{-0.8em}
 \begin{minipage}{0.46\linewidth}
 \BUseVerbatim[fontsize=\footnotesize,baselinestretch=0.97]{example-t-drums}
 \end{minipage}
@@ -598,7 +611,7 @@ not suitable for realtime systems requiring hard deadlines but
 \sleepOp{} instead provides a \emph{soft deadline} (in the terminology
 of Hansson and Jonsson~\cite{hansson1994logic}). However, if a given
 thread falls behind, the user receives explicit timing warnings
-(described in further detail in
+(described further in
 Section~\ref{sec:temporal-warnings}). Finally, if the thread falls
 further behind by a user-specifiable amount of time then Sonic Pi will
 stop that thread by throwing a time exception. This therefore
@@ -634,8 +647,6 @@ for only 1s to reach its minimum duration (half a sleep performed);}
 the first \sleepOp{} is ignored, then performs a computation lasting
 2s, thus the second \sleepOp{} is ignored (no sleeps performed).}
 \end{enumerate}
-
-
 
 \section{A \emph{time system} for Sonic Pi}
 \label{sec:axiomatic}
@@ -742,8 +753,7 @@ in time delay (Section~\ref{sec:soundness}).
 }}
 \end{minipage}
 }
-where \ksleepOp{} is a placeholder to represent a computation lasting a particular length
-of time
+%(\ksleepOp{} represents computations lasting a particular length of time)
 \caption{Example programs with different \sleepOp{} behaviours}
 \label{sleep-examples}
 \end{figure}
@@ -756,7 +766,7 @@ seconds).
 
 \paragraph{A core fragment of Sonic Pi}
 
-Throughout the rest of this paper, we model a core subset of
+In the rest of this paper, we model a core subset of
 the Sonic Pi v2.0 language with the following grammar, where $P$ are
 programs, $S$ statements, and $E$ expressions:
 %%
@@ -982,6 +992,7 @@ For any program $P$ then $\etime{P} \geq \vtime{P}$.
 \label{lemma-rel-etime-vtime}
 \end{lemma}
 %
+
 That is, the actual running time of a program is always at least the
 virtual time; a Sonic Pi program never ``under runs'' its virtual time
 specification.
@@ -1153,6 +1164,7 @@ rather than using |getCurrentTime| directly in any operation that requires
 the time. This choice was made in order to collect the temporal
 features of the model together in the monad.
 
+\noindent
 To model program evaluation, the |runTime| operation executes
 a temporal computation inside of the \emph{IO} monad, providing the
 start time from the operating system and virtual time $0$:
@@ -1163,7 +1175,7 @@ runTime (T c) = do  startT  <- getCurrentTime
                     (x, _)  <- c (startT, startT) 0
                     return x
 \end{code}
-%%
+%\vspace{-1em}
 \begin{example}
 To illustrate the evaluation of temporal computations and the
 ordering and interleaving of calls to the operating system for the
@@ -1191,12 +1203,13 @@ constant start time parameter, and the threading of virtual time state
 throughout the computation.
 \end{example}
 
-Figure~\ref{core-functions} shows a number of effectful operations of
- the \emph{Temporal} monad that access the current time, the start time, get
-and set the virtual time, and cause a kernel sleep. These
-are used in the next part of the model.
+Figure~\ref{core-functions} shows effectful operations of
+ the \emph{Temporal} monad, used in the next part of the model 
+to access the current time, the start time, get
+and set the virtual time, and cause a kernel sleep.
 
 \begin{figure}[t]
+\vspace{-0.75em}
 \begin{code}
 time :: Temporal Time
 time  = T (\(_, nowT) -> \vT -> return (nowT, vT))
@@ -1217,6 +1230,7 @@ kernelSleep t =  T (\(_, _) -> \vT ->
 \end{code}
 \caption{Simple \emph{Temporal} computations, used  by the model}
 \label{core-functions}
+\vspace{-0.4em}
 \end{figure}
 
 
@@ -1260,9 +1274,8 @@ for the tail of the right-associated semantics. In the inductive case,
  the continuation passed to $\interp{P}$ is the pre-composition of the interpretation of
 the statement $S$ to the parameter continuation $k$.
 
-At the top-level, we interpret a closed program to a value
-of type |Temporal ()| by passing
-in the trivial continuation that ignores the environment:
+At the top-level, we interpret a closed program to a |Temporal ()| value by passing
+in the trivial continuation returning |()|: 
 %%
 \begin{align*}
 \interp{P}_{\mathsf{top}} = |runTime| \; (\interp{P} \; |(lamWild -> return ())|)
@@ -1550,7 +1563,6 @@ the above program is not the model of any Sonic Pi program. We can therefore
 From this we regain the monad laws, up to $\approx$ due to
 small variations (as seen above). These are then:
 %
-
 %\paragraph{Laws with respect to $\epsilon$}
 
 %\paragraph{Quotienting by non-time dependent functions}
@@ -1879,7 +1891,7 @@ used to encode sequences of notes. Our approach is less
 declarative, but requires a smaller set of constructions in order
 to support our first-language and educational goals.
 
-Whilst the general approach is very different, the overarching
+Although the general approach is very different, the overarching
 theme of a semantics for time is common to both this work and FRP. There are
 related notions to \emph{time safety} in the semantics of Wan and Hudak,
 where an idealised denotational semantics for FRP is compared to operational
@@ -1888,8 +1900,8 @@ an implementation is said to be ``faithful'' when its actual implementation
 differs only by an $\epsilon$-time to the denotational model. This is similar to
 the conditions of our time safety property between
 our axiomatic time system (Section~\ref{sec:axiomatic}) and the monadic
- model (Section~\ref{sec:time-monad})
-.
+ model (Section~\ref{sec:time-monad}).
+
 \section{Conclusion}
 
 This paper described an enhancement to the Sonic Pi language
