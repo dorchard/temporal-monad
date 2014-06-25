@@ -303,11 +303,19 @@ play 59
 \caption{Playing MIDI notes of an E minor chord in Sonic Pi v1.0}
 \end{figure}
 
+Sonic Pi was designed to teach a large number of computing concepts
+covered in the new UK computing curriculum introduced in September,
+2014. Examples of these concepts are conditionals, iteration, variables,
+functions, algorithms and datastructures. We also extend beyond these to
+provide educators with an opportunity to introduce concepts which we
+believe will play an increasingly important role in future programming
+contexts such as multi-threading and hot-swapping of code.
 
-One of the core computing concepts that Sonic Pi has been used to teach is the
-sequential ordering of effects in imperative programs, such as playing
-successive notes see Figure~\ref{eminor-chord} (which is considered
-here to be a Sonic Pi v1.0 program).
+One of the core UK computing curriculum concepts that Sonic Pi
+immediately focusses on is the sequential ordering of effects in
+imperative programs, such as playing successive notes see
+Figure~\ref{eminor-chord} (which is considered here to be a Sonic Pi
+v1.0 program).
 
 However, given the clockspeeds of modern processors, the instructions
 of Figure~\ref{eminor-chord} are likely to be executed so quickly in
