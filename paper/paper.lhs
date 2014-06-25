@@ -1821,15 +1821,15 @@ between expressivity and ease of understanding.
 \paragraph{Artificial intelligence}
 
 Reasoning about the temporal component of events and action is a classic
-problem in artificial intelligence (e.g. Shoham 1988,
-Shanahan~\cite{Shanahan1995}, Fisher et al.~\cite{Fisher2005}), in which
+problem in artificial intelligence (\eg{}, Shoham~\cite{opac-b1086466}, 
+Shanahan~\cite{Shanahan1995}, Fisher \emph{et al.}~\cite{Fisher2005}), in which
 causal mechanisms and metrical description may be more or less tightly
 coupled. Human interaction with systems that employ temporal reasoning
 can be considered either from a software engineering perspective (the
-usability of formal time notations, for example as in Kutar et al. 2001),
+usability of formal time notations, for example as in Kutar \emph{et al.}~\cite{kutar2001}), 
 or from a cognitive science standpoint, as in Honing's discussion of
 music cognition from a representational
-perspective~\cite{Honing1993}. Honing observes that representation of
+perspective~\cite{Honing1993}. This is particularly relevant to Sonic Pi, where we are trying to invent a novel representation for music. Honing observes that representation of
 time in music can be both declarative and procedural, drawing on
 propositional and analogical cognitive resources. These representations
 may have conflicting implications for efficiency of control and
@@ -1840,7 +1840,7 @@ distinguished according to whether they support only tacit time
 representation (events are encoded only as occurring "now"), implicit
 time representation (events are ordered in a metrical sequence) or
 explicit time representation (temporal structure can be described and
-manipulated). Bellingham et al.~\cite{Bellingham2014} provide a survey of
+manipulated). These principles can be used to compare alternative design options for systems such as Sonic Pi. Bellingham \emph{et al.}~\cite{Bellingham2014} provide a survey of
 32 algorithmic composition systems, in which they apply Honing's
 framework to discuss the problem of notating the hierarchical
 combinations of cyclical and linear time that result in musical
@@ -1917,7 +1917,5 @@ analysis, and Andy Hopper for his support.  This work was kindly supported by th
 foundation.
 
 \bibliography{references}
-
-\appendix
 
 \end{document}

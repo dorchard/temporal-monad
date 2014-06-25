@@ -80,15 +80,7 @@ url = {http://drops.dagstuhl.de/opus/volltexte/2014/4420},
 volume = {3},
 year = {2014}
 }
-@techreport{Bellingham2014,
-abstract = {This paper presents an analysis, using cognitive dimensions (Green \& Blackwell, 1998), of a representative selection of user interfaces for algorithmic composition software. Cognitive dimensions are design principles for notations, user interfaces and programming language design, or from another viewpoint ‘discussion tools’ for designers (Green \& Blackwell, 1998). For the purposes of this report, algorithmic composition software is software which generates music using computer algorithms, where the algorithms may be controlled by end users (who may variously be considered as composers or performers). For example, the algorithms may be created by the end user, or the user may provide data or parameter settings to pre-existing algorithms. Other kinds of end-user manipulation are also possible. A wide variety of algorithmic composition software is considered, including visual programming languages, text- oriented programming languages, and software which requires or allows data entry by the user. The paper considers a representative, rather than comprehensive, selection of software. The analysis also draws, where appropriate, on related discussion tools drawn from Crampton Smith (Moggridge, 2006), Cooper et al. (2007) and Rogers et al. (2011). Finally, the paper reflects on the compositional representation of time as a critical dimension of composition software that is not satisfactorily addressed by cognitive dimensions, or any of the other discussion tools.},
-author = {Bellingham, Matt and Holland, Simon and Mulholland, Paul},
-file = {:Users/sam/Library/Containers/com.apple.mail/Data/Library/Mail Downloads/CDB07050-230A-40F3-94F0-C6011C0B7499/cd-final.pdf:pdf},
-institution = {Open University Computer Science Department},
-pages = {1--34},
-title = {{An analysis of algorithmic composition interaction design with reference to cognitive dimensions}},
-year = {2014}
-}
+
 @techreport{MSR-TR-2014-42,
 abstract = {Time is of the essence when modifying state. Most programming languages expose the hardware's ability to update global state at any time, leaving the burden entirely on programmers to properly order all updates. Just as languages now manage memory to free us from meticulously allocating and freeing memory, languages should also manage time to take care of properly ordering state updates. We propose time management as a general language feature to relate various prior work but also to guide future research of this largely unexplored design space. We propose a new form of managed time, Glitch, which ensures that all updates associated with an external event appear to execute simultaneously, removing the need to order execution manually. Glitch replays code as needed to reach an appearance of simultaneous execution. To do this, all updates must be commutative and capable of being rolled back, which is ensured through built-in state constructs and runtime monitoring. While these restrictions might seem onerous, we find them acceptable for many realistic programs. Glitch retains the familiar imperative programming model as much as possible, restricting rather than replacing it. Managed time also aides in live programming that provides immediate programmer feedback on how code edits affect execution. Live programming to date has been limited to special cases like pure functions, spreadsheets, or at the top level of games and graphics. Glitch is fully live: past program executions can be replayed in an IDE, while executions are incrementally revised under arbitrary code changes.},
 author = {McDirmid, Sean and Edwards, Jonathan},
@@ -265,4 +257,35 @@ year = {2003}
   pages={282--298},
   year={2008},
   publisher={Springer}
+}
+@InProceedings{Bellingham2014,
+    author = {Matt Bellingham and Simon Holland and Paul Mulholland},
+    title = {A Cognitive Dimensions analysis of interaction design for algorithmic composition software},
+    booktitle = {Proceedings of Psychology of Programming Interest Group Annual Conference 2014},
+    month = June,
+    year = 2014,
+    publisher = {University of Sussex},
+    editor = {Benedict du Boulay and Judith Good},
+    pages = {135-140}
+}
+@article{kutar2001,
+title = "Specifying Multiple Time Granularities in Interactive Systems",
+author = "M. Kutar and C. Britton and C.L. Nehaniv",
+year = "2001",
+doi = "10.1007/3-540-44675-3",
+volume = "1946",
+pages = "51--63",
+journal = "Lecture Notes in Computer Science",
+issn = "0302-9743",
+}
+
+@book{opac-b1086466,
+   title = "Reasoning about change : time and causation from the standpoint of artificial intelligence",
+   author = "Shoham, Yoav",
+   series = "The MIT Press series in artificial intelligence",
+   publisher = "Cambridge, Mass. MIT Press",
+   url = "http://opac.inria.fr/record=b1086466",
+   isbn = "0-262-19269-1",
+   note = "Includes index",
+   year = 1988
 }
