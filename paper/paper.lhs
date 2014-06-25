@@ -307,7 +307,7 @@ play 59
 One of the core computing concepts that Sonic Pi has been used to teach is the
 sequential ordering of effects in imperative programs, such as playing
 successive notes see Figure~\ref{eminor-chord} (which is considered
-here to be a Sonic Pi version 1.0 program).
+here to be a Sonic Pi v1.0 program).
 
 However, given the clockspeeds of modern processors, the instructions
 of Figure~\ref{eminor-chord} are likely to be executed so quickly in
