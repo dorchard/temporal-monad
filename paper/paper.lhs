@@ -592,12 +592,23 @@ exceeds this value, the temporal expectations of the system are met.
 \end{figure}
 
 
-It is possible that a computation preceding a \sleepOp{} can overrun; that is, run longer
-than the sleep time.  Thus, the programming model is not suitable for
-realtime systems requiring hard deadlines but \sleepOp{} instead
-provides a \emph{soft deadline} (in the terminology of Hansson and
-Jonsson~\cite{hansson1994logic}).
-
+It is possible that a computation preceding a \sleepOp{} can overrun;
+that is, run longer than the sleep time.  Thus, the programming model is
+not suitable for realtime systems requiring hard deadlines but
+\sleepOp{} instead provides a \emph{soft deadline} (in the terminology
+of Hansson and Jonsson~\cite{hansson1994logic}). However, if a given
+thread falls behind, the user receives explicit timing warnings
+(described in further detail in
+Section~\ref{sec:temporal-warnings}). Finally if the thread falls
+further behind by a user-specifiable amount of time then Sonic Pi will
+stop that specific thread by throwing a time exception. This therefore
+not only provides essential information to users about the temporal
+behaviour of the program but also serves as a safety mechanism against a
+common class of errors such as placing an isolated call to \texttt{play}
+within a loop with no calls \texttt{sleep}. In such cases, the thread
+will no longer perminantly sit in a tight loop consuming all resources,
+but will self-terminate allowing any other threads to continue executing
+normally.
 
 
 \subsection{Examples}
