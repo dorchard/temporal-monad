@@ -112,7 +112,7 @@
 \exclusivelicense
  \conferenceinfo{FARM~'14}{September 6, 2014, Gothenburg, Sweden} 
  \copyrightyear{2014} 
- \copyrightdata{978-1-4503-3039-8/14/09} %NEED THIS NUMBER FROM Sherdian
+ \copyrightdata{978-1-4503-3039-8/14/09} 
  \doi{XXXXXXX.XXXXXXX}% NEED THIS FROM Sheridan
 
 
@@ -142,10 +142,8 @@ Sonic Pi temporal semantics which is sound with respect to this
 specification, using Haskell as a metalanguage.
 \end{abstract}
 
-% Sam: Can you fill in the other ones from last time?
 \category{H.5.5}{Information Interfaces and Presentation}{Sound and Music Computing}
 \category{F.3.2}{Logics and Meanings of Programs}{Semantics of Programming Languages}
-%\category{D.2.6}{Software Engineering}{Interactive Environments}
 \category{D.3.2}{Programming Languages}{Applicative (functional) languages}
 \category{J.5}{Arts and Humanities}{Music}
 
