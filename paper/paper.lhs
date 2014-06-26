@@ -113,7 +113,7 @@
  \conferenceinfo{FARM~'14}{September 6, 2014, Gothenburg, Sweden} 
  \copyrightyear{2014} 
  \copyrightdata{978-1-4503-3039-8/14/09} 
- \doi{XXXXXXX.XXXXXXX}% NEED THIS FROM Sheridan
+ \doi{2633638.2633648}
 
 
 \title{Temporal semantics for a live coding language}
