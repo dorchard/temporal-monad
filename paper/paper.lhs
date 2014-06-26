@@ -33,7 +33,7 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{color}
-\usepackage[pdftex]{graphicx}
+\usepackage{graphicx}
 
 \DeclareGraphicsExtensions{.png,.jpg,.pdf} % used graphic file format for pdflatex
 
