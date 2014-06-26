@@ -91,15 +91,19 @@
 \newcommand{\ie}{\textit{i.e.}}
 \newcommand{\eg}{\textit{e.g.}}
 
-\authorinfo{Samuel Aaron}
+\authorinfo{Samuel Aaron \and Dominic Orchard \and Alan F. Blackwell}
            {Computer Laboratory, University of Cambridge, UK}
-           {sam.aaron|@|cl.cam.ac.uk}
-\authorinfo{Dominic Orchard}
-           {Computer Laboratory, University of Cambridge, UK}
-           {dominic.orchard|@|cl.cam.ac.uk}
-\authorinfo{Alan F. Blackwell}
-           {Computer Laboratory, University of Cambridge, UK}
-           {alan.blackwell|@|cl.cam.ac.uk}
+           {firstname.lastname|@|cl.cam.ac.uk}
+
+%\authorinfo{Samuel Aaron}
+%           {Computer Laboratory, University of Cambridge, UK}
+%           {sam.aaron|@|cl.cam.ac.uk}
+%\authorinfo{Dominic Orchard}
+%           {Computer Laboratory, University of Cambridge, UK}
+%           {dominic.orchard|@|cl.cam.ac.uk}
+%\authorinfo{Alan F. Blackwell}
+%           {Computer Laboratory, University of Cambridge, UK}
+%           {alan.blackwell|@|cl.cam.ac.uk}
 
 
 \conferenceinfo{FARM '14}{}
@@ -108,7 +112,7 @@
 \exclusivelicense
  \conferenceinfo{FARM~'14}{September 6, 2014, Gothenburg, Sweden} 
  \copyrightyear{2014} 
- \copyrightdata{XXX-X-XXXX-XXXX-X/XX/XX} %NEED THIS NUMBER FROM Sherdian
+ \copyrightdata{978-1-4503-3039-8/14/09} %NEED THIS NUMBER FROM Sherdian
  \doi{XXXXXXX.XXXXXXX}% NEED THIS FROM Sheridan
 
 
@@ -139,7 +143,13 @@ specification, using Haskell as a metalanguage.
 \end{abstract}
 
 % Sam: Can you fill in the other ones from last time?
+\category{H.5.5}{Information Interfaces and Presentation}{Sound and Music Computing}
 \category{F.3.2}{Logics and Meanings of Programs}{Semantics of Programming Languages}
+%\category{D.2.6}{Software Engineering}{Interactive Environments}
+\category{D.3.2}{Programming Languages}{Applicative (functional) languages}
+\category{J.5}{Arts and Humanities}{Music}
+
+\keywords time; music; live coding; temporal semantics; monads
 
 \section{Introduction}
 \label{sec:introduction}
@@ -227,8 +237,8 @@ to Section~\ref{sec:sp-1}.
 \label{sec:context}
 
 A first programming language should be conceptually simple
-and syntactically uncluttered. However, it is not straightforward to
-achieve this simplicity in a music live coding language, for reasons
+and syntactically uncluttered. However, 
+achieving this simplicity in a music live coding language is not easy for reasons
 largely related to the representation of time. Representing musical
 time in a programming language is often problematic, firstly because
 natural ways of describing and organising musical events are
@@ -242,10 +252,10 @@ have, like all experience, arises through time -- as media theorist
 Mieke Bal says, ``\emph{time is where subjectivity is
   produced}''~\cite{bal2002travelling}.
 
-As noted by Julian Rorhruber~\cite{blackwell_et_al:DR:2014:4420}, there
+As noted by Rorhruber~\cite{blackwell_et_al:DR:2014:4420}, there
 have been many publications discussing alternative approaches to the
-representation of time in live coding, many having to choose between
-explicit or implicit representation of time, and between description of
+representation of time in live coding, choosing between
+explicit or implicit representation of time and between description of
 time with reference to internal or external state. These many
 interesting strategies include McLean's formalism of cyclic time in the
 Tidal language~\cite{mclean2013textural}, and Sorensen's temporal
@@ -255,12 +265,12 @@ production-quality sound (via the SuperCollider synthesis server) while
 allowing inexperienced programmers in an educational setting (typically
 11-12 year-old children) to express the temporal structure in terms that
 have an intuitive correspondence to the experience and production of
-musical sounds.
+music. 
 % ADDED - in order to make sense of the above reference to Rorhruber
 % Our representation of time is explicit, in terms of intervals.
-The semantics of our formalism is similar
-to the interaction of time and the overloaded \texttt{=>}
-operator in the live coding language ChucK~\cite{Wang2003}.
+%The semantics of our formalism is similar
+%to the interaction of time and the overloaded \texttt{=>}
+%operator in the live coding language ChucK~\cite{Wang2003}.
 
 In music, it is clear that we must be able to speak about the precise
 location of events in time, and hence that any music programming
@@ -315,6 +325,7 @@ play 59
 \label{eminor-chord-spaced}
 }
 \caption{Playing MIDI notes of an E minor chord in Sonic Pi v1.0}
+\vspace{-0.4em}
 \end{figure}
 
 Sonic Pi was designed to teach a large number of computing concepts
@@ -534,9 +545,12 @@ timing.
 Thus, $\sleep{} t$ communicates that, after it has been evaluated,
 at least $t$ seconds has elapsed since the last \sleepOp{}. This
 provides a minimum time. In between calls to \sleepOp{}, any other
-statements can (with some limits) be considered task parallel. As
-mentioned earlier, ChucK has a similar mechanism as part of its
-(multiply) overloaded \texttt{=>} operator~\cite{Wang2003}.
+statements can (with some limits) be considered task parallel. %As
+%mentioned earlier, ChucK has a similar mechanism as part of its
+%(multiply) overloaded \texttt{=>} operator~\cite{Wang2003}.
+The semantics of \sleepOp{} is similar
+to the interaction of time and the (multiply) overloaded \texttt{=>}
+operator in the live coding language ChucK~\cite{Wang2003}.
 
 \begin{SaveVerbatim}{example1}
 play :C ; play :E ; play :G
