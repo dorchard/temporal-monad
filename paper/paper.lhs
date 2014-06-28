@@ -116,7 +116,7 @@
  \doi{2633638.2633648}
 
 
-\title{Temporal semantics for a live coding language}
+\title{Temporal Semantics for a Live Coding Language}
 % A programming model for temporal coordination (in music)}
 
 \begin{document}
