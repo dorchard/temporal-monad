@@ -112,7 +112,7 @@ hasSendTo :: Channel -> Time -> System -> Maybe Time
 hasSendTo chan atT (Sys []) = Nothing
 hasSendTo chan atT (Sys ((BCTA (c,t) ts):as)) = 
                  case lookup c ts of
-                   Just (q, Send chan') -> if chan == chan' && t == atT 
+                   Just (q, Send chan') -> if chan == chan' && t >= atT 
                                            then Just t
                                            else hasSendTo chan atT (Sys as)
                    _                    -> hasSendTo chan atT (Sys as)
@@ -123,7 +123,7 @@ step sys@(Sys xs) =
           where
            runLocal me a@(BCTA (q,t) ts) = 
                case lookup q ts of 
-                   Nothing -> error "transition is bad"
+                   Nothing -> a
                    Just (q1, None)     -> a { current = (q1, t) }
                    Just (q1, Sleep dt) -> a { current = (q1, t + dt) }
                    Just (q1, Send ch)  -> a { current = (q1, t) }
