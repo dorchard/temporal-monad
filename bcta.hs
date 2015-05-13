@@ -27,7 +27,21 @@ instance Show System where
    Two process, each with three states in a loop. 
      1) sleeps 2, sends on 'c' then recurses
      2) sleeps 1, receives on 'c' then recurses
-   Since they are 'out of phases' the second is constantly blocked on the first receive. -}
+   Since they are 'out of phases' the second is constantly blocked on the first receive.
+
+Provides the model for:
+
+live_loop :A do
+  sleep 2
+  cue :c
+end
+
+live_loop :B do
+  sleep 1
+  sync :c
+end
+
+ -}
 
 ex1 = Sys [BCTA (0,0) [(0, (1, Sleep 2)), (1, (2, Send "c")), (2, (0, None))], 
            BCTA (0,0) [(0, (1, Sleep 1)), (1, (2, Recv "c")), (2, (0, None))]]
@@ -36,12 +50,40 @@ ex1 = Sys [BCTA (0,0) [(0, (1, Sleep 2)), (1, (2, Send "c")), (2, (0, None))],
    
    Similar to the above but now the first process (which sends) sleeps only 1, and
    the second sleeps 2. This leads to the processes going 'in phase' after every two
-   iterations of the first process -}
+   iterations of the first process
+
+Provides the model for:
+
+live_loop :A do
+  sleep 1
+  cue :c
+end
+
+live_loop :B do
+  sleep 2
+  sync :c
+end
+
+ -}
 
 ex2 = Sys [BCTA (0,0) [(0, (1, Sleep 1)), (1, (2, Send "c")), (2, (0, None))], 
            BCTA (0,0) [(0, (1, Sleep 2)), (1, (2, Recv "c")), (2, (0, None))]]
 
-{- Exmaple 3 - classic deadlock -}
+{- Exmaple 3 - classic deadlock
+
+Provides the model for:
+
+live_loop :A do
+  sync :c
+  cue :d
+end
+
+live_loop :B do
+  sync :d
+  cue :c
+end
+
+ -}
 
 ex3 = Sys [BCTA (0,0) [(0, (1, Recv "c")), (1, (2, Send "d")), (2, (3, None))], 
            BCTA (0,0) [(0, (1, Recv "d")), (1, (2, Send "c")), (2, (3, None))]]
