@@ -7,7 +7,7 @@ type Channel = String
 data Action = Send Channel | Recv Channel | Sleep Time | None 
 
 -- Broadcasting communicating timed-automata 
-data BCTA = BCTA { current     :: (State, Time),             -- current config 
+data BCTA = BCTA { current     :: (State, Time),       -- current config 
                    transitions :: [(State, (State, Action))] -- transition function 
                  }
 
@@ -18,7 +18,7 @@ data System = Sys [BCTA]
 instance Show System where
     show (Sys []) = ""
     show (Sys ((BCTA (q, t) ts):as)) = show q ++ " @ " ++ 
-                                        "t = " ++ show t ++ "\n" ++ show (Sys as)
+                                       "t = " ++ show t ++ "\n" ++ show (Sys as)
 
 ------------------------------------------
 
@@ -88,6 +88,23 @@ end
 ex3 = Sys [BCTA (0,0) [(0, (1, Recv "c")), (1, (2, Send "d")), (2, (3, None))], 
            BCTA (0,0) [(0, (1, Recv "d")), (1, (2, Send "c")), (2, (3, None))]]
 
+{- Example 4 
+
+live_loop :A do
+  sleep 0.5
+  cue :c
+end
+
+in_thread do
+  sync :c
+  puts "ok"
+end
+
+-}
+
+ex4 = Sys [BCTA (0,0) [(0, (1, Sleep 0.5)), (1, (2, Send "c")), (2, (0, None))], 
+           BCTA (0,0) [(0, (1, Recv "c"))]]
+
 --------------------------------
 
 -- Find a process which has a send on channel at this time
@@ -96,7 +113,7 @@ hasSendTo chan atT (Sys []) = Nothing
 hasSendTo chan atT (Sys ((BCTA (c,t) ts):as)) = 
                  case lookup c ts of
                    Just (q, Send chan') -> if chan == chan' && t == atT 
-                                           then Just t 
+                                           then Just t
                                            else hasSendTo chan atT (Sys as)
                    _                    -> hasSendTo chan atT (Sys as)
 
@@ -112,7 +129,7 @@ step sys@(Sys xs) =
                    Just (q1, Send ch)  -> a { current = (q1, t) }
                    Just (q1, Recv ch)  -> case (hasSendTo ch t sys) of
                                                    Nothing   -> a
-                                                   Just dt -> a { current = (q1, t) }
+                                                   Just nt -> a { current = (q1, nt) }
       
 -- run the example - Press any key to move on, press 'q' or 'x' to terminate
 run ex = do putStrLn $ show ex
