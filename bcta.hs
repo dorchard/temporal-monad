@@ -41,6 +41,11 @@ ex1 = Sys [BCTA (0,0) [(0, (1, Sleep 2)), (1, (2, Send "c")), (2, (0, None))],
 ex2 = Sys [BCTA (0,0) [(0, (1, Sleep 1)), (1, (2, Send "c")), (2, (0, None))], 
            BCTA (0,0) [(0, (1, Sleep 2)), (1, (2, Recv "c")), (2, (0, None))]]
 
+{- Exmaple 3 - classic deadlock -}
+
+ex3 = Sys [BCTA (0,0) [(0, (1, Recv "c")), (1, (2, Send "d")), (2, (3, None))], 
+           BCTA (0,0) [(0, (1, Recv "d")), (1, (2, Send "c")), (2, (3, None))]]
+
 --------------------------------
 
 -- Find a process which has a send on channel at this time
