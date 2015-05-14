@@ -133,7 +133,7 @@ step sys@(Sys xs) =
           where
            runLocal me a@(BCTA q t ts) = 
                case lookup q ts of 
-                   Nothing -> error $ "Tried to move to non-existent state " ++ show q
+                   Nothing -> a 
                    Just (q1, None i)   -> a { current = q1 }
                    Just (q1, Sleep dt) -> a { current = q1, clock = t + dt }
                    Just (q1, Send ch)  -> a { current = q1 }
@@ -166,9 +166,9 @@ toTimedAut (Sys xs) = TA $ step xs [] 0 where
     updateTrans ((q1, (q2, a)):ts) q b | q == q1   = (q1, (q2, b)) : ts
                                        | otherwise = (q1, (q2, a)) : (updateTrans ts q b) 
 
-    runLocal sys minSleep me a@(BCTA q t ts) = 
+    advance sys minSleep me a@(BCTA q t ts) = 
          case lookup q ts of 
-              Nothing -> error $ "Tried to move to non-existent state " ++ show q
+              Nothing -> (a { current = -1 }, None "finished")
               Just (q1, None i)   -> (a { current = q1, clock = t }, None i)
               Just (q1, Sleep dt) -> 
                      if dt == minSleep
@@ -183,8 +183,8 @@ toTimedAut (Sys xs) = TA $ step xs [] 0 where
                                            Just nt -> (a { current = q1, clock = nt }, Recv ch)
 
     step as ass q = 
-          let ms = minSleep $ map (\(BCTA q _ ts) -> snd . fromJust $ lookup q ts) as
-              (as', acs) = unzip $ map (\(me, a) -> runLocal as ms me a) (zip [0..] as) 
+          let ms = minSleep $ map (\(BCTA q _ ts) -> maybe (None "") snd (lookup q ts)) as
+              (as', acs) = unzip $ map (\(me, a) -> advance as ms me a) (zip [0..] as) 
 
           in   if ((CT as') `elem` ass)
                then [(q, (fromJust $ elemIndex (CT as') ass, [None ""]))]
