@@ -23,6 +23,10 @@ instance Functor Tree where
     fmap f (Node ns) = Node (map (fmap f) ns) 
     fmap f (Leaf x)  = Leaf (f x)
 
+instance Applicative Tree where
+    pure x = Leaf x
+    f <*> x = f >>= (\f' -> x >>= (\x' -> return (f' x')))
+
 instance Monad Tree where
     return x = Leaf x
     (Leaf x) >>= f  = f x
@@ -231,8 +235,9 @@ toTimedAut (Sys xs) = TA $ step xs [] 0 where
       let
         advance' :: Tree (State, Time) -> [(State, (State, Action))] -> (Tree (State, Time), [(State, (State, Action))], Tree Action)
         advance' (Node ns) trs = 
-              let (qs, trs', as) = foldl (\(qss, trs', ass) n -> let (q, trs'', as) = advance' n trs'
-                                                                 in (q : qss, trs'', as : ass)) ([], trs, []) ns
+              let (qs, trs', as) = foldl (\(qss, trs', ass) n -> 
+                                              let (q, trs'', as) = advance' n trs'
+                                              in (q : qss, trs'', as : ass)) ([], trs, []) ns
               in (Node qs, trs', Node as)
                                
         advance' (Leaf (q, t)) trs = 
@@ -243,7 +248,7 @@ toTimedAut (Sys xs) = TA $ step xs [] 0 where
                                                           in ((Leaf q') : qss, trs'', (Leaf a') : ass)) ([], trs, []) ns
                     in  if ((length qs) == 1) then 
                           (head qs, trs', head as)
-                        else
+                        else ("two " ++ show qs) `trace`
                           (Node qs, trs', Node as)
 
         trans (q, t) trs (q1, None i)   = ((q1, t), trs, None i)
